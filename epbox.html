@@ -481,34 +481,21 @@ body {
   <div id="alert-triggered-wrap"></div>
 
   <div class="card">
-    <div class="card-title"><i data-lucide="bell-plus"></i> 新增價格提醒</div>
-    <p style="font-size:13px;color:var(--text-gray);margin-bottom:14px;">當指定機型回收價跌破目標金額時，瀏覽器會即時通知你。</p>
+    <div class="card-title"><i data-lucide="bell-plus"></i> 訂閱 EPBOX 價格下跌通知</div>
+    <p style="font-size:13px;color:var(--text-gray);margin-bottom:14px;">當你訂閱的機型 EPBOX 回收價下跌時，瀏覽器會即時通知你。</p>
     <div class="alert-form">
-      <select id="alert-model-sel" onchange="onAlertModelChange()">
+      <select id="alert-model-sel">
         <option value="">── 選擇機型 ──</option>
       </select>
-      <select id="alert-storage-sel">
-        <option value="">── 選擇容量 ──</option>
-      </select>
-      <select id="alert-vendor-sel">
-        <option value="trade in價">EPBOX 自助回收價</option>
-        <option value="APPLE BAR">Apple Bar</option>
-        <option value="台哥大">台哥大</option>
-        <option value="遠傳">遠傳</option>
-        <option value="台北101">台北101</option>
-        <option value="STUDIO">Studio A</option>
-        <option value="神腦">神腦</option>
-      </select>
-      <input type="number" id="alert-price" placeholder="目標金額（低於此價時通知，例：28000）">
-      <button class="submit-btn" onclick="addAlert()">新增提醒</button>
+      <button class="submit-btn" onclick="addAlert()">訂閱通知</button>
     </div>
     <div class="notify-tip" id="notify-tip"></div>
   </div>
 
   <div class="card">
-    <div class="card-title"><i data-lucide="list-checks"></i> 已設定的提醒</div>
+    <div class="card-title"><i data-lucide="list-checks"></i> 已訂閱的機型</div>
     <div id="alert-list" class="alert-list">
-      <div class="no-result" style="padding:20px">尚未設定任何提醒</div>
+      <div class="no-result" style="padding:20px">尚未訂閱任何機型</div>
     </div>
   </div>
 </div>
@@ -1175,6 +1162,8 @@ function drawTrendChart(modelName, history, keys) {
 ════════════════════════════════ */
 function getAlerts() { try { return JSON.parse(localStorage.getItem('epbox_alerts') || '[]'); } catch { return []; } }
 function saveAlerts(a) { localStorage.setItem('epbox_alerts', JSON.stringify(a)); }
+function getLastPrices() { try { return JSON.parse(localStorage.getItem('epbox_last_prices') || '{}'); } catch { return {}; } }
+function saveLastPrices(p) { localStorage.setItem('epbox_last_prices', JSON.stringify(p)); }
 
 function initAlerts() {
   const sel = document.getElementById('alert-model-sel');
@@ -1187,33 +1176,14 @@ function initAlerts() {
   updateNotifyTip();
 }
 
-function onAlertModelChange() {
-  const base = document.getElementById('alert-model-sel').value;
-  const stoSel = document.getElementById('alert-storage-sel');
-  stoSel.innerHTML = '<option value="">── 選擇容量 ──</option>';
-  if (!base) return;
-  const storages = availableStorages(base);
-  storages.forEach(gb => {
-    const m = getModel(base, gb);
-    const o = document.createElement('option');
-    o.value = m?.name ?? ''; o.textContent = storageLabel(gb); stoSel.appendChild(o);
-  });
-  if (storages.length === 1) stoSel.value = getModel(base, storages[0])?.name ?? '';
-}
-
 function addAlert() {
-  const modelFull = document.getElementById('alert-storage-sel').value
-                 || getModel(document.getElementById('alert-model-sel').value, 0)?.name;
-  const vendor    = document.getElementById('alert-vendor-sel').value;
-  const threshold = parseInt(document.getElementById('alert-price').value);
-  if (!modelFull || !vendor || !threshold || threshold < 1000) {
-    alert('請填寫完整資訊（金額需大於 1000）'); return;
-  }
+  const model = document.getElementById('alert-model-sel').value;
+  if (!model) { alert('請選擇機型'); return; }
   const alerts = getAlerts();
-  alerts.push({ modelFull, vendor, threshold });
+  if (alerts.includes(model)) { alert('已訂閱此機型'); return; }
+  alerts.push(model);
   saveAlerts(alerts);
   renderAlertList();
-  document.getElementById('alert-price').value = '';
   requestNotifyPermission();
 }
 
@@ -1228,44 +1198,53 @@ function renderAlertList() {
   const alerts  = getAlerts();
   const container = document.getElementById('alert-list');
   if (!alerts.length) {
-    container.innerHTML = '<div class="no-result" style="padding:24px">尚未設定任何提醒</div>';
+    container.innerHTML = '<div class="no-result" style="padding:24px">尚未訂閱任何機型</div>';
     return;
   }
-  container.innerHTML = alerts.map((a, i) => `
+  container.innerHTML = alerts.map((model, i) => `
     <div class="alert-item">
       <div style="width:36px;height:36px;border-radius:10px;background:var(--ep-light);display:flex;align-items:center;justify-content:center;flex-shrink:0">
         ${ic(P.bell,'#00b96b',16)}
       </div>
       <div class="alert-item-info">
-        <div class="alert-model-name">${a.modelFull}</div>
-        <div class="alert-thresh">${a.vendor} 跌破 NT$${a.threshold.toLocaleString()} 時通知</div>
+        <div class="alert-model-name">${model}</div>
+        <div class="alert-thresh">EPBOX 回收價下跌時通知</div>
       </div>
       <button class="alert-del" onclick="removeAlert(${i})">${ic(P.trash,'#86868b',14)}</button>
     </div>`).join('');
 }
 
 function checkAlerts(models) {
-  const alerts   = getAlerts();
+  const subs = getAlerts();
+  if (!subs.length) return;
+  const lastPrices = getLastPrices();
   const triggered = [];
-  alerts.forEach(a => {
-    const m = models.find(m => m.name === a.modelFull);
-    if (!m) return;
-    const price = m.prices[a.vendor];
-    if (price && price <= a.threshold) {
-      triggered.push({ ...a, currentPrice: price });
+  const newPrices = { ...lastPrices };
+
+  models.forEach(m => {
+    const epboxPrice = m.prices['trade in價'];
+    if (!epboxPrice) return;
+    const baseName = m.name.replace(/\s*(64|128|256|512|1T)GB\s*/i, '').trim();
+    const prev = lastPrices[m.name];
+    if (subs.includes(baseName) && prev && epboxPrice < prev) {
+      triggered.push({ model: m.name, prev, curr: epboxPrice });
       if (Notification.permission === 'granted') {
-        new Notification('EPBOX 價格提醒', {
-          body: `${a.modelFull} ${a.vendor} 回收價已跌至 NT$${price.toLocaleString()}`,
+        new Notification('📉 EPBOX 回收價下跌', {
+          body: `${m.name} EPBOX 價格：NT$${prev.toLocaleString()} → NT$${epboxPrice.toLocaleString()}`,
         });
       }
     }
+    newPrices[m.name] = epboxPrice;
   });
+
+  saveLastPrices(newPrices);
+
   const wrap = document.getElementById('alert-triggered-wrap');
   if (wrap) {
     wrap.innerHTML = triggered.map(t => `
       <div class="alert-triggered">
         ${ic(P.alertTri,'#d48806',14)}
-        <div><strong>${t.modelFull}</strong> 的 ${t.vendor} 目前 NT$${t.currentPrice.toLocaleString()}，已達你設定的提醒門檻（NT$${t.threshold.toLocaleString()}）</div>
+        <div><strong>${t.model}</strong> EPBOX 回收價下跌：NT$${t.prev.toLocaleString()} → NT$${t.curr.toLocaleString()}</div>
       </div>`).join('');
   }
 }
