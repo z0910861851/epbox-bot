@@ -925,8 +925,8 @@ function renderLocations() {
   if (!data.length) { grid.innerHTML = '<div class="no-result">找不到符合條件的地點</div>'; return; }
   grid.innerHTML = data.map(l => {
     const q = encodeURIComponent(l.addr);
-    const googleUrl = `https://www.google.com/maps/search/?api=1&query=${q}`;
-    const appleUrl  = `maps://maps.apple.com/?q=${q}`;
+    const googleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.store + ' ' + l.addr)}`;
+    const appleUrl  = `maps://maps.apple.com/?q=${encodeURIComponent(l.store)}&near=${q}`;
     const levelTag = LEVEL_TAG[l.appleShopLevel] ?? '';
     return `
     <div class="loc-card">
