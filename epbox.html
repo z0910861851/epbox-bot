@@ -1168,9 +1168,9 @@ function saveLastPrices(p) { localStorage.setItem('epbox_last_prices', JSON.stri
 function initAlerts() {
   const sel = document.getElementById('alert-model-sel');
   sel.innerHTML = '<option value="">── 選擇機型 ──</option>';
-  uniqueBaseNames().forEach(b => {
+  allModels.forEach(m => {
     const o = document.createElement('option');
-    o.value = b; o.textContent = b; sel.appendChild(o);
+    o.value = m.name; o.textContent = m.name; sel.appendChild(o);
   });
   renderAlertList();
   updateNotifyTip();
@@ -1224,9 +1224,8 @@ function checkAlerts(models) {
   models.forEach(m => {
     const epboxPrice = m.prices['trade in價'];
     if (!epboxPrice) return;
-    const baseName = m.name.replace(/\s*(64|128|256|512|1T)GB\s*/i, '').trim();
     const prev = lastPrices[m.name];
-    if (subs.includes(baseName) && prev && epboxPrice < prev) {
+    if (subs.includes(m.name) && prev && epboxPrice < prev) {
       triggered.push({ model: m.name, prev, curr: epboxPrice });
       if (Notification.permission === 'granted') {
         new Notification('📉 EPBOX 回收價下跌', {
