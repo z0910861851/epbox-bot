@@ -49,6 +49,7 @@ async function handleEvent(event, client) {
   if (/^刪除\s*(\d+)$/.test(text))                   return cmdDelete(event, client, text);
   if (/^查詢/.test(text))                             return cmdQuery(event, client, text);
   if (/^訂閱\s+(.+)/.test(text))                     return cmdDirectSubscribe(event, client, text);
+  if (/^取消訂閱\s*(.*)/.test(text))                 return cmdUnsubscribe(event, client, text);
   if (text === '取消')                                return cmdCancel(event, client);
 
   return cmdHelp(event, client);
@@ -184,15 +185,45 @@ function subscribeSuccessFlex(model) {
 async function cmdDirectSubscribe(event, client, text) {
   const userId = event.source.userId;
   const model  = text.replace(/^訂閱\s+/i, '').toUpperCase().trim();
-  await addSubscription(userId, model);
-  return client.replyMessage({
-    replyToken: event.replyToken,
-    messages: [{
-      type: 'text',
-      text: `✅ 已訂閱！\n\n當 ${model} 的 EPBOX 回收價下跌時，我會立即通知你。`,
-      quickReply: { items: [qr('我的訂閱'), qr('訂閱通知')] },
-    }],
-  });
+  try {
+    await addSubscription(userId, model);
+    return client.replyMessage({
+      replyToken: event.replyToken,
+      messages: [{ ...subscribeSuccessFlex(model) }],
+    });
+  } catch (e) {
+    console.error('[訂閱] 失敗:', e.message);
+    return client.replyMessage({
+      replyToken: event.replyToken,
+      messages: [{ type: 'text', text: '訂閱時發生錯誤，請稍後再試。' }],
+    });
+  }
+}
+
+// ── 取消訂閱 ─────────────────────────────────────
+async function cmdUnsubscribe(event, client, text) {
+  const userId = event.source.userId;
+  const modelRaw = text.replace(/^取消訂閱\s*/i, '').toUpperCase().trim();
+
+  // 直接指定機型：取消訂閱 IPHONE 16 PRO MAX 256GB
+  if (modelRaw) {
+    const subs = await getUserSubscriptions(userId);
+    const idx  = subs.findIndex(s => s.model === modelRaw);
+    if (idx === -1) {
+      return client.replyMessage({
+        replyToken: event.replyToken,
+        messages: [{ type: 'text', text: `找不到「${modelRaw}」的訂閱紀錄。`, quickReply: { items: [qr('我的訂閱')] } }],
+      });
+    }
+    await removeSubscriptionByIndex(userId, idx);
+    return client.replyMessage({
+      replyToken: event.replyToken,
+      messages: [{ type: 'text', text: `✅ 已取消訂閱 ${modelRaw}。`, quickReply: { items: [qr('我的訂閱')] } }],
+    });
+  }
+
+  // 沒指定機型：顯示清單讓使用者選
+  return cmdList(event, client);
 }
 
 // ── 查看訂閱清單 ──────────────────────────────────
