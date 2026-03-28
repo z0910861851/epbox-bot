@@ -108,12 +108,76 @@ async function handleSetup(event, client, session, text) {
     return client.replyMessage({
       replyToken: event.replyToken,
       messages: [{
-        type: 'text',
-        text: `✅ 已訂閱！\n\n當 ${model} 的 EPBOX 回收價下跌時，我會立即通知你。`,
-        quickReply: { items: [qr('我的訂閱'), qr('訂閱通知')] },
+        ...subscribeSuccessFlex(model),
       }],
     });
   }
+}
+
+// ── 訂閱成功 Flex Message ─────────────────────────
+function subscribeSuccessFlex(model) {
+  return {
+    type: 'flex',
+    altText: `✅ 已訂閱 ${model}`,
+    contents: {
+      type: 'bubble',
+      size: 'mega',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#1a1a1a',
+        paddingAll: '16px',
+        contents: [
+          { type: 'text', text: '📦 EPBOX 訂閱通知', size: 'xs', color: '#aaaaaa' },
+          { type: 'text', text: model, size: 'md', color: '#ffffff', weight: 'bold', wrap: true, margin: '4px' },
+        ],
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        paddingAll: '16px',
+        contents: [
+          {
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              { type: 'text', text: '✅', size: 'xl', flex: 0 },
+              {
+                type: 'box',
+                layout: 'vertical',
+                margin: 'md',
+                contents: [
+                  { type: 'text', text: '訂閱成功！', size: 'md', weight: 'bold', color: '#00b96b' },
+                  { type: 'text', text: '當 EPBOX 回收價下跌時，\n我會立即通知你。', size: 'sm', color: '#555555', wrap: true, margin: 'sm' },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      footer: {
+        type: 'box',
+        layout: 'horizontal',
+        spacing: 'sm',
+        paddingAll: '12px',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            color: '#00b96b',
+            height: 'sm',
+            action: { type: 'message', label: '我的訂閱', text: '我的訂閱' },
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'sm',
+            action: { type: 'message', label: '繼續訂閱', text: '訂閱通知' },
+          },
+        ],
+      },
+    },
+  };
 }
 
 // ── 直接訂閱（從網頁跳轉）────────────────────────
