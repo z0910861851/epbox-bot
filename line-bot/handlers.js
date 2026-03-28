@@ -187,9 +187,70 @@ async function cmdDirectSubscribe(event, client, text) {
   const model  = text.replace(/^訂閱\s+/i, '').toUpperCase().trim();
   try {
     await addSubscription(userId, model);
+
+    // 抓現在 EPBOX 回收價，回傳查詢卡片 + 訂閱成功標示
+    const data   = await fetchPrices();
+    const entry  = Object.entries(data).find(([key]) => key.toUpperCase() === model);
+    const epboxPrice = entry ? entry[1]['trade in價'] : null;
+
+    if (epboxPrice && typeof epboxPrice === 'number') {
+      const flexMsg = {
+        type: 'flex',
+        altText: `✅ 已訂閱！${model} 目前 EPBOX 回收價 NT$${epboxPrice.toLocaleString()}`,
+        contents: {
+          type: 'bubble',
+          size: 'mega',
+          header: {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: '#1a1a1a',
+            paddingAll: '16px',
+            contents: [
+              { type: 'text', text: '📦 EPBOX 回收價查詢', size: 'xs', color: '#aaaaaa' },
+              { type: 'text', text: model, size: 'md', color: '#ffffff', weight: 'bold', wrap: true, margin: '4px' },
+              { type: 'text', text: `NT$${epboxPrice.toLocaleString()}`, size: 'xxl', color: '#ff6b00', weight: 'bold', margin: '8px' },
+            ],
+          },
+          body: {
+            type: 'box',
+            layout: 'vertical',
+            paddingAll: '16px',
+            contents: [
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  { type: 'text', text: 'EPBOX 自助回收 📦', size: 'md', color: '#ff6b00', weight: 'bold', flex: 3 },
+                  { type: 'text', text: `NT$${epboxPrice.toLocaleString()}`, size: 'md', color: '#ff6b00', weight: 'bold', align: 'end', flex: 2 },
+                ],
+              },
+              { type: 'separator', margin: 'md' },
+              { type: 'text', text: '✅ 已訂閱！價格下跌時將立即通知你。', size: 'sm', color: '#00b96b', margin: 'md', wrap: true },
+            ],
+          },
+          footer: {
+            type: 'box',
+            layout: 'horizontal',
+            paddingAll: '12px',
+            contents: [
+              {
+                type: 'button',
+                style: 'primary',
+                color: '#ff6b00',
+                height: 'sm',
+                action: { type: 'message', label: '我的訂閱', text: '我的訂閱' },
+              },
+            ],
+          },
+        },
+      };
+      return client.replyMessage({ replyToken: event.replyToken, messages: [flexMsg] });
+    }
+
+    // 無法取得價格時，退回純文字確認
     return client.replyMessage({
       replyToken: event.replyToken,
-      messages: [{ ...subscribeSuccessFlex(model) }],
+      messages: [{ type: 'text', text: `✅ 已訂閱！\n\n當 ${model} 的 EPBOX 回收價下跌時，我會立即通知你。`, quickReply: { items: [qr('我的訂閱')] } }],
     });
   } catch (e) {
     console.error('[訂閱] 失敗:', e.message);
