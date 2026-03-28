@@ -482,20 +482,12 @@ body {
 
   <div class="card">
     <div class="card-title"><i data-lucide="bell-plus"></i> 訂閱 EPBOX 價格下跌通知</div>
-    <p style="font-size:13px;color:var(--text-gray);margin-bottom:14px;">當你訂閱的機型 EPBOX 回收價下跌時，瀏覽器會即時通知你。</p>
+    <p style="font-size:13px;color:var(--text-gray);margin-bottom:14px;">選擇機型後，點按鈕會開啟 LINE，直接傳送訊息給 Bot 完成訂閱。當 EPBOX 回收價下跌時，Bot 會主動通知你。</p>
     <div class="alert-form">
       <select id="alert-model-sel">
         <option value="">── 選擇機型 ──</option>
       </select>
-      <button class="submit-btn" onclick="addAlert()">訂閱通知</button>
-    </div>
-    <div class="notify-tip" id="notify-tip"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title"><i data-lucide="list-checks"></i> 已訂閱的機型</div>
-    <div id="alert-list" class="alert-list">
-      <div class="no-result" style="padding:20px">尚未訂閱任何機型</div>
+      <button class="submit-btn" onclick="addAlert()">前往 LINE 訂閱通知</button>
     </div>
   </div>
 </div>
@@ -1179,12 +1171,8 @@ function initAlerts() {
 function addAlert() {
   const model = document.getElementById('alert-model-sel').value;
   if (!model) { alert('請選擇機型'); return; }
-  const alerts = getAlerts();
-  if (alerts.includes(model)) { alert('已訂閱此機型'); return; }
-  alerts.push(model);
-  saveAlerts(alerts);
-  renderAlertList();
-  requestNotifyPermission();
+  const msg = encodeURIComponent('訂閱 ' + model);
+  window.open(`https://line.me/R/oaMessage/@wea3313n/?text=${msg}`, '_blank');
 }
 
 function removeAlert(i) {

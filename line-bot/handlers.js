@@ -48,6 +48,7 @@ async function handleEvent(event, client) {
   if (/^(我的提醒|我的訂閱|訂閱清單|查看提醒)$/.test(text)) return cmdList(event, client);
   if (/^刪除\s*(\d+)$/.test(text))                   return cmdDelete(event, client, text);
   if (/^查詢/.test(text))                             return cmdQuery(event, client, text);
+  if (/^訂閱\s+(.+)/.test(text))                     return cmdDirectSubscribe(event, client, text);
   if (text === '取消')                                return cmdCancel(event, client);
 
   return cmdHelp(event, client);
@@ -113,6 +114,21 @@ async function handleSetup(event, client, session, text) {
       }],
     });
   }
+}
+
+// ── 直接訂閱（從網頁跳轉）────────────────────────
+async function cmdDirectSubscribe(event, client, text) {
+  const userId = event.source.userId;
+  const model  = text.replace(/^訂閱\s+/i, '').toUpperCase().trim();
+  await addSubscription(userId, model);
+  return client.replyMessage({
+    replyToken: event.replyToken,
+    messages: [{
+      type: 'text',
+      text: `✅ 已訂閱！\n\n當 ${model} 的 EPBOX 回收價下跌時，我會立即通知你。`,
+      quickReply: { items: [qr('我的訂閱'), qr('訂閱通知')] },
+    }],
+  });
 }
 
 // ── 查看訂閱清單 ──────────────────────────────────
