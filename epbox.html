@@ -261,6 +261,7 @@ body {
 .tag-green { background: #e0f8ec; color: #00915a; }
 .tag-blue { background: #e0eeff; color: #005ab5; }
 .tag-gray { background: #f0f0f2; color: #555; }
+.tag-purple { background: #f0e0ff; color: #7b00d4; }
 .no-result { text-align: center; padding: 40px 20px; color: var(--text-gray); font-size: 14px; }
 .nav-btn {
   display: inline-flex; align-items: center; gap: 5px;
@@ -516,22 +517,16 @@ body {
 <div id="tab-locations" class="tab-content">
   <div class="card" style="padding:14px 16px;">
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
-      <div class="card-title" style="margin:0;">EPBOX 全台設置地點</div>
+      <div class="card-title" style="margin:0;">燦坤 AppleShop 設置地點</div>
       <span class="count-badge" id="loc-count">共 0 台</span>
     </div>
     <div class="loc-filter">
       <input type="text" id="loc-search" placeholder="🔍 搜尋店家或地址…" oninput="renderLocations()">
       <select id="loc-city" onchange="renderLocations()">
         <option value="">全部縣市</option>
-        <option value="台北市">台北市</option>
-        <option value="新北市">新北市</option>
-        <option value="桃園市">桃園市</option>
-        <option value="台中市">台中市</option>
-        <option value="台南市">台南市</option>
         <option value="高雄市">高雄市</option>
-        <option value="新竹市">新竹市</option>
-        <option value="嘉義市">嘉義市</option>
-        <option value="屏東縣">屏東縣</option>
+        <option value="台南市">台南市</option>
+        <option value="雲林縣">雲林縣</option>
       </select>
     </div>
     <div id="loc-grid" class="loc-grid"></div>
@@ -917,35 +912,18 @@ function renderEpboxTable() {
    Tab 3: Locations
 ════════════════════════════════ */
 const LOCATIONS = [
-  { store: "全國電子 信義旗艦店", city: "台北市", district: "信義區", addr: "台北市信義區松壽路9號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "全國電子 中山店", city: "台北市", district: "中山區", addr: "台北市中山區南京東路二段76號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "燦坤 忠孝店", city: "台北市", district: "大安區", addr: "台北市大安區忠孝東路四段181號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
-  { store: "Apple Premium Reseller 松山店", city: "台北市", district: "松山區", addr: "台北市松山區南京東路三段248號", type: "Apple 授權店", hours: "10:00–21:00", icon: "🍎" },
-  { store: "大同 3C 西門旗艦", city: "台北市", district: "萬華區", addr: "台北市萬華區中華路一段75號", type: "3C 通路", hours: "10:00–22:00", icon: "📱" },
-  { store: "寶雅 天母店", city: "台北市", district: "士林區", addr: "台北市士林區中山北路六段77號", type: "零售賣場", hours: "10:00–22:00", icon: "🛍️" },
-  { store: "全國電子 板橋文化店", city: "新北市", district: "板橋區", addr: "新北市板橋區文化路一段188號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "燦坤 新莊中正店", city: "新北市", district: "新莊區", addr: "新北市新莊區中正路400號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
-  { store: "全國電子 三重門市", city: "新北市", district: "三重區", addr: "新北市三重區重新路四段90號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "燦坤 新店中正店", city: "新北市", district: "新店區", addr: "新北市新店區中正路86號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
-  { store: "全國電子 中和景平店", city: "新北市", district: "中和區", addr: "新北市中和區景平路158號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "全國電子 桃園中正旗艦店", city: "桃園市", district: "桃園區", addr: "桃園市桃園區中正路1003號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "燦坤 中壢民族店", city: "桃園市", district: "中壢區", addr: "桃園市中壢區民族路143號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
-  { store: "全國電子 八德廣興店", city: "桃園市", district: "八德區", addr: "桃園市八德區廣興路45號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "全國電子 台中旗艦店", city: "台中市", district: "西屯區", addr: "台中市西屯區台灣大道三段301號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "燦坤 台中中港店", city: "台中市", district: "西屯區", addr: "台中市西屯區中港路二段195號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
-  { store: "全國電子 豐原中正店", city: "台中市", district: "豐原區", addr: "台中市豐原區中正路78號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "Apple Premium Reseller 台中勤美店", city: "台中市", district: "西區", addr: "台中市西區公益路68號", type: "Apple 授權店", hours: "10:00–21:00", icon: "🍎" },
-  { store: "全國電子 台南東門旗艦店", city: "台南市", district: "東區", addr: "台南市東區東門路一段195號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "燦坤 台南中山店", city: "台南市", district: "北區", addr: "台南市北區中山路179號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
-  { store: "全國電子 永康中山店", city: "台南市", district: "永康區", addr: "台南市永康區中山路358號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "全國電子 高雄鳳山旗艦店", city: "高雄市", district: "鳳山區", addr: "高雄市鳳山區中山路137號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "燦坤 高雄三多店", city: "高雄市", district: "苓雅區", addr: "高雄市苓雅區三多一路213號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
-  { store: "全國電子 左營高鐵店", city: "高雄市", district: "左營區", addr: "高雄市左營區博愛二路296號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "Apple Premium Reseller 高雄夢時代", city: "高雄市", district: "前鎮區", addr: "高雄市前鎮區中華五路789號夢時代G1F", type: "Apple 授權店", hours: "11:00–22:00", icon: "🍎" },
-  { store: "全國電子 新竹中正旗艦店", city: "新竹市", district: "東區", addr: "新竹市東區中正路66號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "燦坤 新竹東光店", city: "新竹市", district: "東區", addr: "新竹市東區東光路88號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
-  { store: "全國電子 嘉義中山店", city: "嘉義市", district: "東區", addr: "嘉義市東區中山路258號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
-  { store: "全國電子 屏東中山店", city: "屏東縣", district: "屏東市", addr: "屏東縣屏東市中山路168號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  // AppleShop 3.0
+  { store: "燦坤 新岡山門市", city: "高雄市", district: "岡山區", addr: "高雄市岡山區西東路68號2樓", appleShopLevel: "3.0", hours: "11:00–21:30" },
+  { store: "燦坤 新光華門市", city: "高雄市", district: "苓雅區", addr: "高雄市苓雅區光華一路160號1樓", appleShopLevel: "3.0", hours: "11:00–21:30" },
+  { store: "燦坤 斗六門市", city: "雲林縣", district: "斗六市", addr: "雲林縣斗六市中建西路64號", appleShopLevel: "3.0", hours: "11:00–21:30" },
+  // AppleShop 2.0
+  { store: "燦坤 自由門市", city: "高雄市", district: "左營區", addr: "高雄市左營區自由二路329號", appleShopLevel: "2.0", hours: "11:00–21:30" },
+  { store: "燦坤 華榮門市", city: "高雄市", district: "鼓山區", addr: "高雄市鼓山區華榮路345號", appleShopLevel: "2.0", hours: "11:00–21:30" },
+  { store: "燦坤 永華門市", city: "台南市", district: "安平區", addr: "台南市安平區永華路二段35號", appleShopLevel: "2.0", hours: "11:00–21:30" },
+  { store: "燦坤 中華門市", city: "台南市", district: "永康區", addr: "台南市永康區中華路149號", appleShopLevel: "2.0", hours: "11:00–21:30" },
+  { store: "燦坤 五甲門市", city: "高雄市", district: "鳳山區", addr: "高雄市鳳山區五甲二路219號", appleShopLevel: "2.0", hours: "11:00–21:30" },
+  // AppleShop White+
+  { store: "燦坤 右昌門市", city: "高雄市", district: "楠梓區", addr: "高雄市楠梓區德民路836號", appleShopLevel: "White+", hours: "11:00–21:30" },
 ];
 
 function renderLocations() {
@@ -958,29 +936,27 @@ function renderLocations() {
     l.addr.toLowerCase().includes(q) ||
     l.district.toLowerCase().includes(q)
   );
-  document.getElementById("loc-count").textContent = "共 " + data.length + " 台";
+  document.getElementById("loc-count").textContent = "共 " + data.length + " 間";
   const grid = document.getElementById("loc-grid");
-  const TYPE_ICON = {
-    "電器量販":   P.building,
-    "Apple 授權店": P.store,
-    "3C 通路":    P.phone,
-    "零售賣場":   P.bag,
+  const LEVEL_TAG = {
+    "3.0":    `<span class="loc-tag tag-blue">AppleShop 3.0</span>`,
+    "2.0":    `<span class="loc-tag tag-green">AppleShop 2.0</span>`,
+    "White+": `<span class="loc-tag tag-purple">AppleShop White+</span>`,
   };
   if (!data.length) { grid.innerHTML = '<div class="no-result">找不到符合條件的地點</div>'; return; }
   grid.innerHTML = data.map(l => {
     const q = encodeURIComponent(l.addr);
     const googleUrl = `https://www.google.com/maps/search/?api=1&query=${q}`;
     const appleUrl  = `maps://maps.apple.com/?q=${q}`;
-    const typeIcon = TYPE_ICON[l.type] ?? P.building;
+    const levelTag = LEVEL_TAG[l.appleShopLevel] ?? '';
     return `
     <div class="loc-card">
-      <div class="loc-icon">${ic(typeIcon,'#00b96b',20)}</div>
+      <div class="loc-icon">${ic(P.store,'#00b96b',20)}</div>
       <div style="flex:1">
         <div class="loc-store">${l.store}</div>
         <div class="loc-addr">${l.city}${l.district}・${l.addr}</div>
         <div class="loc-tags">
-          <span class="loc-tag tag-green">${ic(P.bot,'#00915a',11)} EPBOX</span>
-          <span class="loc-tag tag-blue">${l.type}</span>
+          ${levelTag}
           <span class="loc-tag tag-gray">${ic(P.clock,'#555',11)} ${l.hours}</span>
         </div>
         <div>
