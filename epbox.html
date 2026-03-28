@@ -1172,7 +1172,7 @@ function addAlert() {
   const model = document.getElementById('alert-model-sel').value;
   if (!model) { alert('請選擇機型'); return; }
   const msg = encodeURIComponent('訂閱 ' + model);
-  window.open(`https://line.me/R/oaMessage/@wea3313n/?text=${msg}`, '_blank');
+  window.open(`https://line.me/R/oaMessage/@wea3313n/?${msg}`, '_blank');
 }
 
 function removeAlert(i) {
