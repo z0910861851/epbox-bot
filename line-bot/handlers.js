@@ -330,19 +330,12 @@ async function cmdQuery(event, client, text) {
         footer: {
           type: 'box',
           layout: 'horizontal',
-          spacing: 'sm',
           paddingAll: '12px',
           contents: [
             {
               type: 'button',
               style: 'primary',
               color: '#ff6b00',
-              height: 'sm',
-              action: { type: 'message', label: '訂閱通知', text: '訂閱通知' },
-            },
-            {
-              type: 'button',
-              style: 'secondary',
               height: 'sm',
               action: { type: 'message', label: '我的訂閱', text: '我的訂閱' },
             },
