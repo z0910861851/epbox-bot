@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find '/Users/chenlifu/Desktop/AppleShop App/Mini' -name Info.plist -o -name *.plist -o -name *.xcconfig)",
+      "Bash(xargs -I {} sh -c 'head -50 {}')",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(curl -s \"https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/tradein_prices.json\")",
+      "Bash(curl -s \"https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/tradein_prices/prices.json\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); keys=list\\(d.keys\\(\\)\\)[:3]; print\\(keys\\); print\\(json.dumps\\(d[keys[0]], indent=2\\)\\)\")"
+    ]
+  }
+}

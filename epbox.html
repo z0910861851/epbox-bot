@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EPBOX 自助回收機 ─ 回收價格比較與設置地點</title>
+<style>
+:root {
+  --ep-green: #00b96b;
+  --ep-orange: #ff6b00;
+  --apple-blue: #0071e3;
+  --purple: #5e5ce6;
+  --ep-dark: #1a1a2e;
+  --ep-light: #f0faf5;
+  --card-white: #ffffff;
+  --text-dark: #1d1d1f;
+  --text-gray: #86868b;
+  --border: #e5e5e7;
+  --bg: #f5f5f7;
+  --red: #d70015;
+  --gold: #ff9500;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text-dark);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  background: var(--ep-dark);
+  color: #fff;
+  padding: 20px 24px 16px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+.header-logo { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 4px; }
+.logo-box { background: var(--ep-green); color: #fff; font-weight: 900; font-size: 18px; padding: 4px 10px; border-radius: 8px; letter-spacing: 1px; }
+.header h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+.header p { font-size: 12px; color: #aab; margin-top: 4px; }
+
+/* ── Tabs ── */
+.tab-nav {
+  display: flex;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  position: sticky;
+  top: 88px;
+  z-index: 99;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+.tab-btn {
+  flex: 1; min-width: 100px;
+  padding: 14px 10px;
+  border: none; background: none;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-gray);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap; transition: all 0.2s;
+}
+.tab-btn.active { color: var(--ep-green); border-bottom-color: var(--ep-green); }
+
+.tab-content { display: none; padding: 16px; max-width: 800px; margin: 0 auto; }
+.tab-content.active { display: block; }
+
+/* ── Cards ── */
+.card {
+  background: var(--card-white);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+.card-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+/* ── Info Box ── */
+.info-box {
+  background: #fffbe6; border: 1px solid #ffe58f;
+  border-radius: 12px; padding: 12px 16px;
+  font-size: 12px; color: #7a5a00;
+  margin-bottom: 14px; line-height: 1.7;
+}
+.info-box strong { color: #5a3e00; }
+
+/* ── Loading ── */
+.loading-state {
+  text-align: center; padding: 60px 20px;
+  color: var(--text-gray); font-size: 14px;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid #e5e5e7;
+  border-top-color: var(--ep-green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Model Picker ── */
+.picker-card { margin-bottom: 16px; }
+.picker-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.picker-row label { font-size: 13px; color: var(--text-gray); font-weight: 500; white-space: nowrap; }
+.picker-row select {
+  flex: 1; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 10px;
+  font-size: 14px; background: #fff; color: var(--text-dark);
+}
+.picker-row select:focus { outline: none; border-color: var(--ep-green); }
+.storage-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill {
+  padding: 6px 16px; border-radius: 20px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  border: 1.5px solid var(--apple-blue);
+  color: var(--apple-blue); background: transparent;
+  transition: all 0.15s;
+}
+.pill.active { background: var(--apple-blue); color: #fff; border-color: var(--apple-blue); }
+
+/* ── Average Banner ── */
+.avg-banner {
+  background: linear-gradient(135deg, var(--apple-blue), var(--purple));
+  border-radius: 18px; padding: 18px 20px;
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 6px 20px rgba(0,113,227,0.25);
+}
+.avg-banner .label { font-size: 12px; color: rgba(255,255,255,0.8); font-weight: 500; }
+.avg-banner .price { font-size: 30px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
+.avg-banner .tag {
+  margin-left: auto; background: rgba(255,255,255,0.2);
+  color: #fff; font-size: 11px; font-weight: 700;
+  padding: 4px 12px; border-radius: 8px;
+}
+
+/* ── EPBOX Trade-in Card ── */
+.epbox-ref-card {
+  background: #fff;
+  border: 1.5px solid rgba(255,107,0,0.3);
+  border-radius: 16px; padding: 16px;
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 2px 8px rgba(255,107,0,0.06);
+}
+.epbox-ref-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: rgba(255,107,0,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.epbox-ref-name { font-size: 14px; font-weight: 700; }
+.epbox-ref-sub { font-size: 11px; color: var(--text-gray); margin-top: 2px; }
+.epbox-ref-price { margin-left: auto; text-align: right; }
+.epbox-ref-price .p { font-size: 22px; font-weight: 900; color: var(--ep-orange); }
+.epbox-ref-price .unit { font-size: 11px; color: var(--text-gray); }
+
+/* ── Vendor List ── */
+.vendor-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px; padding: 0 2px;
+}
+.vendor-header .title { font-size: 14px; font-weight: 700; }
+.vendor-header .best-tag { font-size: 12px; color: var(--gold); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+
+.vendor-row {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 14px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+.vendor-row.best { border-color: rgba(255,149,0,0.25); }
+.vendor-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.vendor-name { font-size: 13px; font-weight: 700; }
+.vendor-note { font-size: 11px; color: var(--text-gray); margin-top: 1px; }
+.best-chip {
+  display: inline-block; font-size: 9px; font-weight: 700;
+  color: var(--gold); background: rgba(255,149,0,0.12);
+  padding: 1px 6px; border-radius: 4px; margin-left: 6px;
+}
+.vendor-right { margin-left: auto; text-align: right; }
+.vendor-price { font-size: 16px; font-weight: 800; }
+.vendor-price.best-price { color: var(--gold); }
+.price-bar-wrap { width: 80px; height: 4px; background: #f0f0f2; border-radius: 2px; margin-top: 6px; }
+.price-bar { height: 4px; border-radius: 2px; }
+
+/* ── Diff Card ── */
+.diff-card {
+  background: #fff; border: 1px solid rgba(94,92,230,0.15);
+  border-radius: 16px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 12px;
+}
+.diff-icon { width: 40px; height: 40px; border-radius: 50%; background: rgba(94,92,230,0.1); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.diff-label { font-size: 13px; font-weight: 700; }
+.diff-sub { font-size: 11px; color: var(--text-gray); margin-top: 2px; }
+.diff-val { margin-left: auto; font-size: 20px; font-weight: 900; color: var(--purple); }
+
+/* ── All Models Table (Tab 2) ── */
+.models-filter { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.models-filter select {
+  flex: 1; min-width: 140px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 10px;
+  font-size: 14px; background: #fff;
+}
+.models-filter select:focus { outline: none; border-color: var(--ep-green); }
+
+.price-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.price-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 420px; }
+.price-table th {
+  background: #f0faf5; padding: 10px 10px;
+  text-align: center; color: var(--ep-green);
+  font-weight: 700; border-bottom: 2px solid #c8f0dc;
+}
+.price-table th:first-child { text-align: left; padding-left: 14px; }
+.price-table td { padding: 12px 10px; text-align: center; border-bottom: 1px solid #f0f0f2; }
+.price-table td:first-child { text-align: left; padding-left: 14px; font-weight: 600; white-space: nowrap; }
+.price-table tr:last-child td { border-bottom: none; }
+.price-table tr:hover td { background: #fafdf9; }
+.ep-price { color: var(--ep-orange); font-weight: 800; font-size: 14px; }
+.avg-price { color: var(--apple-blue); font-weight: 700; }
+.best-vendor { font-size: 11px; color: var(--gold); font-weight: 600; }
+
+/* ── Locations ── */
+.loc-filter { display: flex; gap: 8px; margin-bottom: 14px; }
+.loc-filter input {
+  flex: 1; padding: 11px 14px;
+  border: 1px solid var(--border); border-radius: 10px; font-size: 14px;
+}
+.loc-filter input:focus { outline: none; border-color: var(--ep-green); }
+.loc-filter select { padding: 11px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; background: #fff; }
+.count-badge { font-size: 12px; background: var(--ep-light); color: var(--ep-green); font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-left: 6px; }
+.loc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.loc-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px;
+  display: flex; gap: 12px; align-items: flex-start;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.loc-card:hover { box-shadow: 0 4px 16px rgba(0,185,107,0.12); border-color: #b0e8cc; }
+.loc-icon { width: 40px; height: 40px; background: var(--ep-light); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.loc-store { font-size: 14px; font-weight: 700; }
+.loc-addr { font-size: 12px; color: var(--text-gray); margin-top: 3px; line-height: 1.5; }
+.loc-tags { display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap; }
+.loc-tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+.tag-green { background: #e0f8ec; color: #00915a; }
+.tag-blue { background: #e0eeff; color: #005ab5; }
+.tag-gray { background: #f0f0f2; color: #555; }
+.no-result { text-align: center; padding: 40px 20px; color: var(--text-gray); font-size: 14px; }
+.nav-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 10px; padding: 7px 14px;
+  background: var(--apple-blue); color: #fff;
+  border: none; border-radius: 20px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  text-decoration: none; transition: background 0.15s;
+}
+.nav-btn:hover { background: #005bbf; }
+.nav-btn-apple {
+  background: #1d1d1f; margin-left: 6px;
+}
+.nav-btn-apple:hover { background: #3a3a3c; }
+
+/* ── Disclaimer ── */
+.disclaimer {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: rgba(0,0,0,0.03); border-radius: 12px;
+  padding: 12px 14px; margin-top: 8px;
+  font-size: 12px; color: var(--text-gray); line-height: 1.6;
+}
+.updated { font-size: 11px; color: var(--text-gray); text-align: right; margin-bottom: 8px; }
+
+@media (max-width: 600px) {
+  .tab-btn { font-size: 12px; padding: 12px 6px; }
+  .loc-grid { grid-template-columns: 1fr; }
+  .avg-banner .price { font-size: 24px; }
+}
+/* ── Calculator ── */
+.calc-result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(188px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.calc-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 18px 16px; }
+.calc-card.best { background: linear-gradient(135deg, var(--apple-blue), var(--purple)); color: #fff; border-color: transparent; box-shadow: 0 6px 20px rgba(0,113,227,0.22); }
+.calc-model { font-size: 14px; font-weight: 800; margin-bottom: 3px; }
+.calc-gap { font-size: 24px; font-weight: 900; color: var(--red); margin: 8px 0 6px; }
+.calc-card.best .calc-gap { color: #fff; }
+.calc-meta { font-size: 12px; color: var(--text-gray); }
+.calc-card.best .calc-meta { color: rgba(255,255,255,0.75); }
+.calc-daily { font-weight: 800; color: var(--apple-blue); }
+.calc-card.best .calc-daily { color: #fff; }
+
+/* ── Delta badges ── */
+.delta-up   { display:inline-block; font-size:10px; font-weight:700; color:#c0392b; background:#fff0f0; padding:1px 6px; border-radius:4px; margin-left:5px; }
+.delta-down { display:inline-block; font-size:10px; font-weight:700; color:#00915a; background:#e0f8ec; padding:1px 6px; border-radius:4px; margin-left:5px; }
+
+/* ── Trend chart ── */
+.chart-wrap { position:relative; height:200px; }
+.chart-empty { text-align:center; padding:30px 20px; color:var(--text-gray); }
+.chart-empty svg { opacity:.25; }
+
+/* ── Alerts ── */
+.alert-form { display:flex; flex-direction:column; gap:10px; }
+.alert-form select, .alert-form input[type=number] { padding:11px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px; background:#fff; color:var(--text-dark); }
+.alert-form select:focus, .alert-form input:focus { outline:none; border-color:var(--ep-green); }
+.submit-btn { padding:14px; background:var(--ep-green); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; margin-top:4px; }
+.submit-btn:hover { background:#009959; }
+.alert-list { display:flex; flex-direction:column; gap:8px; }
+.alert-item { display:flex; align-items:center; gap:10px; background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px 14px; }
+.alert-item-info { flex:1; }
+.alert-model-name { font-size:13px; font-weight:700; }
+.alert-thresh { font-size:11px; color:var(--text-gray); margin-top:2px; }
+.alert-del { width:30px; height:30px; border-radius:50%; border:none; background:#f5f5f7; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .15s; }
+.alert-del:hover { background:#ffe0e0; }
+.alert-triggered { background:#fffbe6; border-color:#ffe58f; border-radius:10px; padding:10px 14px; font-size:12px; color:#7a5a00; margin-bottom:12px; display:flex; gap:8px; align-items:flex-start; }
+.notify-tip { font-size:11px; color:var(--text-gray); text-align:center; margin-top:6px; line-height:1.6; }
+.perm-btn { display:inline-block; margin-top:8px; padding:7px 16px; background:var(--apple-blue); color:#fff; border:none; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; }
+
+/* ── Lucide icons ── */
+.tab-btn svg { width: 15px; height: 15px; vertical-align: -2px; margin-right: 5px; stroke-width: 2.2; }
+.card-title svg { width: 17px; height: 17px; vertical-align: -3px; stroke-width: 2; }
+.info-icon { display: inline-block; vertical-align: -3px; margin-right: 5px; }
+.info-icon svg { width: 14px; height: 14px; stroke-width: 2; }
+.th-icon svg { width: 13px; height: 13px; vertical-align: -2px; stroke-width: 2; margin-right: 3px; }
+.step-icon { width: 44px; height: 44px; background: #e8f7ef; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+.step-icon svg { width: 22px; height: 22px; stroke: var(--ep-green); stroke-width: 1.8; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-logo">
+    <div class="logo-box">EPBOX</div>
+    <h1>自助回收機 回收資訊</h1>
+  </div>
+  <p>即時最高回收價 ／ 各通路比較 ／ 全台設置地點</p>
+</div>
+
+<!-- Tabs -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('compare', this)"><i data-lucide="bar-chart-2"></i>各通路比較</button>
+  <button class="tab-btn" onclick="switchTab('epbox', this)"><i data-lucide="bot"></i>EPBOX 回收價</button>
+  <button class="tab-btn" onclick="switchTab('calc', this)"><i data-lucide="calculator"></i>換機試算</button>
+  <button class="tab-btn" onclick="switchTab('alerts', this)"><i data-lucide="bell"></i>價格提醒</button>
+  <button class="tab-btn" onclick="switchTab('locations', this)"><i data-lucide="map-pin"></i>設置地點</button>
+</div>
+
+<!-- ══════════ Tab 1: 各通路回收比較 ══════════ -->
+<div id="tab-compare" class="tab-content active">
+  <div class="updated" id="last-updated-1">更新時間：載入中…</div>
+
+  <div class="info-box">
+    <span class="info-icon"><i data-lucide="alert-triangle"></i></span><strong>注意：</strong>以下為各通路機況完美（電池 ≥ 80%、無明顯損傷）之最高參考報價，實際金額依現場評估而定。
+  </div>
+
+  <!-- Model / Storage picker -->
+  <div class="card picker-card">
+    <div class="picker-row">
+      <label>機型</label>
+      <select id="compare-model" onchange="onModelChange()">
+        <option value="">── 請選擇 ──</option>
+      </select>
+    </div>
+    <div id="storage-row" style="display:none;">
+      <div style="font-size:13px;color:var(--text-gray);font-weight:500;margin-bottom:8px;">容量</div>
+      <div class="storage-pills" id="storage-pills"></div>
+    </div>
+  </div>
+
+  <div id="compare-result"></div>
+</div>
+
+<!-- ══════════ Tab 2: EPBOX 回收參考價 ══════════ -->
+<div id="tab-epbox" class="tab-content">
+  <div class="updated" id="last-updated-2">更新時間：載入中…</div>
+
+  <div class="info-box">
+    <span class="info-icon"><i data-lucide="bot"></i></span><strong>EPBOX 自助回收機：</strong>「trade in價」為 EPBOX 自助機回收參考報價，全程自助 5-10 分鐘完成，即時入帳。
+  </div>
+
+  <div class="models-filter">
+    <select id="epbox-series" onchange="renderEpboxTable()">
+      <option value="">全部系列</option>
+      <option value="17">iPhone 17 系列</option>
+      <option value="16">iPhone 16 系列</option>
+      <option value="15">iPhone 15 系列</option>
+      <option value="14">iPhone 14 系列</option>
+      <option value="13">iPhone 13 系列</option>
+      <option value="12">iPhone 12 系列</option>
+      <option value="11">iPhone 11 系列</option>
+    </select>
+  </div>
+
+  <div class="card" style="padding:0 0 8px;">
+    <div class="price-table-wrap">
+      <table class="price-table">
+        <thead>
+          <tr>
+            <th>型號</th>
+            <th><span class="th-icon"><i data-lucide="bot"></i></span>EPBOX 回收參考價</th>
+            <th><span class="th-icon"><i data-lucide="trending-up"></i></span>近期漲跌</th>
+            <th><span class="th-icon"><i data-lucide="bar-chart-2"></i></span>6家平均</th>
+            <th><span class="th-icon"><i data-lucide="crown"></i></span>最高通路</th>
+          </tr>
+        </thead>
+        <tbody id="epbox-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Flow steps -->
+  <div class="card">
+    <div class="card-title"><i data-lucide="refresh-cw"></i> EPBOX 回收流程</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;text-align:center;">
+      <div style="background:#f7fdf9;border-radius:12px;padding:16px 8px;">
+        <div class="step-icon"><i data-lucide="smartphone"></i></div>
+        <div style="font-size:13px;font-weight:700;">① 放入手機</div>
+        <div style="font-size:11px;color:var(--text-gray);margin-top:4px;">放入機器感應槽</div>
+      </div>
+      <div style="background:#f7fdf9;border-radius:12px;padding:16px 8px;">
+        <div class="step-icon"><i data-lucide="scan-eye"></i></div>
+        <div style="font-size:13px;font-weight:700;">② 自動鑑定</div>
+        <div style="font-size:11px;color:var(--text-gray);margin-top:4px;">AI 外觀與功能檢測</div>
+      </div>
+      <div style="background:#f7fdf9;border-radius:12px;padding:16px 8px;">
+        <div class="step-icon"><i data-lucide="banknote"></i></div>
+        <div style="font-size:13px;font-weight:700;">③ 確認報價</div>
+        <div style="font-size:11px;color:var(--text-gray);margin-top:4px;">查看即時金額</div>
+      </div>
+      <div style="background:#f7fdf9;border-radius:12px;padding:16px 8px;">
+        <div class="step-icon"><i data-lucide="circle-check"></i></div>
+        <div style="font-size:13px;font-weight:700;">④ 即時入帳</div>
+        <div style="font-size:11px;color:var(--text-gray);margin-top:4px;">轉帳 / 現金取得</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ Tab 3: 換機試算 ══════════ -->
+<div id="tab-calc" class="tab-content">
+  <div class="updated" id="last-updated-calc"></div>
+
+  <div class="card picker-card">
+    <div class="card-title"><i data-lucide="calculator"></i> 換機試算</div>
+    <p style="font-size:13px;color:var(--text-gray);margin-bottom:14px;">選擇你的舊機，看看現在值多少、換到新 iPhone 每天只要多少錢。</p>
+    <div class="picker-row">
+      <label>舊機型號</label>
+      <select id="calc-model" onchange="onCalcModelChange()">
+        <option value="">── 請選擇 ──</option>
+      </select>
+    </div>
+    <div id="calc-storage-row" style="display:none;">
+      <div style="font-size:13px;color:var(--text-gray);font-weight:500;margin-bottom:8px;">容量</div>
+      <div class="storage-pills" id="calc-storage-pills"></div>
+    </div>
+  </div>
+
+  <div id="calc-result">
+    <div class="no-result" style="padding:40px 0">請選擇舊機型號</div>
+  </div>
+</div>
+
+<!-- ══════════ Tab 4: 價格提醒 ══════════ -->
+<div id="tab-alerts" class="tab-content">
+  <div id="alert-triggered-wrap"></div>
+
+  <div class="card">
+    <div class="card-title"><i data-lucide="bell-plus"></i> 新增價格提醒</div>
+    <p style="font-size:13px;color:var(--text-gray);margin-bottom:14px;">當指定機型回收價跌破目標金額時，瀏覽器會即時通知你。</p>
+    <div class="alert-form">
+      <select id="alert-model-sel" onchange="onAlertModelChange()">
+        <option value="">── 選擇機型 ──</option>
+      </select>
+      <select id="alert-storage-sel">
+        <option value="">── 選擇容量 ──</option>
+      </select>
+      <select id="alert-vendor-sel">
+        <option value="trade in價">EPBOX 自助回收價</option>
+        <option value="APPLE BAR">Apple Bar</option>
+        <option value="台哥大">台哥大</option>
+        <option value="遠傳">遠傳</option>
+        <option value="台北101">台北101</option>
+        <option value="STUDIO">Studio A</option>
+        <option value="神腦">神腦</option>
+      </select>
+      <input type="number" id="alert-price" placeholder="目標金額（低於此價時通知，例：28000）">
+      <button class="submit-btn" onclick="addAlert()">新增提醒</button>
+    </div>
+    <div class="notify-tip" id="notify-tip"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i data-lucide="list-checks"></i> 已設定的提醒</div>
+    <div id="alert-list" class="alert-list">
+      <div class="no-result" style="padding:20px">尚未設定任何提醒</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ Tab 5: 設置地點 ══════════ -->
+<div id="tab-locations" class="tab-content">
+  <div class="card" style="padding:14px 16px;">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+      <div class="card-title" style="margin:0;">EPBOX 全台設置地點</div>
+      <span class="count-badge" id="loc-count">共 0 台</span>
+    </div>
+    <div class="loc-filter">
+      <input type="text" id="loc-search" placeholder="🔍 搜尋店家或地址…" oninput="renderLocations()">
+      <select id="loc-city" onchange="renderLocations()">
+        <option value="">全部縣市</option>
+        <option value="台北市">台北市</option>
+        <option value="新北市">新北市</option>
+        <option value="桃園市">桃園市</option>
+        <option value="台中市">台中市</option>
+        <option value="台南市">台南市</option>
+        <option value="高雄市">高雄市</option>
+        <option value="新竹市">新竹市</option>
+        <option value="嘉義市">嘉義市</option>
+        <option value="屏東縣">屏東縣</option>
+      </select>
+    </div>
+    <div id="loc-grid" class="loc-grid"></div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════
+   CONFIG
+════════════════════════════════ */
+const FB_URL = "https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/tradein_prices.json";
+
+const VENDORS = ["APPLE BAR", "台哥大", "遠傳", "台北101", "STUDIO", "地標", "米可", "神腦", "trade in價"];
+const AVG_VENDORS = new Set(["APPLE BAR", "台哥大", "遠傳", "台北101", "STUDIO", "神腦"]);
+
+/* ── Inline SVG helper (Lucide-style, stroke-only) ── */
+function ic(path, color = "currentColor", size = 18) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+}
+const P = {
+  store:    '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  signal:   '<line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>',
+  globe:    '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  building: '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',
+  palette:  '<circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>',
+  mapPin:   '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+  heart:    '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+  cpu:      '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>',
+  bot:      '<rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/>',
+  barChart: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  crown:    '<path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>',
+  upDown:   '<path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/>',
+  info:     '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  map:      '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
+  nav:      '<polygon points="3 11 22 2 13 21 11 13 3 11"/>',
+  phone:    '<rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+  bag:      '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  clock:     '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  arrowRight:'<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+  lineChart: '<line x1="3" y1="3" x2="3" y2="21"/><line x1="3" y1="21" x2="21" y2="21"/><polyline points="7 16 11 10 15 14 19 8"/>',
+  trash:     '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+  bell:      '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  checkCircle:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  alertTri:  '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+};
+
+const VENDOR_ICONS = {
+  "APPLE BAR":  P.store,
+  "台哥大":     P.store,
+  "遠傳":       P.store,
+  "台北101":    P.store,
+  "STUDIO":     P.store,
+  "地標":       P.store,
+  "米可":       P.store,
+  "神腦":       P.store,
+  "trade in價": P.bot,
+};
+const VENDOR_COLORS = {
+  "APPLE BAR": "#1d1d1f", "台哥大": "#e60012", "遠傳": "#00a0e9",
+  "台北101": "#8B4513", "STUDIO": "#9b59b6", "地標": "#e67e22",
+  "米可": "#8e44ad", "神腦": "#2c3e50", "trade in價": "#ff6b00"
+};
+const VENDOR_NOTES = {
+  "APPLE BAR": "Apple 授權經銷商", "台哥大": "台灣大哥大門市",
+  "遠傳": "遠傳電信門市", "台北101": "台北101門市",
+  "STUDIO": "Studio A 門市", "地標": "地標數位門市",
+  "米可": "米可數位門市", "神腦": "神腦國際門市",
+  "trade in價": "EPBOX 自助回收機參考價"
+};
+
+/* ════════════════════════════════
+   STATE
+════════════════════════════════ */
+let allModels = [];      // [{name, prices:{vendor:price}}]
+let selectedBase = "";
+let selectedStorage = 0;
+let lastUpdated = "";
+
+/* ════════════════════════════════
+   HELPERS
+════════════════════════════════ */
+function baseName(name) {
+  return name.replace(/\s+\d+(GB|TB)/gi, "").trim();
+}
+function storageGB(name) {
+  const u = name.toUpperCase();
+  if (u.includes("1TB")) return 1024;
+  const m = u.match(/(\d+)GB/);
+  return m ? parseInt(m[1]) : 0;
+}
+function storageLabel(gb) { return gb >= 1024 ? "1TB" : `${gb}GB`; }
+function fmt(n) { return n.toLocaleString(); }
+
+function generationNumber(name) {
+  const u = name.toUpperCase();
+  if (u.includes("XS MAX")) return 109;
+  if (u.includes("XS"))     return 108;
+  if (u.includes("XR"))     return 107;
+  if (u.includes("SE") && (u.includes("2022") || u.includes("第3") || u.includes("3RD"))) return 106;
+  if (u.includes("SE"))     return 105;
+  const nums = [...u.matchAll(/(\d+)/g)].map(m => parseInt(m[1])).filter(n => n >= 11 && n <= 99);
+  return (nums[0] ?? 0) * 10;
+}
+function modelSubRank(name) {
+  const u = name.toUpperCase();
+  if (u.includes("PRO MAX")) return 6;
+  if (u.includes("PRO"))     return 5;
+  if (u.includes("PLUS"))    return 4;
+  if (u.includes("MINI"))    return 2;
+  if (u.endsWith(" E") || u.includes(" E ")) return 1;
+  return 3;
+}
+
+function averagePrice(prices) {
+  const vals = Object.entries(prices)
+    .filter(([v, p]) => AVG_VENDORS.has(v) && p > 0)
+    .map(([, p]) => p);
+  if (!vals.length) return null;
+  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+}
+
+function getSeriesNum(name) {
+  const u = name.toUpperCase();
+  const m = u.match(/IPHONE\s+(\d+)/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+/* ════════════════════════════════
+   FETCH from Firebase
+════════════════════════════════ */
+async function fetchData() {
+  try {
+    const r = await fetch(FB_URL);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const json = await r.json();
+
+    // Parse last updated
+    if (json?.meta?.lastUpdated) {
+      const d = new Date(json.meta.lastUpdated);
+      const tw = new Intl.DateTimeFormat("zh-TW", {
+        timeZone: "Asia/Taipei",
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit"
+      }).format(d);
+      lastUpdated = tw;
+      document.getElementById("last-updated-1").textContent = "更新時間：" + tw;
+      document.getElementById("last-updated-2").textContent = "更新時間：" + tw;
+      document.getElementById("last-updated-calc").textContent = "更新時間：" + tw;
+    }
+
+    // Parse prices
+    const pricesData = json?.prices ?? {};
+    const parsed = [];
+    for (const entry of Object.values(pricesData)) {
+      if (!entry?.model) continue;
+      const name = entry.model;
+      if (!name.toUpperCase().includes("IPHONE")) continue;
+      const prices = {};
+      for (const v of VENDORS) {
+        const val = entry[v];
+        if (val != null && val > 0) prices[v] = Number(val);
+      }
+      parsed.push({ name, prices });
+    }
+
+    // Sort
+    allModels = parsed.sort((a, b) => {
+      const gA = generationNumber(a.name), gB = generationNumber(b.name);
+      if (gA !== gB) return gB - gA;
+      const rA = modelSubRank(a.name), rB = modelSubRank(b.name);
+      if (rA !== rB) return rB - rA;
+      return storageGB(a.name) - storageGB(b.name);
+    });
+
+    saveHistorySnapshot(allModels);
+    initCompare();
+    renderEpboxTable();
+    checkAlerts(allModels);
+  } catch (e) {
+    console.error(e);
+    document.getElementById("compare-result").innerHTML =
+      '<div class="no-result">⚠️ 無法載入資料，請確認網路連線後重新整理</div>';
+    document.getElementById("epbox-table-body").innerHTML =
+      '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-gray)">⚠️ 無法載入資料</td></tr>';
+  }
+}
+
+/* ════════════════════════════════
+   Tab 1: Compare
+════════════════════════════════ */
+function uniqueBaseNames() {
+  const seen = new Set();
+  return allModels.filter(m => {
+    const b = baseName(m.name);
+    if (seen.has(b)) return false;
+    seen.add(b); return true;
+  }).map(m => baseName(m.name));
+}
+
+function availableStorages(base) {
+  return [...new Set(
+    allModels.filter(m => baseName(m.name) === base).map(m => storageGB(m.name)).filter(g => g > 0)
+  )].sort((a, b) => a - b);
+}
+
+function getModel(base, gb) {
+  if (!gb) return allModels.find(m => baseName(m.name) === base);
+  return allModels.find(m => baseName(m.name) === base && storageGB(m.name) === gb);
+}
+
+function initCompare() {
+  const sel = document.getElementById("compare-model");
+  sel.innerHTML = '<option value="">── 請選擇機型 ──</option>';
+  uniqueBaseNames().forEach(b => {
+    const o = document.createElement("option");
+    o.value = b; o.textContent = b; sel.appendChild(o);
+  });
+  // Auto-select first
+  if (allModels.length) {
+    const first = baseName(allModels[0].name);
+    sel.value = first;
+    onModelChange();
+  }
+  initCalc();
+  initAlerts();
+}
+
+function onModelChange() {
+  selectedBase = document.getElementById("compare-model").value;
+  if (!selectedBase) { document.getElementById("storage-row").style.display = "none"; renderCompare(); return; }
+  const storages = availableStorages(selectedBase);
+  const row = document.getElementById("storage-row");
+  if (storages.length > 1) {
+    row.style.display = "block";
+    const pills = document.getElementById("storage-pills");
+    pills.innerHTML = "";
+    selectedStorage = storages[0];
+    storages.forEach(gb => {
+      const btn = document.createElement("button");
+      btn.className = "pill" + (gb === selectedStorage ? " active" : "");
+      btn.textContent = storageLabel(gb);
+      btn.onclick = () => { selectedStorage = gb; document.querySelectorAll(".pill").forEach(p => p.classList.remove("active")); btn.classList.add("active"); renderCompare(); };
+      pills.appendChild(btn);
+    });
+  } else {
+    row.style.display = "none";
+    selectedStorage = storages[0] ?? 0;
+  }
+  renderCompare();
+}
+
+function renderCompare() {
+  const container = document.getElementById("compare-result");
+  if (!selectedBase) { container.innerHTML = '<div class="no-result" style="padding:40px 0">請選擇機型</div>'; return; }
+  const model = getModel(selectedBase, selectedStorage);
+  if (!model) { container.innerHTML = '<div class="no-result">找不到此機型資料</div>'; return; }
+
+  const prices = model.prices;
+  const avg = averagePrice(prices);
+  const epboxPrice = prices["trade in價"];
+  const vendorPrices = Object.entries(prices)
+    .filter(([v]) => v !== "trade in價")
+    .map(([v, p]) => ({ vendor: v, price: p }))
+    .sort((a, b) => b.price - a.price);
+  const maxP = vendorPrices.length ? vendorPrices[0].price : 1;
+  const diff = (epboxPrice && avg) ? epboxPrice - avg : null;
+
+  let html = "";
+
+  // Average banner
+  if (avg) {
+    html += `
+    <div class="avg-banner">
+      <div style="display:flex;align-items:center;justify-content:center;width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:14px;flex-shrink:0">${ic(P.barChart,'#fff',24)}</div>
+      <div>
+        <div class="label">6家通路平均回收價</div>
+        <div class="price">NT$${fmt(avg)}</div>
+      </div>
+      <div class="tag">Apple Bar · 台哥大<br>遠傳 · 101 · STUDIO · 神腦</div>
+    </div>`;
+  }
+
+  // EPBOX trade-in ref
+  if (epboxPrice) {
+    const epDelta = deltaBadge(getPriceDelta(model.name, 'trade in價'));
+    html += `
+    <div class="epbox-ref-card">
+      <div class="epbox-ref-icon">${ic(P.bot,'#ff6b00',22)}</div>
+      <div>
+        <div class="epbox-ref-name">EPBOX 自助回收機 ${epDelta}</div>
+        <div class="epbox-ref-sub">24小時自助 · 即時入帳</div>
+      </div>
+      <div class="epbox-ref-price">
+        <div class="p">$${fmt(epboxPrice)}</div>
+        <div class="unit">NT$</div>
+      </div>
+    </div>`;
+  }
+
+  // Vendor prices
+  if (vendorPrices.length) {
+    const best = vendorPrices[0];
+    html += `<div class="vendor-header"><span class="title">各通路回收報價</span><span style="font-size:12px;color:var(--gold);font-weight:600;display:flex;align-items:center;gap:4px">${ic(P.crown,'#ff9500',13)} ${best.vendor}</span></div>`;
+    vendorPrices.forEach(({ vendor, price }) => {
+      const isBest = vendor === best.vendor;
+      const barW = Math.round((price / maxP) * 100);
+      const color = VENDOR_COLORS[vendor] ?? "#86868b";
+      const barColor = isBest ? "linear-gradient(to right, #ff9500, #ffcc00)" : `linear-gradient(to right, ${color}99, ${color}55)`;
+      const vDelta = deltaBadge(getPriceDelta(model.name, vendor));
+      html += `
+      <div class="vendor-row${isBest ? " best" : ""}">
+        <div class="vendor-icon" style="background:${color}18">${ic(VENDOR_ICONS[vendor] ?? P.store, color, 20)}</div>
+        <div>
+          <div class="vendor-name">${vendor}${isBest ? '<span class="best-chip">最高</span>' : ""}</div>
+          <div class="vendor-note">${VENDOR_NOTES[vendor] ?? ""}</div>
+        </div>
+        <div class="vendor-right">
+          <div class="vendor-price${isBest ? " best-price" : ""}">$${fmt(price)} ${vDelta}</div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:${barW}%;background:${barColor}"></div></div>
+        </div>
+      </div>`;
+    });
+  }
+
+  // Diff
+  if (diff !== null) {
+    const sign = diff >= 0 ? "+" : "";
+    html += `
+    <div class="diff-card">
+      <div class="diff-icon">${ic(P.upDown,'#5e5ce6',20)}</div>
+      <div>
+        <div class="diff-label">EPBOX 與均價差異</div>
+        <div class="diff-sub">EPBOX $${fmt(epboxPrice)} vs 均價 $${fmt(avg)}</div>
+      </div>
+      <div class="diff-val">${sign}$${fmt(diff)}</div>
+    </div>`;
+  }
+
+  // Disclaimer
+  html += `<div class="disclaimer" style="gap:8px">${ic(P.info,'#86868b',14)} 以上為參考估算，實際回收價依各通路現場評估、機況及活動優惠而不同。</div>`;
+  container.innerHTML = html;
+}
+
+/* ════════════════════════════════
+   Tab 2: EPBOX Table
+════════════════════════════════ */
+function renderEpboxTable() {
+  const series = document.getElementById("epbox-series").value;
+  const tbody = document.getElementById("epbox-table-body");
+
+  let data = allModels.filter(m => m.prices["trade in價"] > 0);
+  if (series) data = data.filter(m => {
+    const n = getSeriesNum(m.name);
+    return String(n) === series;
+  });
+
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-gray)">載入中…</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(m => {
+    const ep = m.prices["trade in價"];
+    const avg = averagePrice(m.prices);
+    const vendorEntries = Object.entries(m.prices).filter(([v]) => v !== "trade in價" && m.prices[v] > 0);
+    const best = vendorEntries.sort((a, b) => b[1] - a[1])[0];
+    const delta = getPriceDelta(m.name, "trade in價");
+    const deltaCell = delta === null ? '<span style="color:var(--text-gray);font-size:11px">─</span>'
+                    : delta > 0 ? `<span class="delta-up">▲ +$${fmt(Math.abs(delta))}</span>`
+                    : delta < 0 ? `<span class="delta-down">▼ −$${fmt(Math.abs(delta))}</span>`
+                    : '<span style="color:var(--text-gray);font-size:11px">持平</span>';
+    return `<tr>
+      <td>${m.name}</td>
+      <td class="ep-price">${ep ? "$" + fmt(ep) : "─"}</td>
+      <td>${deltaCell}</td>
+      <td class="avg-price">${avg ? "$" + fmt(avg) : "─"}</td>
+      <td class="best-vendor">${best ? `${ic(VENDOR_ICONS[best[0]] ?? P.store, VENDOR_COLORS[best[0]] ?? '#86868b', 13)} ${best[0]}<br><span style="color:var(--text-dark);font-weight:700">$${fmt(best[1])}</span>` : "─"}</td>
+    </tr>`;
+  }).join("");
+}
+
+/* ════════════════════════════════
+   Tab 3: Locations
+════════════════════════════════ */
+const LOCATIONS = [
+  { store: "全國電子 信義旗艦店", city: "台北市", district: "信義區", addr: "台北市信義區松壽路9號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "全國電子 中山店", city: "台北市", district: "中山區", addr: "台北市中山區南京東路二段76號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "燦坤 忠孝店", city: "台北市", district: "大安區", addr: "台北市大安區忠孝東路四段181號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
+  { store: "Apple Premium Reseller 松山店", city: "台北市", district: "松山區", addr: "台北市松山區南京東路三段248號", type: "Apple 授權店", hours: "10:00–21:00", icon: "🍎" },
+  { store: "大同 3C 西門旗艦", city: "台北市", district: "萬華區", addr: "台北市萬華區中華路一段75號", type: "3C 通路", hours: "10:00–22:00", icon: "📱" },
+  { store: "寶雅 天母店", city: "台北市", district: "士林區", addr: "台北市士林區中山北路六段77號", type: "零售賣場", hours: "10:00–22:00", icon: "🛍️" },
+  { store: "全國電子 板橋文化店", city: "新北市", district: "板橋區", addr: "新北市板橋區文化路一段188號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "燦坤 新莊中正店", city: "新北市", district: "新莊區", addr: "新北市新莊區中正路400號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
+  { store: "全國電子 三重門市", city: "新北市", district: "三重區", addr: "新北市三重區重新路四段90號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "燦坤 新店中正店", city: "新北市", district: "新店區", addr: "新北市新店區中正路86號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
+  { store: "全國電子 中和景平店", city: "新北市", district: "中和區", addr: "新北市中和區景平路158號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "全國電子 桃園中正旗艦店", city: "桃園市", district: "桃園區", addr: "桃園市桃園區中正路1003號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "燦坤 中壢民族店", city: "桃園市", district: "中壢區", addr: "桃園市中壢區民族路143號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
+  { store: "全國電子 八德廣興店", city: "桃園市", district: "八德區", addr: "桃園市八德區廣興路45號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "全國電子 台中旗艦店", city: "台中市", district: "西屯區", addr: "台中市西屯區台灣大道三段301號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "燦坤 台中中港店", city: "台中市", district: "西屯區", addr: "台中市西屯區中港路二段195號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
+  { store: "全國電子 豐原中正店", city: "台中市", district: "豐原區", addr: "台中市豐原區中正路78號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "Apple Premium Reseller 台中勤美店", city: "台中市", district: "西區", addr: "台中市西區公益路68號", type: "Apple 授權店", hours: "10:00–21:00", icon: "🍎" },
+  { store: "全國電子 台南東門旗艦店", city: "台南市", district: "東區", addr: "台南市東區東門路一段195號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "燦坤 台南中山店", city: "台南市", district: "北區", addr: "台南市北區中山路179號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
+  { store: "全國電子 永康中山店", city: "台南市", district: "永康區", addr: "台南市永康區中山路358號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "全國電子 高雄鳳山旗艦店", city: "高雄市", district: "鳳山區", addr: "高雄市鳳山區中山路137號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "燦坤 高雄三多店", city: "高雄市", district: "苓雅區", addr: "高雄市苓雅區三多一路213號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
+  { store: "全國電子 左營高鐵店", city: "高雄市", district: "左營區", addr: "高雄市左營區博愛二路296號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "Apple Premium Reseller 高雄夢時代", city: "高雄市", district: "前鎮區", addr: "高雄市前鎮區中華五路789號夢時代G1F", type: "Apple 授權店", hours: "11:00–22:00", icon: "🍎" },
+  { store: "全國電子 新竹中正旗艦店", city: "新竹市", district: "東區", addr: "新竹市東區中正路66號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "燦坤 新竹東光店", city: "新竹市", district: "東區", addr: "新竹市東區東光路88號", type: "電器量販", hours: "11:00–22:00", icon: "🏪" },
+  { store: "全國電子 嘉義中山店", city: "嘉義市", district: "東區", addr: "嘉義市東區中山路258號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+  { store: "全國電子 屏東中山店", city: "屏東縣", district: "屏東市", addr: "屏東縣屏東市中山路168號", type: "電器量販", hours: "11:00–22:00", icon: "🏬" },
+];
+
+function renderLocations() {
+  const q = document.getElementById("loc-search").value.trim().toLowerCase();
+  const city = document.getElementById("loc-city").value;
+  let data = LOCATIONS;
+  if (city) data = data.filter(l => l.city === city);
+  if (q) data = data.filter(l =>
+    l.store.toLowerCase().includes(q) ||
+    l.addr.toLowerCase().includes(q) ||
+    l.district.toLowerCase().includes(q)
+  );
+  document.getElementById("loc-count").textContent = "共 " + data.length + " 台";
+  const grid = document.getElementById("loc-grid");
+  const TYPE_ICON = {
+    "電器量販":   P.building,
+    "Apple 授權店": P.store,
+    "3C 通路":    P.phone,
+    "零售賣場":   P.bag,
+  };
+  if (!data.length) { grid.innerHTML = '<div class="no-result">找不到符合條件的地點</div>'; return; }
+  grid.innerHTML = data.map(l => {
+    const q = encodeURIComponent(l.addr);
+    const googleUrl = `https://www.google.com/maps/search/?api=1&query=${q}`;
+    const appleUrl  = `maps://maps.apple.com/?q=${q}`;
+    const typeIcon = TYPE_ICON[l.type] ?? P.building;
+    return `
+    <div class="loc-card">
+      <div class="loc-icon">${ic(typeIcon,'#00b96b',20)}</div>
+      <div style="flex:1">
+        <div class="loc-store">${l.store}</div>
+        <div class="loc-addr">${l.city}${l.district}・${l.addr}</div>
+        <div class="loc-tags">
+          <span class="loc-tag tag-green">${ic(P.bot,'#00915a',11)} EPBOX</span>
+          <span class="loc-tag tag-blue">${l.type}</span>
+          <span class="loc-tag tag-gray">${ic(P.clock,'#555',11)} ${l.hours}</span>
+        </div>
+        <div>
+          <a class="nav-btn" href="${googleUrl}" target="_blank" rel="noopener">${ic(P.map,'#fff',13)} Google Maps</a>
+          <a class="nav-btn nav-btn-apple" href="${appleUrl}">${ic(P.nav,'#fff',13)} Apple Maps</a>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ════════════════════════════════
+   NEW IPHONES
+════════════════════════════════ */
+const NEW_IPHONES = [
+  { name: "iPhone 17",         price: 29900, best: false },
+  { name: "iPhone Air",        price: 36900, best: false },
+  { name: "iPhone 17 Pro",     price: 39900, best: true  },
+  { name: "iPhone 17 Pro Max", price: 44900, best: true  },
+];
+
+/* ════════════════════════════════
+   PRICE HISTORY  (localStorage)
+════════════════════════════════ */
+function todayKey() { return new Date().toISOString().slice(0, 10); }
+
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem('epbox_ph') || '{}'); } catch { return {}; }
+}
+function saveHistorySnapshot(models) {
+  const h = getHistory();
+  const today = todayKey();
+  if (h[today]) return; // already saved today
+  h[today] = {};
+  models.forEach(m => { h[today][m.name] = { ...m.prices }; });
+  // keep last 60 days
+  const keys = Object.keys(h).sort();
+  if (keys.length > 60) keys.slice(0, keys.length - 60).forEach(k => delete h[k]);
+  localStorage.setItem('epbox_ph', JSON.stringify(h));
+}
+
+function getPriceDelta(modelName, vendor) {
+  const h = getHistory();
+  const today = todayKey();
+  const prevKeys = Object.keys(h).sort().filter(k => k < today);
+  if (!prevKeys.length) return null;
+  const prev = prevKeys[prevKeys.length - 1];
+  const cur  = h[today]?.[modelName]?.[vendor];
+  const old  = h[prev]?.[modelName]?.[vendor];
+  if (!cur || !old) return null;
+  return cur - old;
+}
+
+function deltaBadge(delta) {
+  if (delta === null || delta === 0) return '';
+  if (delta > 0) return `<span class="delta-up">▲ +$${fmt(Math.abs(delta))}</span>`;
+  return `<span class="delta-down">▼ −$${fmt(Math.abs(delta))}</span>`;
+}
+
+/* ════════════════════════════════
+   CALCULATOR  (Tab 3)
+════════════════════════════════ */
+let calcBase = '', calcStorage = 0;
+let trendChartInstance = null;
+
+function initCalc() {
+  const sel = document.getElementById('calc-model');
+  sel.innerHTML = '<option value="">── 請選擇 ──</option>';
+  uniqueBaseNames().forEach(b => {
+    const o = document.createElement('option');
+    o.value = b; o.textContent = b; sel.appendChild(o);
+  });
+}
+
+function onCalcModelChange() {
+  calcBase = document.getElementById('calc-model').value;
+  const row = document.getElementById('calc-storage-row');
+  if (!calcBase) { row.style.display = 'none'; renderCalculator(); return; }
+  const storages = availableStorages(calcBase);
+  if (storages.length > 1) {
+    row.style.display = 'block';
+    const pills = document.getElementById('calc-storage-pills');
+    pills.innerHTML = '';
+    calcStorage = storages[0];
+    storages.forEach(gb => {
+      const btn = document.createElement('button');
+      btn.className = 'pill' + (gb === calcStorage ? ' active' : '');
+      btn.textContent = storageLabel(gb);
+      btn.onclick = () => {
+        calcStorage = gb;
+        document.querySelectorAll('#calc-storage-pills .pill').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        renderCalculator();
+      };
+      pills.appendChild(btn);
+    });
+  } else {
+    row.style.display = 'none';
+    calcStorage = storages[0] ?? 0;
+  }
+  renderCalculator();
+}
+
+function renderCalculator() {
+  const container = document.getElementById('calc-result');
+  if (!calcBase) { container.innerHTML = '<div class="no-result" style="padding:40px 0">請選擇舊機型號</div>'; return; }
+  const model = getModel(calcBase, calcStorage);
+  if (!model) { container.innerHTML = '<div class="no-result">找不到此機型資料</div>'; return; }
+
+  const tradeIn = model.prices['trade in價'] ?? 0;
+  const avg = averagePrice(model.prices) ?? 0;
+  const bestEntry = Object.entries(model.prices).filter(([v]) => v !== 'trade in價').sort((a,b)=>b[1]-a[1])[0];
+  const epDelta = deltaBadge(getPriceDelta(model.name, 'trade in價'));
+
+  let html = '';
+
+  // ── Value banner ──
+  html += `
+  <div class="avg-banner" style="margin-bottom:14px;">
+    <div style="width:52px;height:52px;background:rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      ${ic(P.phone,'#fff',26)}
+    </div>
+    <div style="flex:1">
+      <div class="label" style="margin-bottom:2px">${model.name}</div>
+      <div class="price">NT$${fmt(tradeIn)}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:2px;">EPBOX 自助回收參考價 ${epDelta}</div>
+    </div>
+    ${avg ? `<div class="tag" style="text-align:center">6家均價<br><strong>$${fmt(avg)}</strong></div>` : ''}
+  </div>`;
+
+  // ── Gap cards ──
+  html += `<div style="font-size:14px;font-weight:700;margin-bottom:10px;padding:0 2px;display:flex;align-items:center;gap:6px">
+    ${ic(P.arrowRight,'var(--text-dark)',15)} 換到新 iPhone 需補差價
+  </div>
+  <div class="calc-result-grid">`;
+
+  NEW_IPHONES.forEach(({ name, price, best }) => {
+    const gap     = price - tradeIn;
+    const monthly = Math.round(gap / 12);
+    const daily   = Math.round(gap / 365);
+    html += `
+    <div class="calc-card${best ? ' best' : ''}">
+      <div class="calc-model">${name}</div>
+      <div style="font-size:11px;margin-bottom:4px;opacity:.7">定價 NT$${fmt(price)}</div>
+      <div class="calc-gap">補 $${fmt(gap)}</div>
+      <div class="calc-meta">
+        月付 <strong>$${fmt(monthly)}</strong>・日付 <strong class="calc-daily">$${daily}</strong>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // ── Trend chart ──
+  const history  = getHistory();
+  const histKeys = Object.keys(history).sort();
+  html += `
+  <div class="card" style="margin-top:4px;">
+    <div class="card-title" style="margin-bottom:12px">${ic(P.lineChart,'var(--apple-blue)',16)} 回收價走勢（EPBOX vs 6家均價）</div>`;
+
+  if (histKeys.length < 2) {
+    html += `<div class="chart-empty">
+      ${ic(P.lineChart,'#d2d2d7',44)}
+      <div style="font-size:13px;font-weight:600;margin-top:10px;">資料累積中</div>
+      <div style="font-size:11px;margin-top:6px;">每次造訪都會自動記錄一筆，歷史走勢將隨時間建立</div>
+    </div>`;
+  } else {
+    html += `<div class="chart-wrap"><canvas id="trend-chart"></canvas></div>`;
+  }
+  html += `</div>`;
+
+  container.innerHTML = html;
+
+  if (histKeys.length >= 2) {
+    if (trendChartInstance) { trendChartInstance.destroy(); trendChartInstance = null; }
+    drawTrendChart(model.name, history, histKeys);
+  }
+}
+
+function drawTrendChart(modelName, history, keys) {
+  const canvas = document.getElementById('trend-chart');
+  if (!canvas) return;
+  const labels   = keys.map(k => k.slice(5));
+  const epData   = keys.map(k => history[k]?.[modelName]?.['trade in價'] ?? null);
+  const avgData  = keys.map(k => {
+    const prices = history[k]?.[modelName];
+    if (!prices) return null;
+    const vals = Object.entries(prices).filter(([v,p]) => AVG_VENDORS.has(v) && p > 0).map(([,p]) => p);
+    return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : null;
+  });
+
+  trendChartInstance = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'EPBOX 自助機', data: epData,  borderColor: '#ff6b00', backgroundColor: 'rgba(255,107,0,0.08)', tension: 0.35, fill: true,  pointRadius: 4, pointBackgroundColor: '#ff6b00' },
+        { label: '6家均價',      data: avgData, borderColor: '#0071e3', backgroundColor: 'rgba(0,113,227,0.05)', tension: 0.35, fill: false, pointRadius: 4, pointBackgroundColor: '#0071e3', borderDash: [5,4] },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 18, padding: 14 } },
+        tooltip: { callbacks: { label: c => `${c.dataset.label}: NT$${c.raw?.toLocaleString() ?? '─'}` } }
+      },
+      scales: {
+        y: { ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'k', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+/* ════════════════════════════════
+   ALERTS  (Tab 4)
+════════════════════════════════ */
+function getAlerts() { try { return JSON.parse(localStorage.getItem('epbox_alerts') || '[]'); } catch { return []; } }
+function saveAlerts(a) { localStorage.setItem('epbox_alerts', JSON.stringify(a)); }
+
+function initAlerts() {
+  const sel = document.getElementById('alert-model-sel');
+  sel.innerHTML = '<option value="">── 選擇機型 ──</option>';
+  uniqueBaseNames().forEach(b => {
+    const o = document.createElement('option');
+    o.value = b; o.textContent = b; sel.appendChild(o);
+  });
+  renderAlertList();
+  updateNotifyTip();
+}
+
+function onAlertModelChange() {
+  const base = document.getElementById('alert-model-sel').value;
+  const stoSel = document.getElementById('alert-storage-sel');
+  stoSel.innerHTML = '<option value="">── 選擇容量 ──</option>';
+  if (!base) return;
+  const storages = availableStorages(base);
+  storages.forEach(gb => {
+    const m = getModel(base, gb);
+    const o = document.createElement('option');
+    o.value = m?.name ?? ''; o.textContent = storageLabel(gb); stoSel.appendChild(o);
+  });
+  if (storages.length === 1) stoSel.value = getModel(base, storages[0])?.name ?? '';
+}
+
+function addAlert() {
+  const modelFull = document.getElementById('alert-storage-sel').value
+                 || getModel(document.getElementById('alert-model-sel').value, 0)?.name;
+  const vendor    = document.getElementById('alert-vendor-sel').value;
+  const threshold = parseInt(document.getElementById('alert-price').value);
+  if (!modelFull || !vendor || !threshold || threshold < 1000) {
+    alert('請填寫完整資訊（金額需大於 1000）'); return;
+  }
+  const alerts = getAlerts();
+  alerts.push({ modelFull, vendor, threshold });
+  saveAlerts(alerts);
+  renderAlertList();
+  document.getElementById('alert-price').value = '';
+  requestNotifyPermission();
+}
+
+function removeAlert(i) {
+  const alerts = getAlerts();
+  alerts.splice(i, 1);
+  saveAlerts(alerts);
+  renderAlertList();
+}
+
+function renderAlertList() {
+  const alerts  = getAlerts();
+  const container = document.getElementById('alert-list');
+  if (!alerts.length) {
+    container.innerHTML = '<div class="no-result" style="padding:24px">尚未設定任何提醒</div>';
+    return;
+  }
+  container.innerHTML = alerts.map((a, i) => `
+    <div class="alert-item">
+      <div style="width:36px;height:36px;border-radius:10px;background:var(--ep-light);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        ${ic(P.bell,'#00b96b',16)}
+      </div>
+      <div class="alert-item-info">
+        <div class="alert-model-name">${a.modelFull}</div>
+        <div class="alert-thresh">${a.vendor} 跌破 NT$${a.threshold.toLocaleString()} 時通知</div>
+      </div>
+      <button class="alert-del" onclick="removeAlert(${i})">${ic(P.trash,'#86868b',14)}</button>
+    </div>`).join('');
+}
+
+function checkAlerts(models) {
+  const alerts   = getAlerts();
+  const triggered = [];
+  alerts.forEach(a => {
+    const m = models.find(m => m.name === a.modelFull);
+    if (!m) return;
+    const price = m.prices[a.vendor];
+    if (price && price <= a.threshold) {
+      triggered.push({ ...a, currentPrice: price });
+      if (Notification.permission === 'granted') {
+        new Notification('EPBOX 價格提醒', {
+          body: `${a.modelFull} ${a.vendor} 回收價已跌至 NT$${price.toLocaleString()}`,
+        });
+      }
+    }
+  });
+  const wrap = document.getElementById('alert-triggered-wrap');
+  if (wrap) {
+    wrap.innerHTML = triggered.map(t => `
+      <div class="alert-triggered">
+        ${ic(P.alertTri,'#d48806',14)}
+        <div><strong>${t.modelFull}</strong> 的 ${t.vendor} 目前 NT$${t.currentPrice.toLocaleString()}，已達你設定的提醒門檻（NT$${t.threshold.toLocaleString()}）</div>
+      </div>`).join('');
+  }
+}
+
+function requestNotifyPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(() => updateNotifyTip());
+  }
+}
+
+function updateNotifyTip() {
+  const el = document.getElementById('notify-tip');
+  if (!el) return;
+  if (!('Notification' in window)) { el.textContent = '此瀏覽器不支援通知功能'; return; }
+  if (Notification.permission === 'granted') {
+    el.innerHTML = `${ic(P.checkCircle,'#00915a',13)} 通知已啟用，價格觸發時會自動提醒你`;
+  } else if (Notification.permission === 'denied') {
+    el.innerHTML = `${ic(P.alertTri,'#d48806',13)} 通知已被封鎖，請至瀏覽器設定中允許本頁通知`;
+  } else {
+    el.innerHTML = `<button class="perm-btn" onclick="requestNotifyPermission()">啟用瀏覽器通知</button>`;
+  }
+}
+
+/* ════════════════════════════════
+   Tab Switch
+════════════════════════════════ */
+function switchTab(id, btn) {
+  document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+  document.getElementById("tab-" + id).classList.add("active");
+  btn.classList.add("active");
+}
+
+/* ════════════════════════════════
+   INIT
+════════════════════════════════ */
+document.getElementById("compare-result").innerHTML = '<div class="loading-state"><div class="spinner"></div>載入最新回收價格中…</div>';
+document.getElementById("epbox-table-body").innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-gray)"><div class="spinner"></div><br>載入中…</td></tr>';
+
+renderLocations();
+fetchData();
+
+// Init Lucide static icons after DOM ready
+document.addEventListener("DOMContentLoaded", () => lucide.createIcons());
+if (document.readyState !== "loading") lucide.createIcons();
+</script>
+</body>
+</html>
