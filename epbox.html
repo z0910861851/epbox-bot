@@ -941,7 +941,7 @@ function renderLocations() {
       <div class="loc-icon">${ic(P.store,'#00b96b',20)}</div>
       <div style="flex:1">
         <div class="loc-store">${l.store}</div>
-        <div class="loc-addr">${l.city}${l.district}・${l.addr}</div>
+        <div class="loc-addr">${l.addr.startsWith(l.city + l.district) ? l.addr.slice((l.city + l.district).length) : l.addr}</div>
         <div class="loc-tags">
           ${levelTag}
           <span class="loc-tag tag-gray">${ic(P.clock,'#555',11)} ${l.hours}</span>
