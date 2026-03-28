@@ -103,10 +103,57 @@ const VENDORS = {
 
 ---
 
-## 任務區（每次新需求填這裡）
+## 已完成的修改紀錄
+
+| 日期 | 修改內容 |
+|------|---------|
+| 2026-03-28 | `cmdQuery` 改為只顯示 EPBOX 自助回收價，移除競業比較列表 |
+| 2026-03-28 | Render 改連新 repo `epbox-bot`，設定 Root Directory 為 `line-bot` |
+
+---
+
+## 任務區
 
 ### 任務名稱：
+取代「設定提醒」功能 → 改為「訂閱價格變動通知」
+
 ### 目標：
+移除原本需要使用者輸入目標金額的提醒機制，改為只要訂閱某個機型，當 EPBOX 回收價與前一天相比有下跌，就自動推播通知。不需要設定目標金額。
+
 ### 涉及檔案：
+- `handlers.js` — 修改設定提醒流程（移除容量、通路、金額步驟，改為只選機型訂閱）
+- `db.js` — 修改資料結構（訂閱只存 userId + model，不存 vendor/threshold）
+- `scheduler.js` — 修改推播邏輯（比對今日與昨日 EPBOX 價格，有跌才推播）
+- `firebase.js` — 新增「儲存昨日價格快照」的功能
+
 ### 具體修改說明：
+
+**1. db.js**
+- 訂閱資料結構改為：`{ userId, model, createdAt }`
+- Firebase 路徑維持 `/epbox_bot_alerts`
+- 新增函式：`addSubscription(userId, model)`、`removeSubscriptionByIndex(userId, n)`、`getUserSubscriptions(userId)`
+
+**2. handlers.js**
+- `cmdSetup` 流程改為只選機型（Quick Reply），選完直接儲存訂閱，不再問容量/通路/金額
+- 回應文字改為「✅ 已訂閱！當 [機型] 的 EPBOX 回收價下跌時，我會立即通知你。」
+- `cmdList` 改為顯示訂閱的機型清單
+- `cmdDelete` 邏輯不變，刪除對應訂閱
+- `cmdHelp` Quick Reply 按鈕文字對應更新
+
+**3. firebase.js**
+- 新增函式 `savePriceSnapshot()`：把今日所有機型的 EPBOX 價格存到 Firebase `/epbox_price_history/YYYY-MM-DD`
+- 新增函式 `getYesterdaySnapshot()`：讀取昨日價格快照
+
+**4. scheduler.js**
+- 每天 09:00 執行：
+  1. 呼叫 `savePriceSnapshot()` 存今日價格
+  2. 讀取昨日快照 `getYesterdaySnapshot()`
+  3. 比對每個機型的 EPBOX 價格，找出今日 < 昨日的機型
+  4. 查詢所有訂閱這些機型的使用者
+  5. 推播通知：「📉 [機型] EPBOX 回收價下跌！昨日 NT$X → 今日 NT$Y」
+
 ### 注意事項：
+- `sessions` 對話狀態的 step 要對應更新（移除 `storage`、`vendor`、`price` 步驟）
+- 舊的 `/epbox_bot_alerts` 資料格式會不相容，需在 `db.js` 處理或直接清空
+- LINE 推播用 `client.pushMessage`，需要 userId
+- 日期格式統一用 `new Date().toISOString().slice(0, 10)`（YYYY-MM-DD）
