@@ -21,7 +21,6 @@ const client = new line.messagingApi.MessagingApiClient({
 
 // ── Express ───────────────────────────────────────
 const app = express();
-app.use(express.json({ limit: '15mb' }));
 
 app.post(
   '/webhook',
@@ -48,7 +47,7 @@ app.options('/claude-proxy', (req, res) => {
   res.sendStatus(204);
 });
 
-app.post('/claude-proxy', async (req, res) => {
+app.post('/claude-proxy', express.json({ limit: '15mb' }), async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   try {
     const { base64, mediaType } = req.body;
