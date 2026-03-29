@@ -329,6 +329,32 @@ body {
 .notify-tip { font-size:11px; color:var(--text-gray); text-align:center; margin-top:6px; line-height:1.6; }
 .perm-btn { display:inline-block; margin-top:8px; padding:7px 16px; background:var(--apple-blue); color:#fff; border:none; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; }
 
+/* ── AI Analysis Tab ── */
+.ai-upload-btn { width:100%; padding:28px 20px; background:rgba(48,209,88,.06); border:1.5px dashed rgba(48,209,88,.4); border-radius:18px; cursor:pointer; text-align:center; display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:10px; transition:background .15s; }
+.ai-upload-btn:hover { background:rgba(48,209,88,.1); }
+.ai-upload-icon { font-size:36px; }
+.ai-upload-label { font-size:15px; font-weight:700; color:var(--text-dark); }
+.ai-upload-sub { font-size:12px; color:var(--text-gray); }
+.ai-picker-btn { width:100%; padding:11px; background:rgba(0,0,0,.04); border:1px solid var(--border); border-radius:12px; cursor:pointer; font-size:13px; color:var(--text-gray); }
+.ai-repick-btn { flex:1; padding:10px; background:rgba(48,209,88,.1); border:1px solid rgba(48,209,88,.25); border-radius:12px; cursor:pointer; font-size:12px; font-weight:600; color:#00915a; }
+.ai-repick-btn.secondary { background:rgba(0,0,0,.04); border:1px solid var(--border); color:var(--text-gray); }
+.ai-analyze-btn { width:100%; padding:16px; background:linear-gradient(135deg,#30d158,#0071e3); color:#fff; border:none; border-radius:18px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 6px 20px rgba(48,209,88,.3); margin-bottom:4px; }
+.ai-info-row { display:flex; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:14px; }
+.ai-info-row:last-child { border-bottom:none; }
+.ai-info-label { color:var(--text-gray); flex-shrink:0; width:90px; }
+.ai-info-val { font-weight:600; flex:1; text-align:right; word-break:break-all; }
+.ai-price-final { background:rgba(0,185,107,.08); border:1px solid rgba(0,185,107,.2); border-radius:14px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
+.ai-battery-warn { border-radius:14px; padding:14px; margin:8px 0; display:flex; gap:10px; align-items:flex-start; }
+.ai-warning-tag { display:inline-block; background:rgba(255,149,0,.1); color:#b36a00; border:1px solid rgba(255,149,0,.25); border-radius:8px; padding:3px 10px; font-size:12px; font-weight:600; margin:2px 2px 2px 0; }
+.ai-advice-wrap { background:rgba(94,92,230,.05); border:1px solid rgba(94,92,230,.12); border-radius:14px; padding:16px; }
+.ai-advice-question { background:rgba(0,113,227,.07); border:1px solid rgba(0,113,227,.2); border-radius:12px; padding:12px; margin-bottom:10px; }
+.ai-advice-section-hdr { display:inline-block; background:#5e5ce6; color:#fff; padding:4px 12px; border-radius:8px; font-size:12px; font-weight:700; margin:8px 0 6px; }
+.ai-advice-bullet { display:flex; gap:10px; align-items:flex-start; margin-bottom:8px; font-size:14px; line-height:1.55; }
+.ai-advice-dot { width:5px; height:5px; border-radius:50%; background:rgba(94,92,230,.5); flex-shrink:0; margin-top:8px; }
+.ai-copy-btn { width:100%; padding:12px; background:rgba(94,92,230,.08); border:1px solid rgba(94,92,230,.2); border-radius:12px; font-size:13px; font-weight:600; color:#5e5ce6; cursor:pointer; margin-top:12px; }
+.ai-history-item { padding:12px 0; border-bottom:1px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:space-between; }
+.ai-history-item:last-child { border-bottom:none; }
+
 /* ── Lucide icons ── */
 .tab-btn svg { width: 15px; height: 15px; vertical-align: -2px; margin-right: 5px; stroke-width: 2.2; }
 .card-title svg { width: 17px; height: 17px; vertical-align: -3px; stroke-width: 2; }
@@ -349,7 +375,7 @@ body {
     <div class="logo-box">EPBOX</div>
     <h1>自助回收機 回收資訊</h1>
   </div>
-  <p>即時最高回收價 ／ 各通路比較 ／ 全台設置地點</p>
+  <p>即時最高回收價 ／ 各通路比較 ／ 南台灣設置地點</p>
 </div>
 
 <!-- Tabs -->
@@ -357,7 +383,8 @@ body {
   <button class="tab-btn active" onclick="switchTab('compare', this)"><i data-lucide="bar-chart-2"></i>各通路比較</button>
   <button class="tab-btn" onclick="switchTab('epbox', this)"><i data-lucide="bot"></i>EPBOX 回收價</button>
   <button class="tab-btn" onclick="switchTab('calc', this)"><i data-lucide="calculator"></i>換機試算</button>
-  <button class="tab-btn" onclick="switchTab('alerts', this)"><i data-lucide="bell"></i>價格提醒</button>
+  <button class="tab-btn" onclick="switchTab('alerts', this)"><i data-lucide="bell"></i>回收價提醒</button>
+  <button class="tab-btn" onclick="switchTab('analytics', this)"><i data-lucide="activity"></i>EPBOX 分析</button>
   <button class="tab-btn" onclick="switchTab('locations', this)"><i data-lucide="map-pin"></i>設置地點</button>
 </div>
 
@@ -481,7 +508,7 @@ body {
   <div id="alert-triggered-wrap"></div>
 
   <div class="card">
-    <div class="card-title"><i data-lucide="bell-plus"></i> 訂閱 EPBOX 價格下跌通知</div>
+    <div class="card-title"><i data-lucide="bell-plus"></i> 回收價提醒</div>
     <p style="font-size:13px;color:var(--text-gray);margin-bottom:14px;">選擇機型後，點按鈕會開啟 LINE，直接傳送訊息給 Bot 完成訂閱。當 EPBOX 回收價下跌時，Bot 會主動通知你。</p>
     <div class="alert-form">
       <select id="alert-model-sel">
@@ -489,10 +516,91 @@ body {
       </select>
       <button class="submit-btn" onclick="addAlert()">前往 LINE 訂閱通知</button>
     </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+      <p style="font-size:13px;color:var(--text-gray);margin-bottom:10px;">還沒加入 LINE 官方帳號？先加好友，才能收到通知。</p>
+      <a href="https://line.me/R/ti/p/@wea3313n" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#00b900;color:#fff;padding:9px 18px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.070 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+        加入 LINE 官方帳號
+      </a>
+    </div>
   </div>
 </div>
 
-<!-- ══════════ Tab 5: 設置地點 ══════════ -->
+<!-- ══════════ Tab 5: EPBOX 分析 ══════════ -->
+<div id="tab-analytics" class="tab-content">
+
+  <!-- Header -->
+  <div class="card" style="display:flex;align-items:center;gap:14px;padding:18px;">
+    <div style="width:50px;height:50px;flex-shrink:0;border-radius:14px;background:linear-gradient(135deg,#30d158,#0071e3);display:flex;align-items:center;justify-content:center;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><circle cx="18" cy="6" r="3" fill="white" stroke="none"/></svg>
+    </div>
+    <div style="flex:1;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span style="font-size:15px;font-weight:800;">EPBOX AI 說服分析</span>
+        <span style="font-size:10px;font-weight:700;color:#30d158;background:rgba(48,209,88,.12);padding:2px 8px;border-radius:6px;">AI</span>
+      </div>
+      <p style="font-size:12px;color:var(--text-gray);margin:0;">拍攝 EPBOX 估價畫面，AI 自動解析數據並生成說服話術</p>
+    </div>
+  </div>
+
+  <!-- Photo Area -->
+  <div class="card" style="padding:18px;">
+    <input type="file" id="ai-file-camera" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="ai-file-picker" accept="image/*" style="display:none">
+
+    <div id="ai-no-photo">
+      <button class="ai-upload-btn" onclick="document.getElementById('ai-file-camera').click()">
+        <div class="ai-upload-icon">📷</div>
+        <div class="ai-upload-label">拍攝 EPBOX 估價畫面</div>
+        <div class="ai-upload-sub">直接拍攝螢幕畫面，效果最佳</div>
+      </button>
+      <button class="ai-picker-btn" onclick="document.getElementById('ai-file-picker').click()">從相簿選擇</button>
+    </div>
+
+    <div id="ai-has-photo" style="display:none;">
+      <img id="ai-preview-img" style="width:100%;max-height:260px;object-fit:contain;border-radius:14px;margin-bottom:12px;">
+      <div style="display:flex;gap:10px;">
+        <button class="ai-repick-btn" onclick="document.getElementById('ai-file-camera').click()">📷 重新拍攝</button>
+        <button class="ai-repick-btn secondary" onclick="document.getElementById('ai-file-picker').click()">從相簿選擇</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analyze Button -->
+  <button id="ai-analyze-btn" class="ai-analyze-btn" style="display:none;" onclick="epboxAnalyze()">✨ 開始 AI 分析</button>
+
+  <!-- Loading -->
+  <div id="ai-loading" class="card" style="display:none;text-align:center;padding:36px 20px;">
+    <div class="spinner" style="margin:0 auto 14px;width:34px;height:34px;border-width:3px;border-color:rgba(48,209,88,.2);border-top-color:#30d158;"></div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px;">AI 正在分析中...</div>
+    <div style="font-size:12px;color:var(--text-gray);">辨識 EPBOX 資料並生成說服話術</div>
+  </div>
+
+  <!-- Error -->
+  <div id="ai-error" style="display:none;" class="card">
+    <div style="display:flex;gap:10px;align-items:flex-start;">
+      <span style="font-size:20px;flex-shrink:0;">⚠️</span>
+      <div id="ai-error-msg" style="font-size:13px;color:#c0392b;line-height:1.5;"></div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div id="ai-result"></div>
+
+  <!-- History -->
+  <div class="card" style="padding:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="epboxToggleHistory()">
+      <div style="font-size:14px;font-weight:700;">🕐 分析記錄</div>
+      <span id="ai-history-chevron" style="font-size:12px;color:var(--text-gray);">展開 ▼</span>
+    </div>
+    <div id="ai-history-content" style="display:none;margin-top:12px;">
+      <div id="ai-history-list"><div style="text-align:center;padding:20px;color:var(--text-gray);font-size:13px;">尚無記錄</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════ Tab 6: 設置地點 ══════════ -->
 <div id="tab-locations" class="tab-content">
   <div class="card" style="padding:14px 16px;">
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
@@ -568,6 +676,10 @@ const VENDOR_COLORS = {
   "台北101": "#8B4513", "STUDIO": "#9b59b6", "地標": "#e67e22",
   "米可": "#8e44ad", "神腦": "#2c3e50", "trade in價": "#ff6b00"
 };
+const VENDOR_DISPLAY_NAMES = {
+  "trade in價": "EPBOX 自助回收",
+};
+
 const VENDOR_NOTES = {
   "APPLE BAR": "Apple 授權經銷商", "台哥大": "台灣大哥大門市",
   "遠傳": "遠傳電信門市", "台北101": "台北101門市",
@@ -583,6 +695,7 @@ let allModels = [];      // [{name, prices:{vendor:price}}]
 let selectedBase = "";
 let selectedStorage = 0;
 let lastUpdated = "";
+let lastKnownPrices = {}; // { modelName: price } from Firebase
 
 /* ════════════════════════════════
    HELPERS
@@ -638,9 +751,13 @@ function getSeriesNum(name) {
 ════════════════════════════════ */
 async function fetchData() {
   try {
-    const r = await fetch(FB_URL);
+    const [r, lkpRes] = await Promise.all([
+      fetch(FB_URL),
+      fetch("https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/epbox_last_known_prices.json"),
+    ]);
     if (!r.ok) throw new Error("HTTP " + r.status);
     const json = await r.json();
+    if (lkpRes.ok) { const lkp = await lkpRes.json(); if (lkp) lastKnownPrices = lkp; }
 
     // Parse last updated
     if (json?.meta?.lastUpdated) {
@@ -882,7 +999,7 @@ function renderEpboxTable() {
       <td class="ep-price">${ep ? "$" + fmt(ep) : "─"}</td>
       <td>${deltaCell}</td>
       <td class="avg-price">${avg ? "$" + fmt(avg) : "─"}</td>
-      <td class="best-vendor">${best ? `${ic(VENDOR_ICONS[best[0]] ?? P.store, VENDOR_COLORS[best[0]] ?? '#86868b', 13)} ${best[0]}<br><span style="color:var(--text-dark);font-weight:700">$${fmt(best[1])}</span>` : "─"}</td>
+      <td class="best-vendor">${best ? `${ic(VENDOR_ICONS[best[0]] ?? P.store, VENDOR_COLORS[best[0]] ?? '#86868b', 13)} ${VENDOR_DISPLAY_NAMES[best[0]] ?? best[0]}<br><span style="color:var(--text-dark);font-weight:700">$${fmt(best[1])}</span>` : "─"}</td>
     </tr>`;
   }).join("");
 }
@@ -978,13 +1095,10 @@ function saveHistorySnapshot(models) {
 }
 
 function getPriceDelta(modelName, vendor) {
-  const h = getHistory();
-  const today = todayKey();
-  const prevKeys = Object.keys(h).sort().filter(k => k < today);
-  if (!prevKeys.length) return null;
-  const prev = prevKeys[prevKeys.length - 1];
-  const cur  = h[today]?.[modelName]?.[vendor];
-  const old  = h[prev]?.[modelName]?.[vendor];
+  if (vendor !== "trade in價") return null;
+  const m = allModels.find(x => x.name === modelName);
+  const cur = m?.prices?.["trade in價"];
+  const old = lastKnownPrices[modelName];
   if (!cur || !old) return null;
   return cur - old;
 }
@@ -1255,6 +1369,275 @@ function updateNotifyTip() {
     el.innerHTML = `<button class="perm-btn" onclick="requestNotifyPermission()">啟用瀏覽器通知</button>`;
   }
 }
+
+/* ════════════════════════════════
+   Tab 5: EPBOX AI 分析
+════════════════════════════════ */
+const CLAUDE_PROXY_URL = 'https://epbox-bot.onrender.com/claude-proxy';
+const FB_ANALYTICS     = 'https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/tradein_prices/analytics.json';
+
+let aiSelectedFile = null;   // File object
+let aiRecords = [];          // localStorage history
+
+/* ── Battery replacement fee ── */
+function batteryReplacementFee(model) {
+  const n = (model || '').toUpperCase();
+  if (n.includes('AIR')) return 4150;
+  if (n.includes('17') && n.includes('PRO')) return 4150;
+  if (n.includes('16') && n.includes('PRO')) return 4150;
+  if (n.includes('17')) return 3350;
+  if (n.includes('16')) return 3350;
+  if (n.includes('15')) return 3350;
+  if (n.includes('14')) return 3350;
+  if (n.includes('13')) return 2990;
+  if (n.includes('12')) return 2990;
+  if (n.includes('11')) return 2990;
+  if (n.includes('XR') || n.includes('XS')) return 2990;
+  return 2290;
+}
+
+/* ── File input handlers ── */
+function epboxHandleFile(file) {
+  if (!file) return;
+  aiSelectedFile = file;
+  const url = URL.createObjectURL(file);
+  document.getElementById('ai-preview-img').src = url;
+  document.getElementById('ai-no-photo').style.display = 'none';
+  document.getElementById('ai-has-photo').style.display = 'block';
+  document.getElementById('ai-analyze-btn').style.display = 'block';
+  document.getElementById('ai-result').innerHTML = '';
+  document.getElementById('ai-error').style.display = 'none';
+}
+document.getElementById('ai-file-camera').addEventListener('change', e => epboxHandleFile(e.target.files[0]));
+document.getElementById('ai-file-picker').addEventListener('change', e => epboxHandleFile(e.target.files[0]));
+
+/* ── Main analyze ── */
+async function epboxAnalyze() {
+  if (!aiSelectedFile) return;
+  document.getElementById('ai-analyze-btn').style.display = 'none';
+  document.getElementById('ai-loading').style.display = 'block';
+  document.getElementById('ai-error').style.display = 'none';
+  document.getElementById('ai-result').innerHTML = '';
+
+  try {
+    const base64 = await fileToBase64(aiSelectedFile);
+    const mediaType = aiSelectedFile.type || 'image/jpeg';
+    const record = await callClaudeAPI(base64, mediaType);
+    document.getElementById('ai-loading').style.display = 'none';
+    epboxRenderResult(record);
+    epboxSaveRecord(record);
+    epboxUploadFirebase(record);
+  } catch (e) {
+    document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('ai-analyze-btn').style.display = 'block';
+    document.getElementById('ai-error').style.display = 'block';
+    document.getElementById('ai-error-msg').textContent = '分析失敗：' + e.message;
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function callClaudeAPI(base64, mediaType) {
+  const res = await fetch(CLAUDE_PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ base64, mediaType: mediaType || 'image/jpeg' })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  const parsed = data.result;
+  const now = new Date();
+  return {
+    ...parsed,
+    warnings: (parsed.warnings || []).filter(w => w.trim()),
+    timestamp: Math.floor(Date.now() / 1000),
+    dateString: now.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+  };
+}
+
+/* ── Render result ── */
+function epboxRenderResult(r) {
+  const battVal = parseInt((r.batteryHealth || '').replace('%', ''));
+  const lowBatt = !isNaN(battVal) && battVal < 80;
+  const fee = batteryReplacementFee(r.modelName);
+  const feePercent = r.finalPrice > 0 ? Math.round(fee / r.finalPrice * 100) : 0;
+  const notWorth = feePercent >= 80;
+
+  let html = `<div class="card" style="padding:20px;margin-bottom:4px;">`;
+
+  // Title row
+  html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;">
+      <span style="color:var(--apple-blue);">📋</span> 分析結果
+    </div>
+    <div style="font-size:11px;color:var(--text-gray);">${r.dateString}</div>
+  </div>
+  <div style="border-top:1px solid var(--border);margin-bottom:14px;"></div>`;
+
+  // Info rows
+  html += `<div>`;
+  html += infoRow('機型', r.modelName || '—');
+  html += infoRow('電池健康度', batteryHealthBadge(r.batteryHealth));
+
+  // Battery warning
+  if (lowBatt) {
+    const color = notWorth ? '#e74c3c' : '#ff9500';
+    const bg    = notWorth ? 'rgba(231,76,60,.07)' : 'rgba(255,149,0,.07)';
+    const border= notWorth ? 'rgba(231,76,60,.2)' : 'rgba(255,149,0,.2)';
+    html += `<div class="ai-battery-warn" style="background:${bg};border:1px solid ${border};">
+      <span style="font-size:18px;flex-shrink:0;">${notWorth ? '❌' : '⚠️'}</span>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:${color};margin-bottom:5px;">電池健康度低於 80%，建議換電池</div>
+        <div style="font-size:12px;color:var(--text-gray);">
+          官方換電池費用：<strong style="color:${color};">NT$${fee.toLocaleString()}</strong>
+          <span>（佔回收價 ${feePercent}%）</span>
+        </div>
+        ${notWorth ? `<div style="font-size:12px;font-weight:700;color:${color};margin-top:4px;">換電池費用偏高，建議直接回收換現金！</div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  // Warnings / condition
+  if (r.warnings && r.warnings.length > 0) {
+    html += `<div class="ai-info-row">
+      <span class="ai-info-label">外觀狀況</span>
+      <div style="flex:1;text-align:right;">${r.warnings.map(w => `<span class="ai-warning-tag">${w}</span>`).join('')}</div>
+    </div>`;
+  } else {
+    html += infoRow('外觀狀況', r.condition || '—');
+  }
+
+  html += infoRow('基本回收價', `NT$${fmt(r.basePrice || 0)}`);
+  html += infoRow('加碼補貼', `+NT$${fmt(r.bonus || 0)}`);
+  html += `</div>`;
+
+  // Final price
+  html += `<div class="ai-price-final">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="color:var(--ep-green);font-size:16px;">✅</span>
+      <span style="font-size:14px;color:var(--text-gray);">補貼後回收價</span>
+    </div>
+    <div style="font-size:22px;font-weight:900;color:var(--ep-green);">NT$${fmt(r.finalPrice || 0)}</div>
+  </div>
+
+  <div style="border-top:1px solid var(--border);margin:16px 0;"></div>`;
+
+  // AI advice
+  html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+    <span style="color:#5e5ce6;font-size:15px;">💬</span>
+    <span style="font-size:14px;font-weight:700;">AI 建議話術</span>
+    <span style="font-size:10px;font-weight:700;color:#5e5ce6;background:rgba(94,92,230,.1);padding:2px 7px;border-radius:5px;">AI 生成</span>
+  </div>
+  <div class="ai-advice-wrap">${renderAdviceLines(r.aiAdvice)}</div>`;
+
+  // Copy button
+  const escapedAdvice = (r.aiAdvice || '').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+  html += `<button class="ai-copy-btn" onclick="navigator.clipboard.writeText('${escapedAdvice}').then(()=>{ this.textContent='✅ 已複製！'; setTimeout(()=>this.textContent='複製話術',1500); })">複製話術</button>`;
+
+  html += `</div>`;
+  document.getElementById('ai-result').innerHTML = html;
+}
+
+function infoRow(label, val) {
+  return `<div class="ai-info-row"><span class="ai-info-label">${label}</span><span class="ai-info-val">${val}</span></div>`;
+}
+
+function batteryHealthBadge(health) {
+  const v = parseInt((health || '').replace('%', ''));
+  if (isNaN(v)) return health || '—';
+  const color = v >= 80 ? '#1a7a47' : v >= 70 ? '#b7791f' : '#c0392b';
+  const bg    = v >= 80 ? '#e8f8ee'  : v >= 70 ? '#fff3cd'  : '#fdecea';
+  return `<span style="background:${bg};color:${color};padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;">${health}</span>`;
+}
+
+function renderAdviceLines(text) {
+  if (!text) return '';
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  return lines.map(line => {
+    const clean = line.replace(/^[•\-]+\s*/, '');
+    if (clean.startsWith('【詢問顧客】')) {
+      return `<div class="ai-advice-question">
+        <div style="font-size:10px;font-weight:700;color:var(--apple-blue);margin-bottom:4px;">詢問顧客</div>
+        <div style="font-size:14px;font-weight:600;color:var(--apple-blue);">${clean.replace('【詢問顧客】','').trim()}</div>
+      </div>`;
+    }
+    if (clean.startsWith('【') && clean.includes('】')) {
+      return `<div><span class="ai-advice-section-hdr">${clean}</span></div>`;
+    }
+    return `<div class="ai-advice-bullet"><div class="ai-advice-dot"></div><div>${clean}</div></div>`;
+  }).join('');
+}
+
+/* ── Save / upload ── */
+function epboxSaveRecord(record) {
+  try {
+    const data = JSON.parse(localStorage.getItem('epbox_ai_records') || '[]');
+    data.unshift(record);
+    if (data.length > 100) data.splice(100);
+    localStorage.setItem('epbox_ai_records', JSON.stringify(data));
+    aiRecords = data;
+    epboxRenderHistory();
+  } catch(e) {}
+}
+
+async function epboxUploadFirebase(record) {
+  try {
+    await fetch(FB_ANALYTICS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...record, storeName: '網站版' })
+    });
+  } catch(e) {}
+}
+
+/* ── History ── */
+function epboxLoadHistory() {
+  try { aiRecords = JSON.parse(localStorage.getItem('epbox_ai_records') || '[]'); } catch(e) { aiRecords = []; }
+  epboxRenderHistory();
+}
+
+function epboxRenderHistory() {
+  const el = document.getElementById('ai-history-list');
+  if (!aiRecords.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-gray);font-size:13px;">尚無記錄</div>';
+    return;
+  }
+  el.innerHTML = aiRecords.map((r, i) => `
+    <div class="ai-history-item" onclick="epboxShowHistoryRecord(${i})">
+      <div>
+        <div style="font-size:13px;font-weight:700;">${r.modelName || '—'}</div>
+        <div style="font-size:11px;color:var(--text-gray);margin-top:2px;">${r.dateString || ''}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:14px;font-weight:800;color:var(--ep-green);">NT$${fmt(r.finalPrice||0)}</div>
+        <div style="font-size:11px;color:var(--text-gray);">${r.batteryHealth || ''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function epboxShowHistoryRecord(i) {
+  const r = aiRecords[i];
+  if (!r) return;
+  epboxRenderResult(r);
+  document.getElementById('ai-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function epboxToggleHistory() {
+  const content = document.getElementById('ai-history-content');
+  const chevron = document.getElementById('ai-history-chevron');
+  const open = content.style.display === 'none';
+  content.style.display = open ? 'block' : 'none';
+  chevron.textContent = open ? '收起 ▲' : '展開 ▼';
+}
+
+epboxLoadHistory();
 
 /* ════════════════════════════════
    Tab Switch
