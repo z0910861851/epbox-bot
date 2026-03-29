@@ -1299,6 +1299,7 @@ function removeAlert(i) {
 function renderAlertList() {
   const alerts  = getAlerts();
   const container = document.getElementById('alert-list');
+  if (!container) return;
   if (!alerts.length) {
     container.innerHTML = '<div class="no-result" style="padding:24px">尚未訂閱任何機型</div>';
     return;
