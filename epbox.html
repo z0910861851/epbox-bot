@@ -1294,9 +1294,26 @@ function initAlerts() {
 
 function addAlert() {
   const model = document.getElementById('alert-model-sel').value;
-  if (!model) { alert('請選擇機型'); return; }
+  if (!model) { alert('請先選擇機型'); return; }
   const msg = encodeURIComponent('訂閱 ' + model);
-  window.open(`https://line.me/R/oaMessage/@wea3313n/?${msg}`, '_blank');
+  const lineUrl = 'https://line.me/R/oaMessage/@wea3313n/?' + msg;
+  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  if (isMobile) {
+    window.open(lineUrl, '_blank');
+  } else {
+    showLineQRModal(model, lineUrl);
+  }
+}
+
+function showLineQRModal(model, lineUrl) {
+  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(lineUrl);
+  document.getElementById('line-qr-model-name').textContent = model;
+  document.getElementById('line-qr-img').src = qrUrl;
+  document.getElementById('line-qr-modal').style.display = 'flex';
+}
+
+function closeLineQRModal() {
+  document.getElementById('line-qr-modal').style.display = 'none';
 }
 
 function removeAlert(i) {
@@ -1673,5 +1690,20 @@ fetchData();
 document.addEventListener("DOMContentLoaded", () => lucide.createIcons());
 if (document.readyState !== "loading") lucide.createIcons();
 </script>
+
+<!-- QR Code Modal -->
+<div id="line-qr-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:24px;padding:32px 24px;max-width:300px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div style="font-size:20px;font-weight:800;margin-bottom:6px;">📱 掃描加入訂閱</div>
+    <div id="line-qr-model-name" style="font-size:13px;color:#555;margin-bottom:20px;font-weight:500;"></div>
+    <div style="background:#f5f5f7;border-radius:16px;padding:16px;display:inline-block;margin-bottom:16px;">
+      <img id="line-qr-img" src="" width="168" height="168" style="display:block;"/>
+    </div>
+    <div style="font-size:12px;color:#888;margin-bottom:20px;line-height:1.6;">
+      用手機 LINE 掃描 QR Code<br>即可加入官方帳號並完成訂閱
+    </div>
+    <button onclick="closeLineQRModal()" style="background:#00b900;color:#fff;border:none;padding:12px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;">關閉</button>
+  </div>
+</div>
 </body>
 </html>
