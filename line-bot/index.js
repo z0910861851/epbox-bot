@@ -142,5 +142,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`EPBOX LINE Bot 已啟動，port ${PORT}`);
     console.log('Webhook URL: https://你的網域/webhook');
-  console.log('[epbox.html] 版本: 2026-04-03 訂閱一條龍');
+  console.log('[epbox.html] 版本: 2026-04-03 QR Code 支援');
 });
