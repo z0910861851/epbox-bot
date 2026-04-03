@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 
 const express = require('express');
 const line    = require('@line/bot-sdk');
@@ -34,6 +35,10 @@ app.post(
             });
     }
   );
+
+// ── 舊換新網頁 ───────────────────────────────────
+app.get('/', (_, res) => res.sendFile(path.join(__dirname, '..', 'epbox.html')));
+app.get('/epbox.html', (_, res) => res.sendFile(path.join(__dirname, '..', 'epbox.html')));
 
 app.get('/health', (_, res) => res.json({ ok: true, time: new Date().toISOString() }));
 
