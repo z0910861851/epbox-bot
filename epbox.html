@@ -381,11 +381,9 @@ body {
 <!-- Tabs -->
 <div class="tab-nav">
   <button class="tab-btn active" onclick="switchTab('compare', this)"><i data-lucide="bar-chart-2"></i>各通路比較</button>
-  <button class="tab-btn" onclick="switchTab('epbox', this)"><i data-lucide="bot"></i>EPBOX 回收價</button>
   <button class="tab-btn" onclick="switchTab('calc', this)"><i data-lucide="calculator"></i>換機試算</button>
   <button class="tab-btn" onclick="switchTab('alerts', this)"><i data-lucide="bell"></i>回收價提醒</button>
   <button class="tab-btn" onclick="switchTab('analytics', this)"><i data-lucide="activity"></i>EPBOX 分析</button>
-  <button class="tab-btn" onclick="switchTab('locations', this)"><i data-lucide="map-pin"></i>設置地點</button>
 </div>
 
 <!-- ══════════ Tab 1: 各通路回收比較 ══════════ -->
@@ -1401,7 +1399,7 @@ function updateNotifyTip() {
 /* ════════════════════════════════
    Tab 5: EPBOX AI 分析
 ════════════════════════════════ */
-const CLAUDE_PROXY_URL = 'https://epbox-bot.onrender.com/claude-proxy';
+const CLAUDE_PROXY_URL = 'https://epbox-line-bot.onrender.com/claude-proxy';
 const FB_ANALYTICS     = 'https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/tradein_prices/analytics.json';
 
 let aiSelectedFile = null;   // File object
