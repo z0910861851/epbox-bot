@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPBOX · 後台數據分析</title>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg:        #0a0b0e;
+    --surface:   #111318;
+    --border:    #1e2128;
+    --border2:   #2a2f3a;
+    --text:      #e8eaf0;
+    --muted:     #5c6375;
+    --accent:    #00e5a0;
+    --accent2:   #0095ff;
+    --accent3:   #ff6b35;
+    --accent4:   #c084fc;
+    --danger:    #ff4757;
+    --warn:      #ffd32a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Grid noise overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,160,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Top bar ── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,11,14,.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    color: var(--accent);
+  }
+
+  .logo-box {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #000;
+    clip-path: polygon(0 0,100% 0,100% 75%,75% 100%,0 100%);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: .4; }
+  }
+
+  #last-updated { color: var(--text); }
+
+  /* ── Config modal ── */
+  #config-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.85);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .config-card {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    width: 480px;
+    padding: 32px;
+  }
+
+  .config-card h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 6px;
+    letter-spacing: .08em;
+  }
+
+  .config-card p {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 5px;
+    letter-spacing: .06em;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .field input:focus {
+    border-color: var(--accent);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 22px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+
+  .btn:hover { opacity: .85; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+
+  .btn-ghost {
+    background: var(--border);
+    color: var(--muted);
+  }
+
+  /* ── Main layout ── */
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 28px 60px;
+  }
+
+  /* ── Section labels ── */
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .14em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin: 32px 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── KPI cards ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .25s;
+  }
+
+  .kpi-card:hover { border-color: var(--border2); }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .kpi-card.c0::before { background: var(--accent); }
+  .kpi-card.c1::before { background: var(--accent2); }
+  .kpi-card.c2::before { background: var(--accent3); }
+  .kpi-card.c3::before { background: var(--accent4); }
+
+  .kpi-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .kpi-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .kpi-card.c0 .kpi-value { color: var(--accent); }
+  .kpi-card.c1 .kpi-value { color: var(--accent2); }
+  .kpi-card.c2 .kpi-value { color: var(--accent3); }
+  .kpi-card.c3 .kpi-value { color: var(--accent4); }
+
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── Two-col charts ── */
+  .chart-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 780px) {
+    .chart-2col { grid-template-columns: 1fr; }
+  }
+
+  /* ── Chart cards ── */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 22px;
+  }
+
+  .chart-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .08em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .chart-tag {
+    font-size: 10px;
+    background: var(--border);
+    border-radius: 2px;
+    padding: 2px 7px;
+    color: var(--muted);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .chart-wrap {
+    position: relative;
+    height: 240px;
+  }
+
+  /* ── Trend chart full width ── */
+  .chart-card.full .chart-wrap { height: 200px; }
+
+  /* ── Ranked list ── */
+  .ranked-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .rank-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .rank-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    width: 18px;
+    flex-shrink: 0;
+  }
+
+  .rank-bar-wrap {
+    flex: 1;
+    background: var(--border);
+    border-radius: 2px;
+    height: 6px;
+    overflow: hidden;
+  }
+
+  .rank-bar {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent2);
+    transition: width .6s cubic-bezier(.25,.8,.25,1);
+  }
+
+  .rank-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+    width: 120px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .rank-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ── Warning list ── */
+  .warn-list { display: flex; flex-direction: column; gap: 7px; }
+
+  .warn-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 9px 12px;
+    transition: border-color .2s;
+  }
+
+  .warn-item:hover { border-color: var(--border2); }
+
+  .warn-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .warn-text {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .warn-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    background: rgba(255,107,53,.15);
+    border: 1px solid rgba(255,107,53,.3);
+    color: var(--accent3);
+    padding: 2px 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .warn-bar-wrap {
+    width: 80px;
+    background: var(--border);
+    border-radius: 2px;
+    height: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .warn-bar {
+    height: 100%;
+    background: var(--accent3);
+    border-radius: 2px;
+  }
+
+  /* ── Loading skeleton ── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--border) 25%, var(--border2) 50%, var(--border) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 3px;
+    height: 16px;
+    margin-bottom: 8px;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ── Error banner ── */
+  .error-banner {
+    background: rgba(255,71,87,.1);
+    border: 1px solid rgba(255,71,87,.3);
+    border-radius: 4px;
+    padding: 12px 16px;
+    color: var(--danger);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* ── Config button ── */
+  .cfg-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: var(--border);
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    padding: 5px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color .2s, border-color .2s;
+  }
+
+  .cfg-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  /* ── Refresh btn ── */
+  #refresh-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: none;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    padding: 5px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+
+  #refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- Config overlay -->
+<div id="config-overlay">
+  <div class="config-card">
+    <h2>// FIREBASE CONFIG</h2>
+    <p>請填入 Firebase 專案設定。設定儲存於 localStorage，下次自動載入。<br>
+    或點「使用示範資料」以 Mock 數據預覽介面。</p>
+
+    <div class="field">
+      <label>API KEY</label>
+      <input id="cfg-apiKey" type="text" placeholder="AIzaSy...">
+    </div>
+    <div class="field">
+      <label>AUTH DOMAIN</label>
+      <input id="cfg-authDomain" type="text" placeholder="your-project.firebaseapp.com">
+    </div>
+    <div class="field">
+      <label>DATABASE URL</label>
+      <input id="cfg-dbUrl" type="text" placeholder="https://your-project-default-rtdb.firebaseio.com">
+    </div>
+    <div class="field">
+      <label>PROJECT ID</label>
+      <input id="cfg-projectId" type="text" placeholder="your-project-id">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="connectFirebase()">連線 Firebase</button>
+      <button class="btn btn-ghost" onclick="useMockData()">使用示範資料</button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-box">EP</div>
+    EPBOX · ANALYTICS
+  </div>
+  <div class="header-right">
+    <div class="status-dot" id="status-dot" style="background:var(--muted);box-shadow:none;"></div>
+    <span id="conn-label">未連線</span>
+    <span id="last-updated">—</span>
+    <button id="refresh-btn" onclick="refreshData()">↻ 重新整理</button>
+    <button class="cfg-btn" onclick="showConfig()">⚙ 設定</button>
+  </div>
+</header>
+
+<main>
+  <div class="error-banner" id="error-banner"></div>
+
+  <!-- KPIs -->
+  <div class="section-label">概覽 · Overview</div>
+  <div class="kpi-grid">
+    <div class="kpi-card c0">
+      <div class="kpi-label">總評估次數</div>
+      <div class="kpi-value" id="kpi-total">—</div>
+      <div class="kpi-sub">累計</div>
+    </div>
+    <div class="kpi-card c1">
+      <div class="kpi-label">本月評估</div>
+      <div class="kpi-value" id="kpi-month">—</div>
+      <div class="kpi-sub" id="kpi-month-sub">—</div>
+    </div>
+    <div class="kpi-card c2">
+      <div class="kpi-label">平均電池健康</div>
+      <div class="kpi-value" id="kpi-battery">—</div>
+      <div class="kpi-sub">% 中位數</div>
+    </div>
+    <div class="kpi-card c3">
+      <div class="kpi-label">機型總數</div>
+      <div class="kpi-value" id="kpi-models">—</div>
+      <div class="kpi-sub">已收錄機型</div>
+    </div>
+  </div>
+
+  <!-- Trend chart -->
+  <div class="section-label">使用量趨勢 · Usage Trend</div>
+  <div class="chart-card full">
+    <div class="chart-title">
+      每日評估次數
+      <span class="chart-tag">近 30 天</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chart-trend"></canvas>
+    </div>
+  </div>
+
+  <!-- Rankings + Battery -->
+  <div class="section-label">機型排行 & 電池分布 · Rankings & Battery</div>
+  <div class="chart-2col">
+    <div class="chart-card">
+      <div class="chart-title">
+        熱門機型 Top 10
+        <span class="chart-tag">評估次數</span>
+      </div>
+      <div class="ranked-list" id="model-ranking"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">
+        電池健康度分布
+        <span class="chart-tag">% 區間</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-battery"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Warnings -->
+  <div class="section-label">外觀警告 · Appearance Warnings</div>
+  <div class="chart-card">
+    <div class="chart-title">
+      最常見外觀問題
+      <span class="chart-tag">觸發次數</span>
+    </div>
+    <div class="warn-list" id="warn-list"></div>
+  </div>
+</main>
+
+<script>
+/* ─────────────── Config ─────────────── */
+const LS_KEY = 'epbox_fb_cfg';
+
+function showConfig() {
+  const saved = getSavedConfig();
+  if (saved) {
+    document.getElementById('cfg-apiKey').value    = saved.apiKey    || '';
+    document.getElementById('cfg-authDomain').value= saved.authDomain|| '';
+    document.getElementById('cfg-dbUrl').value     = saved.databaseURL|| '';
+    document.getElementById('cfg-projectId').value = saved.projectId || '';
+  }
+  document.getElementById('config-overlay').style.display = 'flex';
+}
+
+function getSavedConfig() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch { return null; }
+}
+
+window.onload = () => {
+  const saved = getSavedConfig();
+  if (saved && saved.apiKey) {
+    document.getElementById('cfg-apiKey').value     = saved.apiKey;
+    document.getElementById('cfg-authDomain').value = saved.authDomain || '';
+    document.getElementById('cfg-dbUrl').value      = saved.databaseURL || '';
+    document.getElementById('cfg-projectId').value  = saved.projectId || '';
+  }
+};
+
+/* ─────────────── Firebase connect ─────────────── */
+let db = null;
+
+function connectFirebase() {
+  const cfg = {
+    apiKey:      document.getElementById('cfg-apiKey').value.trim(),
+    authDomain:  document.getElementById('cfg-authDomain').value.trim(),
+    databaseURL: document.getElementById('cfg-dbUrl').value.trim(),
+    projectId:   document.getElementById('cfg-projectId').value.trim(),
+  };
+
+  if (!cfg.apiKey || !cfg.databaseURL) {
+    alert('請填寫 API Key 和 Database URL');
+    return;
+  }
+
+  localStorage.setItem(LS_KEY, JSON.stringify(cfg));
+
+  try {
+    // avoid duplicate app
+    if (firebase.apps.length) firebase.app().delete().catch(()=>{});
+    const app = firebase.initializeApp(cfg);
+    db = firebase.database(app);
+    document.getElementById('config-overlay').style.display = 'none';
+    setStatus(true);
+    loadFromFirebase();
+  } catch(e) {
+    showError('Firebase 初始化失敗：' + e.message);
+  }
+}
+
+function setStatus(online) {
+  const dot   = document.getElementById('status-dot');
+  const label = document.getElementById('conn-label');
+  if (online) {
+    dot.style.background  = 'var(--accent)';
+    dot.style.boxShadow   = '0 0 8px var(--accent)';
+    label.textContent     = 'Firebase 已連線';
+  } else {
+    dot.style.background  = 'var(--muted)';
+    dot.style.boxShadow   = 'none';
+    label.textContent     = '示範模式';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-banner');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 8000);
+}
+
+/* ─────────────── Load data ─────────────── */
+async function loadFromFirebase() {
+  try {
+    // 嘗試讀取 analytics 路徑
+    const snap = await db.ref('/tradein_prices/analytics').once('value');
+    let data = snap.val();
+
+    if (!data) {
+      // Fallback：從 /tradein_prices/prices 彙整現有機型資料
+      showError('⚠ /tradein_prices/analytics 尚無資料，自動從 /tradein_prices/prices 彙整機型清單');
+      data = await deriveFromPrices();
+    }
+
+    if (!data) { useMockData(); return; }
+    renderAll(data);
+    stamp();
+  } catch(e) {
+    showError('讀取失敗：' + e.message + '　使用示範資料');
+    useMockData();
+  }
+}
+
+async function deriveFromPrices() {
+  try {
+    const snap = await db.ref('/tradein_prices/prices').once('value');
+    const prices = snap.val();
+    if (!prices) return null;
+
+    const models = Object.keys(prices);
+    const topModels = models
+      .map(m => ({ model: m.replace(/_/g, ' '), count: prices[m]?.epbox || prices[m]?.EPBOX || 0 }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    const now = new Date();
+    const trend = Array.from({ length: 30 }, (_, i) => {
+      const d = new Date(now); d.setDate(d.getDate() - (29 - i));
+      return { date: `${d.getMonth()+1}/${d.getDate()}`, count: 0 };
+    });
+
+    return {
+      summary: { totalEvaluations: null, thisMonth: null, avgBattery: null, totalModels: models.length },
+      trend,
+      topModels,
+      batteryDistribution: null,
+      warnings: null,
+    };
+  } catch { return null; }
+}
+
+function refreshData() {
+  if (db) loadFromFirebase();
+  else useMockData();
+}
+
+function stamp() {
+  document.getElementById('last-updated').textContent =
+    '更新：' + new Date().toLocaleTimeString('zh-TW');
+}
+
+/* ─────────────── Mock data ─────────────── */
+function useMockData() {
+  document.getElementById('config-overlay').style.display = 'none';
+  setStatus(false);
+
+  // Generate 30-day trend
+  const days = [];
+  const now = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const label = `${d.getMonth()+1}/${d.getDate()}`;
+    days.push({ date: label, count: Math.floor(60 + Math.random()*80 + Math.sin(i/3)*20) });
+  }
+
+  const mock = {
+    summary: {
+      totalEvaluations: 4827,
+      thisMonth: 312,
+      lastMonth: 278,
+      avgBattery: 84,
+      totalModels: 63
+    },
+    trend: days,
+    topModels: [
+      { model: 'iPhone 15 Pro Max', count: 487 },
+      { model: 'iPhone 15 Pro',     count: 412 },
+      { model: 'iPhone 14 Pro Max', count: 389 },
+      { model: 'iPhone 14 Pro',     count: 341 },
+      { model: 'iPhone 13 Pro Max', count: 298 },
+      { model: 'iPhone 15',         count: 256 },
+      { model: 'iPhone 14',         count: 223 },
+      { model: 'iPhone 13',         count: 195 },
+      { model: 'iPhone 12 Pro Max', count: 167 },
+      { model: 'iPhone 13 Pro',     count: 134 },
+    ],
+    batteryDistribution: {
+      '100': 42,  '95-99': 186, '90-94': 413,
+      '85-89': 687,'80-84': 894,'75-79': 791,
+      '70-74': 623,'65-69': 467,'60-64': 312,
+      '<60':   211
+    },
+    warnings: [
+      { key: 'scratch_screen',    label: '螢幕刮傷',      icon: '📱', count: 1243 },
+      { key: 'dent_frame',        label: '邊框凹痕',      icon: '🔲', count: 987  },
+      { key: 'crack_back',        label: '背蓋裂痕',      icon: '💔', count: 741  },
+      { key: 'yellow_screen',     label: '螢幕泛黃',      icon: '🟡', count: 618  },
+      { key: 'broken_camera',     label: '鏡頭玻璃破裂',  icon: '📷', count: 534  },
+      { key: 'speaker_issue',     label: '揚聲器異常',    icon: '🔊', count: 289  },
+      { key: 'face_id_fail',      label: 'Face ID 失效',  icon: '🔐', count: 213  },
+      { key: 'charging_unstable', label: '充電不穩',      icon: '⚡', count: 178  },
+    ]
+  };
+
+  renderAll(mock);
+  stamp();
+}
+
+/* ─────────────── Render ─────────────── */
+let chartTrend = null, chartBattery = null;
+
+function renderAll(data) {
+  renderKPIs(data.summary);
+  renderTrend(data.trend);
+  renderModels(data.topModels);
+  renderBattery(data.batteryDistribution);
+  renderWarnings(data.warnings);
+}
+
+function renderKPIs(s) {
+  if (!s) return;
+  animCount('kpi-total',   s.totalEvaluations || 0, '');
+  animCount('kpi-month',   s.thisMonth || 0, '');
+  animCount('kpi-battery', s.avgBattery || 0, '');
+  animCount('kpi-models',  s.totalModels || 0, '');
+
+  if (s.lastMonth && s.thisMonth) {
+    const diff = s.thisMonth - s.lastMonth;
+    const sign = diff >= 0 ? '+' : '';
+    document.getElementById('kpi-month-sub').textContent =
+      `${sign}${diff} 較上月`;
+  }
+}
+
+function animCount(id, target, suffix) {
+  const el = document.getElementById(id);
+  let start = 0, duration = 800;
+  const step = (ts) => {
+    if (!step.start) step.start = ts;
+    const p = Math.min((ts - step.start) / duration, 1);
+    el.textContent = Math.floor(p * target) + suffix;
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+/* Trend */
+function renderTrend(trend) {
+  if (!trend) return;
+  const labels = trend.map(d => d.date);
+  const counts  = trend.map(d => d.count);
+
+  if (chartTrend) chartTrend.destroy();
+
+  const ctx = document.getElementById('chart-trend').getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, 200);
+  grad.addColorStop(0, 'rgba(0,229,160,.25)');
+  grad.addColorStop(1, 'rgba(0,229,160,0)');
+
+  chartTrend = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: counts,
+        borderColor: '#00e5a0',
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        pointHoverBackgroundColor: '#00e5a0',
+        tension: 0.4,
+        fill: true,
+        backgroundColor: grad,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#111318',
+          borderColor: '#1e2128',
+          borderWidth: 1,
+          titleColor: '#5c6375',
+          bodyColor: '#00e5a0',
+          titleFont: { family: 'IBM Plex Mono', size: 10 },
+          bodyFont:  { family: 'IBM Plex Mono', size: 13, weight: '600' },
+          callbacks: {
+            label: ctx => ' ' + ctx.parsed.y + ' 次'
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: '#1e2128' },
+          ticks: {
+            color: '#5c6375',
+            font: { family: 'IBM Plex Mono', size: 9 },
+            maxTicksLimit: 10,
+          },
+          border: { color: '#1e2128' }
+        },
+        y: {
+          grid: { color: '#1e2128' },
+          ticks: {
+            color: '#5c6375',
+            font: { family: 'IBM Plex Mono', size: 9 },
+          },
+          border: { color: '#1e2128' }
+        }
+      }
+    }
+  });
+}
+
+/* Models */
+function renderModels(models) {
+  if (!models || !models.length) return;
+  const max = models[0].count;
+  const container = document.getElementById('model-ranking');
+  container.innerHTML = '';
+
+  models.slice(0, 10).forEach((m, i) => {
+    const pct = Math.round((m.count / max) * 100);
+    container.innerHTML += `
+      <div class="rank-item">
+        <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
+        <span class="rank-label" title="${m.model}">${m.model}</span>
+        <div class="rank-bar-wrap">
+          <div class="rank-bar" style="width:0%" data-w="${pct}%"></div>
+        </div>
+        <span class="rank-count">${m.count}</span>
+      </div>`;
+  });
+
+  // animate bars
+  setTimeout(() => {
+    document.querySelectorAll('.rank-bar').forEach(b => {
+      b.style.width = b.dataset.w;
+    });
+  }, 50);
+}
+
+/* Battery */
+function renderBattery(dist) {
+  if (!dist) return;
+  const labels = Object.keys(dist);
+  const values = Object.values(dist);
+
+  if (chartBattery) chartBattery.destroy();
+
+  const colors = labels.map((_, i) => {
+    const t = i / (labels.length - 1);
+    // green → amber → red
+    if (t < 0.5) return `hsl(${160 - t*160*2}, 80%, 55%)`;
+    return `hsl(${0}, ${60 + t*20}%, ${60 - t*10}%)`;
+  }).reverse();
+
+  const ctx = document.getElementById('chart-battery').getContext('2d');
+  chartBattery = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: [...labels].reverse(),
+      datasets: [{
+        data: [...values].reverse(),
+        backgroundColor: colors,
+        borderRadius: 2,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#111318',
+          borderColor: '#1e2128',
+          borderWidth: 1,
+          titleColor: '#5c6375',
+          bodyColor: '#e8eaf0',
+          titleFont: { family: 'IBM Plex Mono', size: 10 },
+          bodyFont:  { family: 'IBM Plex Mono', size: 12 },
+          callbacks: { label: ctx => ' ' + ctx.parsed.y + ' 台' }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            color: '#5c6375',
+            font: { family: 'IBM Plex Mono', size: 9 },
+          },
+          border: { color: '#1e2128' }
+        },
+        y: {
+          grid: { color: '#1e2128' },
+          ticks: {
+            color: '#5c6375',
+            font: { family: 'IBM Plex Mono', size: 9 },
+          },
+          border: { color: '#1e2128' }
+        }
+      }
+    }
+  });
+}
+
+/* Warnings */
+function renderWarnings(warnings) {
+  if (!warnings || !warnings.length) return;
+  const max = warnings[0].count;
+  const container = document.getElementById('warn-list');
+  container.innerHTML = '';
+
+  warnings.sort((a,b) => b.count - a.count).forEach(w => {
+    const pct = Math.round((w.count / max) * 100);
+    container.innerHTML += `
+      <div class="warn-item">
+        <span class="warn-icon">${w.icon || '⚠️'}</span>
+        <span class="warn-text">${w.label || w.key}</span>
+        <div class="warn-bar-wrap">
+          <div class="warn-bar" style="width:${pct}%"></div>
+        </div>
+        <span class="warn-badge">${w.count.toLocaleString()}</span>
+      </div>`;
+  });
+}
+
+/* Auto-load if saved config exists */
+// ── Known project defaults (from PROGRESS.md) ──
+const PROJECT_DEFAULTS = {
+  authDomain:  'trade-in-5135c.firebaseapp.com',
+  databaseURL: 'https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId:   'trade-in-5135c',
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = getSavedConfig();
+  const cfg   = saved && saved.apiKey ? saved : {};
+
+  document.getElementById('cfg-apiKey').value     = cfg.apiKey     || '';
+  document.getElementById('cfg-authDomain').value = cfg.authDomain || PROJECT_DEFAULTS.authDomain;
+  document.getElementById('cfg-dbUrl').value      = cfg.databaseURL|| PROJECT_DEFAULTS.databaseURL;
+  document.getElementById('cfg-projectId').value  = cfg.projectId  || PROJECT_DEFAULTS.projectId;
+});
+</script>
+</body>
+</html>
