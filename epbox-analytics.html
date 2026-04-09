@@ -4,539 +4,340 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EPBOX · 後台數據分析</title>
-
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-
-<!-- Chart.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-
 <style>
-  :root {
-    --bg:        #0a0b0e;
-    --surface:   #111318;
-    --border:    #1e2128;
-    --border2:   #2a2f3a;
-    --text:      #e8eaf0;
-    --muted:     #5c6375;
-    --accent:    #00e5a0;
-    --accent2:   #0095ff;
-    --accent3:   #ff6b35;
-    --accent4:   #c084fc;
-    --danger:    #ff4757;
-    --warn:      #ffd32a;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 14px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* ── Grid noise overlay ── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,229,160,.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,229,160,.03) 1px, transparent 1px);
-    background-size: 32px 32px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* ── Top bar ── */
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(10,11,14,.92);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    padding: 0 28px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: .08em;
-    color: var(--accent);
-  }
-
-  .logo-box {
-    width: 28px; height: 28px;
-    background: var(--accent);
-    display: grid;
-    place-items: center;
-    font-size: 10px;
-    font-weight: 700;
-    color: #000;
-    clip-path: polygon(0 0,100% 0,100% 75%,75% 100%,0 100%);
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .status-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 8px var(--accent);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%,100% { opacity: 1; }
-    50%      { opacity: .4; }
-  }
-
-  #last-updated { color: var(--text); }
-
-  /* ── Config modal ── */
-  #config-overlay {
-    position: fixed; inset: 0; z-index: 200;
-    background: rgba(0,0,0,.85);
-    backdrop-filter: blur(8px);
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  .config-card {
-    background: var(--surface);
-    border: 1px solid var(--accent);
-    border-radius: 4px;
-    width: 480px;
-    padding: 32px;
-  }
-
-  .config-card h2 {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 14px;
-    color: var(--accent);
-    margin-bottom: 6px;
-    letter-spacing: .08em;
-  }
-
-  .config-card p {
-    color: var(--muted);
-    font-size: 12px;
-    margin-bottom: 24px;
-    line-height: 1.6;
-  }
-
-  .field {
-    margin-bottom: 14px;
-  }
-
-  .field label {
-    display: block;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 5px;
-    letter-spacing: .06em;
-  }
-
-  .field input {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 3px;
-    padding: 8px 12px;
-    color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    outline: none;
-    transition: border-color .2s;
-  }
-
-  .field input:focus {
-    border-color: var(--accent);
-  }
-
-  .btn-row {
-    display: flex;
-    gap: 10px;
-    margin-top: 22px;
-  }
-
-  .btn {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 3px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity .2s;
-  }
-
-  .btn:hover { opacity: .85; }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #000;
-  }
-
-  .btn-ghost {
-    background: var(--border);
-    color: var(--muted);
-  }
-
-  /* ── Main layout ── */
-  main {
-    position: relative;
-    z-index: 1;
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 28px 28px 60px;
-  }
-
-  /* ── Section labels ── */
-  .section-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    letter-spacing: .14em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin: 32px 0 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* ── KPI cards ── */
-  .kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-  }
-
-  @media (max-width: 900px) {
-    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-
-  .kpi-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 20px 22px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color .25s;
-  }
-
-  .kpi-card:hover { border-color: var(--border2); }
-
-  .kpi-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-  }
-
-  .kpi-card.c0::before { background: var(--accent); }
-  .kpi-card.c1::before { background: var(--accent2); }
-  .kpi-card.c2::before { background: var(--accent3); }
-  .kpi-card.c3::before { background: var(--accent4); }
-
-  .kpi-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    letter-spacing: .1em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-
-  .kpi-value {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 32px;
-    font-weight: 600;
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-
-  .kpi-card.c0 .kpi-value { color: var(--accent); }
-  .kpi-card.c1 .kpi-value { color: var(--accent2); }
-  .kpi-card.c2 .kpi-value { color: var(--accent3); }
-  .kpi-card.c3 .kpi-value { color: var(--accent4); }
-
-  .kpi-sub {
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  /* ── Two-col charts ── */
-  .chart-2col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  @media (max-width: 780px) {
-    .chart-2col { grid-template-columns: 1fr; }
-  }
-
-  /* ── Chart cards ── */
-  .chart-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 22px;
-  }
-
-  .chart-title {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: .08em;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .chart-tag {
-    font-size: 10px;
-    background: var(--border);
-    border-radius: 2px;
-    padding: 2px 7px;
-    color: var(--muted);
-    letter-spacing: 0;
-    text-transform: none;
-  }
-
-  .chart-wrap {
-    position: relative;
-    height: 240px;
-  }
-
-  /* ── Trend chart full width ── */
-  .chart-card.full .chart-wrap { height: 200px; }
-
-  /* ── Ranked list ── */
-  .ranked-list { display: flex; flex-direction: column; gap: 8px; }
-
-  .rank-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .rank-num {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    width: 18px;
-    flex-shrink: 0;
-  }
-
-  .rank-bar-wrap {
-    flex: 1;
-    background: var(--border);
-    border-radius: 2px;
-    height: 6px;
-    overflow: hidden;
-  }
-
-  .rank-bar {
-    height: 100%;
-    border-radius: 2px;
-    background: var(--accent2);
-    transition: width .6s cubic-bezier(.25,.8,.25,1);
-  }
-
-  .rank-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--text);
-    width: 120px;
-    flex-shrink: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .rank-count {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    width: 36px;
-    text-align: right;
-    flex-shrink: 0;
-  }
-
-  /* ── Warning list ── */
-  .warn-list { display: flex; flex-direction: column; gap: 7px; }
-
-  .warn-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 9px 12px;
-    transition: border-color .2s;
-  }
-
-  .warn-item:hover { border-color: var(--border2); }
-
-  .warn-icon {
-    font-size: 14px;
-    flex-shrink: 0;
-  }
-
-  .warn-text {
-    flex: 1;
-    font-size: 12px;
-    color: var(--text);
-  }
-
-  .warn-badge {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    background: rgba(255,107,53,.15);
-    border: 1px solid rgba(255,107,53,.3);
-    color: var(--accent3);
-    padding: 2px 8px;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-
-  .warn-bar-wrap {
-    width: 80px;
-    background: var(--border);
-    border-radius: 2px;
-    height: 4px;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-
-  .warn-bar {
-    height: 100%;
-    background: var(--accent3);
-    border-radius: 2px;
-  }
-
-  /* ── Loading skeleton ── */
-  .skeleton {
-    background: linear-gradient(90deg, var(--border) 25%, var(--border2) 50%, var(--border) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s infinite;
-    border-radius: 3px;
-    height: 16px;
-    margin-bottom: 8px;
-  }
-
-  @keyframes shimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
-  /* ── Error banner ── */
-  .error-banner {
-    background: rgba(255,71,87,.1);
-    border: 1px solid rgba(255,71,87,.3);
-    border-radius: 4px;
-    padding: 12px 16px;
-    color: var(--danger);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    margin-bottom: 16px;
-    display: none;
-  }
-
-  /* ── Config button ── */
-  .cfg-btn {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    background: var(--border);
-    border: 1px solid var(--border2);
-    color: var(--muted);
-    padding: 5px 12px;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: color .2s, border-color .2s;
-  }
-
-  .cfg-btn:hover { color: var(--text); border-color: var(--muted); }
-
-  /* ── Refresh btn ── */
-  #refresh-btn {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    background: none;
-    border: 1px solid var(--border2);
-    color: var(--muted);
-    padding: 5px 12px;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all .2s;
-  }
-
-  #refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+:root {
+  --ep-green: #00b96b;
+  --ep-orange: #ff6b00;
+  --apple-blue: #0071e3;
+  --purple: #5e5ce6;
+  --ep-dark: #1a1a2e;
+  --ep-light: #f0faf5;
+  --card-white: #ffffff;
+  --text-dark: #1d1d1f;
+  --text-gray: #86868b;
+  --border: #e5e5e7;
+  --bg: #f5f5f7;
+  --red: #d70015;
+  --gold: #ff9500;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text-dark);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  background: var(--ep-dark);
+  color: #fff;
+  padding: 20px 24px 16px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+.header-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.logo-badge {
+  background: var(--ep-green);
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+.header-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 2px;
+}
+.header-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+}
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-gray);
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.status-dot.online {
+  background: var(--ep-green);
+  box-shadow: 0 0 6px var(--ep-green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+.header-btn {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.header-btn:hover { background: rgba(255,255,255,.2); }
+
+/* ── Config Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,.5);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+}
+.modal {
+  background: var(--card-white);
+  border-radius: 18px;
+  width: 440px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+}
+.modal h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.modal p {
+  font-size: 13px;
+  color: var(--text-gray);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+.field { margin-bottom: 12px; }
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-gray);
+  margin-bottom: 4px;
+}
+.field input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--text-dark);
+  background: var(--bg);
+  outline: none;
+  transition: border-color .2s;
+}
+.field input:focus { border-color: var(--apple-blue); }
+.btn-row { display: flex; gap: 10px; margin-top: 18px; }
+.btn {
+  flex: 1; padding: 12px;
+  border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: opacity .2s;
+}
+.btn:hover { opacity: .85; }
+.btn-primary { background: var(--ep-green); color: #fff; }
+.btn-ghost { background: var(--bg); color: var(--text-gray); border: 1px solid var(--border); }
+
+/* ── Main ── */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+/* ── KPI Cards ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+@media (max-width: 800px) { .kpi-grid { grid-template-columns: repeat(2,1fr); } }
+
+.kpi-card {
+  background: var(--card-white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+}
+.kpi-card.c0::before { background: var(--ep-green); }
+.kpi-card.c1::before { background: var(--apple-blue); }
+.kpi-card.c2::before { background: var(--ep-orange); }
+.kpi-card.c3::before { background: var(--purple); }
+
+.kpi-icon { font-size: 22px; margin-bottom: 10px; }
+.kpi-label { font-size: 12px; color: var(--text-gray); margin-bottom: 6px; }
+.kpi-value {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.kpi-card.c0 .kpi-value { color: var(--ep-green); }
+.kpi-card.c1 .kpi-value { color: var(--apple-blue); }
+.kpi-card.c2 .kpi-value { color: var(--ep-orange); }
+.kpi-card.c3 .kpi-value { color: var(--purple); }
+.kpi-sub { font-size: 11px; color: var(--text-gray); }
+
+/* ── Section title ── */
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 24px 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--ep-green);
+}
+
+/* ── Chart Cards ── */
+.chart-card {
+  background: var(--card-white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.chart-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.chart-tag {
+  font-size: 11px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  color: var(--text-gray);
+  font-weight: 400;
+}
+.chart-wrap { position: relative; height: 200px; }
+.chart-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .chart-2col { grid-template-columns: 1fr; } }
+
+/* ── Ranked list ── */
+.rank-list { display: flex; flex-direction: column; gap: 10px; }
+.rank-item { display: flex; align-items: center; gap: 10px; }
+.rank-num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  display: grid; place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-gray);
+  flex-shrink: 0;
+}
+.rank-num.top { background: var(--ep-green); border-color: var(--ep-green); color: #fff; }
+.rank-label { flex: 1; font-size: 13px; font-weight: 500; }
+.rank-bar-wrap {
+  width: 80px;
+  background: var(--bg);
+  border-radius: 4px;
+  height: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.rank-bar { height: 100%; border-radius: 4px; background: var(--apple-blue); transition: width .6s ease; }
+.rank-count { font-size: 12px; color: var(--text-gray); width: 32px; text-align: right; flex-shrink: 0; }
+
+/* ── Warning list ── */
+.warn-list { display: flex; flex-direction: column; gap: 10px; }
+.warn-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.warn-icon { font-size: 18px; flex-shrink: 0; }
+.warn-text { flex: 1; font-size: 13px; font-weight: 500; }
+.warn-bar-wrap { width: 80px; background: var(--border); border-radius: 4px; height: 5px; overflow: hidden; flex-shrink: 0; }
+.warn-bar { height: 100%; background: var(--ep-orange); border-radius: 4px; }
+.warn-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ep-orange);
+  background: #fff3e8;
+  border-radius: 6px;
+  padding: 2px 8px;
+  flex-shrink: 0;
+}
+
+/* ── Error banner ── */
+.error-banner {
+  background: #fff0f0;
+  border: 1px solid #ffc0c0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--red);
+  font-size: 13px;
+  margin-bottom: 16px;
+  display: none;
+}
 </style>
 </head>
 <body>
 
-<!-- Config overlay -->
-<div id="config-overlay">
-  <div class="config-card">
-    <h2>// FIREBASE CONFIG</h2>
-    <p>請填入 Firebase 專案設定。設定儲存於 localStorage，下次自動載入。<br>
-    或點「使用示範資料」以 Mock 數據預覽介面。</p>
-
+<!-- Config Modal -->
+<div id="config-overlay" class="modal-overlay">
+  <div class="modal">
+    <h2>連線設定</h2>
+    <p>輸入 Firebase API Key 後連線，設定會自動儲存。或點「使用示範資料」預覽介面。</p>
     <div class="field">
       <label>API KEY</label>
       <input id="cfg-apiKey" type="text" placeholder="AIzaSy...">
     </div>
     <div class="field">
       <label>AUTH DOMAIN</label>
-      <input id="cfg-authDomain" type="text" placeholder="your-project.firebaseapp.com">
+      <input id="cfg-authDomain" type="text">
     </div>
     <div class="field">
       <label>DATABASE URL</label>
-      <input id="cfg-dbUrl" type="text" placeholder="https://your-project-default-rtdb.firebaseio.com">
+      <input id="cfg-dbUrl" type="text">
     </div>
     <div class="field">
       <label>PROJECT ID</label>
-      <input id="cfg-projectId" type="text" placeholder="your-project-id">
+      <input id="cfg-projectId" type="text">
     </div>
-
     <div class="btn-row">
       <button class="btn btn-primary" onclick="connectFirebase()">連線 Firebase</button>
       <button class="btn btn-ghost" onclick="useMockData()">使用示範資料</button>
@@ -545,164 +346,125 @@
 </div>
 
 <!-- Header -->
-<header>
-  <div class="logo">
-    <div class="logo-box">EP</div>
-    EPBOX · ANALYTICS
+<div class="header">
+  <div class="header-logo">
+    <span class="logo-badge">EPBOX</span>
+    後台數據分析
   </div>
-  <div class="header-right">
-    <div class="status-dot" id="status-dot" style="background:var(--muted);box-shadow:none;"></div>
-    <span id="conn-label">未連線</span>
+  <div class="header-sub">使用統計 / 機型排行 / 電池分布 / 外觀警告</div>
+  <div class="header-meta">
+    <span><span class="status-dot" id="status-dot"></span><span id="conn-label">未連線</span></span>
     <span id="last-updated">—</span>
-    <button id="refresh-btn" onclick="refreshData()">↻ 重新整理</button>
-    <button class="cfg-btn" onclick="showConfig()">⚙ 設定</button>
+    <button class="header-btn" onclick="refreshData()">↻ 重新整理</button>
+    <button class="header-btn" onclick="showConfig()">⚙ 設定</button>
   </div>
-</header>
+</div>
 
 <main>
   <div class="error-banner" id="error-banner"></div>
 
   <!-- KPIs -->
-  <div class="section-label">概覽 · Overview</div>
   <div class="kpi-grid">
     <div class="kpi-card c0">
+      <div class="kpi-icon">📊</div>
       <div class="kpi-label">總評估次數</div>
       <div class="kpi-value" id="kpi-total">—</div>
       <div class="kpi-sub">累計</div>
     </div>
     <div class="kpi-card c1">
+      <div class="kpi-icon">📅</div>
       <div class="kpi-label">本月評估</div>
       <div class="kpi-value" id="kpi-month">—</div>
       <div class="kpi-sub" id="kpi-month-sub">—</div>
     </div>
     <div class="kpi-card c2">
+      <div class="kpi-icon">🔋</div>
       <div class="kpi-label">平均電池健康</div>
       <div class="kpi-value" id="kpi-battery">—</div>
       <div class="kpi-sub">% 中位數</div>
     </div>
     <div class="kpi-card c3">
+      <div class="kpi-icon">📱</div>
       <div class="kpi-label">機型總數</div>
       <div class="kpi-value" id="kpi-models">—</div>
       <div class="kpi-sub">已收錄機型</div>
     </div>
   </div>
 
-  <!-- Trend chart -->
-  <div class="section-label">使用量趨勢 · Usage Trend</div>
-  <div class="chart-card full">
-    <div class="chart-title">
-      每日評估次數
-      <span class="chart-tag">近 30 天</span>
-    </div>
-    <div class="chart-wrap">
-      <canvas id="chart-trend"></canvas>
-    </div>
+  <!-- Trend -->
+  <div class="section-title"><span class="dot"></span>使用量趨勢</div>
+  <div class="chart-card">
+    <div class="chart-card-title">每日評估次數 <span class="chart-tag">近 30 天</span></div>
+    <div class="chart-wrap"><canvas id="chart-trend"></canvas></div>
   </div>
 
   <!-- Rankings + Battery -->
-  <div class="section-label">機型排行 & 電池分布 · Rankings & Battery</div>
+  <div class="section-title"><span class="dot"></span>機型排行 & 電池分布</div>
   <div class="chart-2col">
     <div class="chart-card">
-      <div class="chart-title">
-        熱門機型 Top 10
-        <span class="chart-tag">評估次數</span>
-      </div>
-      <div class="ranked-list" id="model-ranking"></div>
+      <div class="chart-card-title">熱門機型 Top 10 <span class="chart-tag">評估次數</span></div>
+      <div class="rank-list" id="model-ranking"></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title">
-        電池健康度分布
-        <span class="chart-tag">% 區間</span>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-battery"></canvas>
-      </div>
+      <div class="chart-card-title">電池健康度分布 <span class="chart-tag">% 區間</span></div>
+      <div class="chart-wrap"><canvas id="chart-battery"></canvas></div>
     </div>
   </div>
 
   <!-- Warnings -->
-  <div class="section-label">外觀警告 · Appearance Warnings</div>
+  <div class="section-title"><span class="dot"></span>最常見外觀警告</div>
   <div class="chart-card">
-    <div class="chart-title">
-      最常見外觀問題
-      <span class="chart-tag">觸發次數</span>
-    </div>
+    <div class="chart-card-title">外觀問題排行 <span class="chart-tag">觸發次數</span></div>
     <div class="warn-list" id="warn-list"></div>
   </div>
 </main>
 
 <script>
-/* ─────────────── Config ─────────────── */
 const LS_KEY = 'epbox_fb_cfg';
-
-function showConfig() {
-  const saved = getSavedConfig();
-  if (saved) {
-    document.getElementById('cfg-apiKey').value    = saved.apiKey    || '';
-    document.getElementById('cfg-authDomain').value= saved.authDomain|| '';
-    document.getElementById('cfg-dbUrl').value     = saved.databaseURL|| '';
-    document.getElementById('cfg-projectId').value = saved.projectId || '';
-  }
-  document.getElementById('config-overlay').style.display = 'flex';
-}
-
-function getSavedConfig() {
-  try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch { return null; }
-}
-
-window.onload = () => {
-  const saved = getSavedConfig();
-  if (saved && saved.apiKey) {
-    document.getElementById('cfg-apiKey').value     = saved.apiKey;
-    document.getElementById('cfg-authDomain').value = saved.authDomain || '';
-    document.getElementById('cfg-dbUrl').value      = saved.databaseURL || '';
-    document.getElementById('cfg-projectId').value  = saved.projectId || '';
-  }
+const PROJECT_DEFAULTS = {
+  apiKey:      'AIzaSyCuK7MkMN_ZIUxv0cOA7zq_OMcR-2kaJBY',
+  authDomain:  'trade-in-5135c.firebaseapp.com',
+  databaseURL: 'https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId:   'trade-in-5135c',
 };
-
-/* ─────────────── Firebase connect ─────────────── */
 let db = null;
+let chartTrend = null, chartBattery = null;
 
-function connectFirebase() {
+function getSaved() { try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch { return null; } }
+
+window.addEventListener('DOMContentLoaded', () => {
+  const s = getSaved() || {};
+  document.getElementById('cfg-apiKey').value    = s.apiKey      || PROJECT_DEFAULTS.apiKey;
+  document.getElementById('cfg-authDomain').value= s.authDomain  || PROJECT_DEFAULTS.authDomain;
+  document.getElementById('cfg-dbUrl').value     = s.databaseURL || PROJECT_DEFAULTS.databaseURL;
+  document.getElementById('cfg-projectId').value = s.projectId   || PROJECT_DEFAULTS.projectId;
+});
+
+function showConfig() { document.getElementById('config-overlay').style.display = 'flex'; }
+
+async function connectFirebase() {
   const cfg = {
     apiKey:      document.getElementById('cfg-apiKey').value.trim(),
     authDomain:  document.getElementById('cfg-authDomain').value.trim(),
     databaseURL: document.getElementById('cfg-dbUrl').value.trim(),
     projectId:   document.getElementById('cfg-projectId').value.trim(),
   };
-
-  if (!cfg.apiKey || !cfg.databaseURL) {
-    alert('請填寫 API Key 和 Database URL');
-    return;
-  }
-
+  if (!cfg.apiKey || !cfg.databaseURL) { alert('請填寫 API Key 和 Database URL'); return; }
   localStorage.setItem(LS_KEY, JSON.stringify(cfg));
-
   try {
-    // avoid duplicate app
-    if (firebase.apps.length) firebase.app().delete().catch(()=>{});
-    const app = firebase.initializeApp(cfg);
-    db = firebase.database(app);
+    if (firebase.apps.length) await firebase.app().delete().catch(()=>{});
+    firebase.initializeApp(cfg);
+    db = firebase.database();
     document.getElementById('config-overlay').style.display = 'none';
     setStatus(true);
     loadFromFirebase();
-  } catch(e) {
-    showError('Firebase 初始化失敗：' + e.message);
-  }
+  } catch(e) { showError('Firebase 初始化失敗：' + e.message); }
 }
 
 function setStatus(online) {
-  const dot   = document.getElementById('status-dot');
-  const label = document.getElementById('conn-label');
-  if (online) {
-    dot.style.background  = 'var(--accent)';
-    dot.style.boxShadow   = '0 0 8px var(--accent)';
-    label.textContent     = 'Firebase 已連線';
-  } else {
-    dot.style.background  = 'var(--muted)';
-    dot.style.boxShadow   = 'none';
-    label.textContent     = '示範模式';
-  }
+  const dot = document.getElementById('status-dot');
+  document.getElementById('conn-label').textContent = online ? 'Firebase 已連線' : '示範模式';
+  dot.className = 'status-dot' + (online ? ' online' : '');
 }
 
 function showError(msg) {
@@ -712,26 +474,17 @@ function showError(msg) {
   setTimeout(() => el.style.display = 'none', 8000);
 }
 
-/* ─────────────── Load data ─────────────── */
 async function loadFromFirebase() {
   try {
-    // 嘗試讀取 analytics 路徑
     const snap = await db.ref('/tradein_prices/analytics').once('value');
     let data = snap.val();
-
     if (!data) {
-      // Fallback：從 /tradein_prices/prices 彙整現有機型資料
-      showError('⚠ /tradein_prices/analytics 尚無資料，自動從 /tradein_prices/prices 彙整機型清單');
+      showError('⚠ /tradein_prices/analytics 無資料，嘗試從 /prices 彙整');
       data = await deriveFromPrices();
     }
-
     if (!data) { useMockData(); return; }
-    renderAll(data);
-    stamp();
-  } catch(e) {
-    showError('讀取失敗：' + e.message + '　使用示範資料');
-    useMockData();
-  }
+    renderAll(data); stamp();
+  } catch(e) { showError('讀取失敗：' + e.message); useMockData(); }
 }
 
 async function deriveFromPrices() {
@@ -739,334 +492,156 @@ async function deriveFromPrices() {
     const snap = await db.ref('/tradein_prices/prices').once('value');
     const prices = snap.val();
     if (!prices) return null;
-
     const models = Object.keys(prices);
-    const topModels = models
-      .map(m => ({ model: m.replace(/_/g, ' '), count: prices[m]?.epbox || prices[m]?.EPBOX || 0 }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-
-    const now = new Date();
-    const trend = Array.from({ length: 30 }, (_, i) => {
-      const d = new Date(now); d.setDate(d.getDate() - (29 - i));
-      return { date: `${d.getMonth()+1}/${d.getDate()}`, count: 0 };
-    });
-
+    const topModels = models.map(m => ({ model: m.replace(/_/g,' '), count: prices[m]?.epbox || 0 }))
+      .sort((a,b) => b.count - a.count).slice(0,10);
     return {
       summary: { totalEvaluations: null, thisMonth: null, avgBattery: null, totalModels: models.length },
-      trend,
-      topModels,
-      batteryDistribution: null,
-      warnings: null,
+      trend: Array.from({length:30},(_,i)=>{ const d=new Date(); d.setDate(d.getDate()-(29-i)); return {date:`${d.getMonth()+1}/${d.getDate()}`,count:0}; }),
+      topModels, batteryDistribution: null, warnings: null,
     };
   } catch { return null; }
 }
 
-function refreshData() {
-  if (db) loadFromFirebase();
-  else useMockData();
-}
+function refreshData() { if (db) loadFromFirebase(); else useMockData(); }
 
 function stamp() {
-  document.getElementById('last-updated').textContent =
-    '更新：' + new Date().toLocaleTimeString('zh-TW');
+  document.getElementById('last-updated').textContent = '更新：' + new Date().toLocaleTimeString('zh-TW');
 }
 
-/* ─────────────── Mock data ─────────────── */
 function useMockData() {
   document.getElementById('config-overlay').style.display = 'none';
   setStatus(false);
-
-  // Generate 30-day trend
-  const days = [];
   const now = new Date();
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const label = `${d.getMonth()+1}/${d.getDate()}`;
-    days.push({ date: label, count: Math.floor(60 + Math.random()*80 + Math.sin(i/3)*20) });
-  }
-
-  const mock = {
-    summary: {
-      totalEvaluations: 4827,
-      thisMonth: 312,
-      lastMonth: 278,
-      avgBattery: 84,
-      totalModels: 63
-    },
-    trend: days,
+  const trend = Array.from({length:30},(_,i)=>{ const d=new Date(now); d.setDate(d.getDate()-(29-i)); return {date:`${d.getMonth()+1}/${d.getDate()}`,count:Math.floor(60+Math.random()*80+Math.sin(i/3)*20)}; });
+  renderAll({
+    summary: { totalEvaluations:4827, thisMonth:312, lastMonth:278, avgBattery:84, totalModels:63 },
+    trend,
     topModels: [
-      { model: 'iPhone 15 Pro Max', count: 487 },
-      { model: 'iPhone 15 Pro',     count: 412 },
-      { model: 'iPhone 14 Pro Max', count: 389 },
-      { model: 'iPhone 14 Pro',     count: 341 },
-      { model: 'iPhone 13 Pro Max', count: 298 },
-      { model: 'iPhone 15',         count: 256 },
-      { model: 'iPhone 14',         count: 223 },
-      { model: 'iPhone 13',         count: 195 },
-      { model: 'iPhone 12 Pro Max', count: 167 },
-      { model: 'iPhone 13 Pro',     count: 134 },
+      {model:'iPhone 15 Pro Max',count:487},{model:'iPhone 15 Pro',count:412},{model:'iPhone 14 Pro Max',count:389},
+      {model:'iPhone 14 Pro',count:341},{model:'iPhone 13 Pro Max',count:298},{model:'iPhone 15',count:256},
+      {model:'iPhone 14',count:223},{model:'iPhone 13',count:195},{model:'iPhone 12 Pro Max',count:167},{model:'iPhone 13 Pro',count:134},
     ],
-    batteryDistribution: {
-      '100': 42,  '95-99': 186, '90-94': 413,
-      '85-89': 687,'80-84': 894,'75-79': 791,
-      '70-74': 623,'65-69': 467,'60-64': 312,
-      '<60':   211
-    },
+    batteryDistribution: {'100':42,'95-99':186,'90-94':413,'85-89':687,'80-84':894,'75-79':791,'70-74':623,'65-69':467,'60-64':312,'<60':211},
     warnings: [
-      { key: 'scratch_screen',    label: '螢幕刮傷',      icon: '📱', count: 1243 },
-      { key: 'dent_frame',        label: '邊框凹痕',      icon: '🔲', count: 987  },
-      { key: 'crack_back',        label: '背蓋裂痕',      icon: '💔', count: 741  },
-      { key: 'yellow_screen',     label: '螢幕泛黃',      icon: '🟡', count: 618  },
-      { key: 'broken_camera',     label: '鏡頭玻璃破裂',  icon: '📷', count: 534  },
-      { key: 'speaker_issue',     label: '揚聲器異常',    icon: '🔊', count: 289  },
-      { key: 'face_id_fail',      label: 'Face ID 失效',  icon: '🔐', count: 213  },
-      { key: 'charging_unstable', label: '充電不穩',      icon: '⚡', count: 178  },
+      {key:'scratch_screen',label:'螢幕刮傷',icon:'📱',count:1243},{key:'dent_frame',label:'邊框凹痕',icon:'🔲',count:987},
+      {key:'crack_back',label:'背蓋裂痕',icon:'💔',count:741},{key:'yellow_screen',label:'螢幕泛黃',icon:'🟡',count:618},
+      {key:'broken_camera',label:'鏡頭玻璃破裂',icon:'📷',count:534},{key:'speaker_issue',label:'揚聲器異常',icon:'🔊',count:289},
+      {key:'face_id_fail',label:'Face ID 失效',icon:'🔐',count:213},{key:'charging_unstable',label:'充電不穩',icon:'⚡',count:178},
     ]
-  };
-
-  renderAll(mock);
+  });
   stamp();
 }
 
-/* ─────────────── Render ─────────────── */
-let chartTrend = null, chartBattery = null;
-
 function renderAll(data) {
-  renderKPIs(data.summary);
-  renderTrend(data.trend);
-  renderModels(data.topModels);
-  renderBattery(data.batteryDistribution);
-  renderWarnings(data.warnings);
+  if (data.summary) renderKPIs(data.summary);
+  if (data.trend) renderTrend(data.trend);
+  if (data.topModels) renderModels(data.topModels);
+  if (data.batteryDistribution) renderBattery(data.batteryDistribution);
+  if (data.warnings) renderWarnings(data.warnings);
 }
 
 function renderKPIs(s) {
-  if (!s) return;
-  animCount('kpi-total',   s.totalEvaluations || 0, '');
-  animCount('kpi-month',   s.thisMonth || 0, '');
-  animCount('kpi-battery', s.avgBattery || 0, '');
-  animCount('kpi-models',  s.totalModels || 0, '');
-
+  const animCount = (id, target) => {
+    if (!target && target !== 0) { document.getElementById(id).textContent = '—'; return; }
+    const el = document.getElementById(id);
+    let start = Date.now();
+    const tick = () => {
+      const p = Math.min((Date.now()-start)/700, 1);
+      el.textContent = Math.floor(p*target).toLocaleString();
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+  animCount('kpi-total', s.totalEvaluations);
+  animCount('kpi-month', s.thisMonth);
+  animCount('kpi-battery', s.avgBattery);
+  animCount('kpi-models', s.totalModels);
   if (s.lastMonth && s.thisMonth) {
-    const diff = s.thisMonth - s.lastMonth;
-    const sign = diff >= 0 ? '+' : '';
-    document.getElementById('kpi-month-sub').textContent =
-      `${sign}${diff} 較上月`;
+    const d = s.thisMonth - s.lastMonth;
+    document.getElementById('kpi-month-sub').textContent = (d>=0?'+':'') + d + ' 較上月';
   }
 }
 
-function animCount(id, target, suffix) {
-  const el = document.getElementById(id);
-  let start = 0, duration = 800;
-  const step = (ts) => {
-    if (!step.start) step.start = ts;
-    const p = Math.min((ts - step.start) / duration, 1);
-    el.textContent = Math.floor(p * target) + suffix;
-    if (p < 1) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
-}
-
-/* Trend */
 function renderTrend(trend) {
-  if (!trend) return;
-  const labels = trend.map(d => d.date);
-  const counts  = trend.map(d => d.count);
-
   if (chartTrend) chartTrend.destroy();
-
   const ctx = document.getElementById('chart-trend').getContext('2d');
-  const grad = ctx.createLinearGradient(0, 0, 0, 200);
-  grad.addColorStop(0, 'rgba(0,229,160,.25)');
-  grad.addColorStop(1, 'rgba(0,229,160,0)');
-
+  const grad = ctx.createLinearGradient(0,0,0,200);
+  grad.addColorStop(0,'rgba(0,185,107,.2)');
+  grad.addColorStop(1,'rgba(0,185,107,0)');
   chartTrend = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        data: counts,
-        borderColor: '#00e5a0',
-        borderWidth: 2,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        pointHoverBackgroundColor: '#00e5a0',
-        tension: 0.4,
-        fill: true,
-        backgroundColor: grad,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { intersect: false, mode: 'index' },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#111318',
-          borderColor: '#1e2128',
-          borderWidth: 1,
-          titleColor: '#5c6375',
-          bodyColor: '#00e5a0',
-          titleFont: { family: 'IBM Plex Mono', size: 10 },
-          bodyFont:  { family: 'IBM Plex Mono', size: 13, weight: '600' },
-          callbacks: {
-            label: ctx => ' ' + ctx.parsed.y + ' 次'
-          }
-        }
+    type:'line',
+    data:{ labels:trend.map(d=>d.date), datasets:[{ data:trend.map(d=>d.count), borderColor:'#00b96b', borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:.4, fill:true, backgroundColor:grad }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{intersect:false,mode:'index'},
+      plugins:{
+        legend:{display:false},
+        tooltip:{ backgroundColor:'#1a1a2e', titleColor:'rgba(255,255,255,.6)', bodyColor:'#00b96b', bodyFont:{weight:'700'}, callbacks:{label:c=>' '+c.parsed.y+' 次'} }
       },
-      scales: {
-        x: {
-          grid: { color: '#1e2128' },
-          ticks: {
-            color: '#5c6375',
-            font: { family: 'IBM Plex Mono', size: 9 },
-            maxTicksLimit: 10,
-          },
-          border: { color: '#1e2128' }
-        },
-        y: {
-          grid: { color: '#1e2128' },
-          ticks: {
-            color: '#5c6375',
-            font: { family: 'IBM Plex Mono', size: 9 },
-          },
-          border: { color: '#1e2128' }
-        }
+      scales:{
+        x:{ grid:{color:'#f0f0f0'}, ticks:{color:'#86868b',font:{size:10},maxTicksLimit:8}, border:{color:'#e5e5e7'} },
+        y:{ grid:{color:'#f0f0f0'}, ticks:{color:'#86868b',font:{size:10}}, border:{color:'#e5e5e7'} }
       }
     }
   });
 }
 
-/* Models */
 function renderModels(models) {
-  if (!models || !models.length) return;
-  const max = models[0].count;
-  const container = document.getElementById('model-ranking');
-  container.innerHTML = '';
-
-  models.slice(0, 10).forEach((m, i) => {
-    const pct = Math.round((m.count / max) * 100);
-    container.innerHTML += `
-      <div class="rank-item">
-        <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
-        <span class="rank-label" title="${m.model}">${m.model}</span>
-        <div class="rank-bar-wrap">
-          <div class="rank-bar" style="width:0%" data-w="${pct}%"></div>
-        </div>
-        <span class="rank-count">${m.count}</span>
-      </div>`;
-  });
-
-  // animate bars
-  setTimeout(() => {
-    document.querySelectorAll('.rank-bar').forEach(b => {
-      b.style.width = b.dataset.w;
-    });
-  }, 50);
+  const max = models[0]?.count || 1;
+  document.getElementById('model-ranking').innerHTML = models.slice(0,10).map((m,i) => `
+    <div class="rank-item">
+      <div class="rank-num ${i<3?'top':''}">${i+1}</div>
+      <div class="rank-label">${m.model}</div>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:0%" data-w="${Math.round(m.count/max*100)}%"></div></div>
+      <div class="rank-count">${m.count}</div>
+    </div>`).join('');
+  setTimeout(() => document.querySelectorAll('.rank-bar').forEach(b => b.style.width = b.dataset.w), 50);
 }
 
-/* Battery */
 function renderBattery(dist) {
-  if (!dist) return;
-  const labels = Object.keys(dist);
-  const values = Object.values(dist);
-
   if (chartBattery) chartBattery.destroy();
-
-  const colors = labels.map((_, i) => {
-    const t = i / (labels.length - 1);
-    // green → amber → red
-    if (t < 0.5) return `hsl(${160 - t*160*2}, 80%, 55%)`;
-    return `hsl(${0}, ${60 + t*20}%, ${60 - t*10}%)`;
-  }).reverse();
-
+  const labels = Object.keys(dist).reverse();
+  const values = Object.values(dist).reverse();
+  const colors = labels.map((_,i) => {
+    const t = i / (labels.length-1);
+    return t < 0.5 ? `hsl(${150-t*120},75%,50%)` : `hsl(${30-t*30},80%,55%)`;
+  });
   const ctx = document.getElementById('chart-battery').getContext('2d');
   chartBattery = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: [...labels].reverse(),
-      datasets: [{
-        data: [...values].reverse(),
-        backgroundColor: colors,
-        borderRadius: 2,
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#111318',
-          borderColor: '#1e2128',
-          borderWidth: 1,
-          titleColor: '#5c6375',
-          bodyColor: '#e8eaf0',
-          titleFont: { family: 'IBM Plex Mono', size: 10 },
-          bodyFont:  { family: 'IBM Plex Mono', size: 12 },
-          callbacks: { label: ctx => ' ' + ctx.parsed.y + ' 台' }
-        }
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: {
-            color: '#5c6375',
-            font: { family: 'IBM Plex Mono', size: 9 },
-          },
-          border: { color: '#1e2128' }
-        },
-        y: {
-          grid: { color: '#1e2128' },
-          ticks: {
-            color: '#5c6375',
-            font: { family: 'IBM Plex Mono', size: 9 },
-          },
-          border: { color: '#1e2128' }
-        }
+    type:'bar',
+    data:{ labels, datasets:[{ data:values, backgroundColor:colors, borderRadius:4, borderSkipped:false }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#1a1a2e', callbacks:{label:c=>' '+c.parsed.y+' 台'} } },
+      scales:{
+        x:{ grid:{display:false}, ticks:{color:'#86868b',font:{size:10}}, border:{color:'#e5e5e7'} },
+        y:{ grid:{color:'#f0f0f0'}, ticks:{color:'#86868b',font:{size:10}}, border:{color:'#e5e5e7'} }
       }
     }
   });
 }
 
-/* Warnings */
 function renderWarnings(warnings) {
-  if (!warnings || !warnings.length) return;
-  const max = warnings[0].count;
-  const container = document.getElementById('warn-list');
-  container.innerHTML = '';
-
-  warnings.sort((a,b) => b.count - a.count).forEach(w => {
-    const pct = Math.round((w.count / max) * 100);
-    container.innerHTML += `
-      <div class="warn-item">
-        <span class="warn-icon">${w.icon || '⚠️'}</span>
-        <span class="warn-text">${w.label || w.key}</span>
-        <div class="warn-bar-wrap">
-          <div class="warn-bar" style="width:${pct}%"></div>
-        </div>
-        <span class="warn-badge">${w.count.toLocaleString()}</span>
-      </div>`;
-  });
+  const max = warnings[0]?.count || 1;
+  document.getElementById('warn-list').innerHTML = [...warnings].sort((a,b)=>b.count-a.count).map(w => `
+    <div class="warn-item">
+      <span class="warn-icon">${w.icon||'⚠️'}</span>
+      <span class="warn-text">${w.label||w.key}</span>
+      <div class="warn-bar-wrap"><div class="warn-bar" style="width:${Math.round(w.count/max*100)}%"></div></div>
+      <span class="warn-badge">${w.count.toLocaleString()}</span>
+    </div>`).join('');
 }
 
-/* Auto-load if saved config exists */
-// ── Known project defaults (from PROGRESS.md) ──
-const PROJECT_DEFAULTS = {
-  authDomain:  'trade-in-5135c.firebaseapp.com',
-  databaseURL: 'https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app',
-  projectId:   'trade-in-5135c',
-};
-
+// Auto connect
 window.addEventListener('DOMContentLoaded', () => {
-  const saved = getSavedConfig();
-  const cfg   = saved && saved.apiKey ? saved : {};
-
-  document.getElementById('cfg-apiKey').value     = cfg.apiKey     || '';
-  document.getElementById('cfg-authDomain').value = cfg.authDomain || PROJECT_DEFAULTS.authDomain;
-  document.getElementById('cfg-dbUrl').value      = cfg.databaseURL|| PROJECT_DEFAULTS.databaseURL;
-  document.getElementById('cfg-projectId').value  = cfg.projectId  || PROJECT_DEFAULTS.projectId;
+  const s = getSaved();
+  if (s && s.apiKey) {
+    document.getElementById('cfg-apiKey').value    = s.apiKey;
+    document.getElementById('cfg-authDomain').value= s.authDomain || PROJECT_DEFAULTS.authDomain;
+    document.getElementById('cfg-dbUrl').value     = s.databaseURL|| PROJECT_DEFAULTS.databaseURL;
+    document.getElementById('cfg-projectId').value = s.projectId  || PROJECT_DEFAULTS.projectId;
+  }
 });
 </script>
 </body>

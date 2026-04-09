@@ -4,424 +4,344 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EPBOX · 價格管理</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
 :root {
-  --bg: #f5f2ee;
-  --surface: #ffffff;
-  --ink: #1a1714;
-  --ink2: #6b6560;
-  --accent: #c84b2f;
-  --accent2: #2f6bc8;
-  --success: #1a7a4a;
-  --border: #ddd9d3;
-  --border2: #c8c3bb;
-  --warn: #e07a1a;
+  --ep-green: #00b96b;
+  --ep-orange: #ff6b00;
+  --apple-blue: #0071e3;
+  --purple: #5e5ce6;
+  --ep-dark: #1a1a2e;
+  --ep-light: #f0faf5;
+  --card-white: #ffffff;
+  --text-dark: #1d1d1f;
+  --text-gray: #86868b;
+  --border: #e5e5e7;
+  --bg: #f5f5f7;
+  --red: #d70015;
+  --gold: #ff9500;
 }
-
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
 body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
-  color: var(--ink);
-  font-family: 'Noto Sans TC', sans-serif;
-  font-size: 14px;
+  color: var(--text-dark);
   min-height: 100vh;
 }
 
 /* ── Header ── */
-header {
-  background: var(--ink);
-  color: var(--bg);
-  padding: 0 32px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.header {
+  background: var(--ep-dark);
+  color: #fff;
+  padding: 20px 24px 16px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.3);
 }
-
-.logo {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
-  font-size: 18px;
-  letter-spacing: .04em;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.logo-mark {
-  width: 30px; height: 30px;
-  background: var(--accent);
-  clip-path: polygon(0 0,100% 0,100% 70%,70% 100%,0 100%);
-  display: grid; place-items: center;
-  font-size: 9px; font-weight: 900; color: #fff;
-}
-
-.header-badge {
-  font-family: 'Syne', sans-serif;
-  font-size: 11px;
-  background: rgba(255,255,255,.12);
-  border: 1px solid rgba(255,255,255,.2);
-  border-radius: 2px;
-  padding: 3px 10px;
-  letter-spacing: .08em;
-}
-
-/* ── Layout ── */
-main {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 32px 24px 64px;
-}
-
-/* ── Steps bar ── */
-.steps {
-  display: flex;
-  gap: 0;
-  margin-bottom: 32px;
-  border: 1px solid var(--border2);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.step {
-  flex: 1;
-  padding: 14px 20px;
-  background: var(--surface);
-  border-right: 1px solid var(--border2);
-  display: flex;
+.header-logo {
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  cursor: pointer;
-  transition: background .2s;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.logo-badge {
+  background: var(--ep-green);
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+.header-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 2px;
 }
 
-.step:last-child { border-right: none; }
-.step.active { background: var(--ink); color: var(--bg); }
-.step.done { background: #e8f5ee; color: var(--success); }
-
+/* ── Steps ── */
+.steps-wrap {
+  background: var(--card-white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  display: flex;
+  justify-content: center;
+}
+.steps {
+  display: flex;
+  max-width: 600px;
+  width: 100%;
+}
+.step {
+  flex: 1;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all .2s;
+  position: relative;
+}
+.step::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 25%; bottom: 25%;
+  width: 1px;
+  background: var(--border);
+}
+.step:last-child::after { display: none; }
+.step.active { border-bottom-color: var(--ep-green); }
 .step-num {
   width: 24px; height: 24px;
   border-radius: 50%;
-  border: 2px solid currentColor;
+  border: 2px solid var(--border);
   display: grid; place-items: center;
-  font-family: 'Syne', sans-serif;
   font-size: 11px;
   font-weight: 700;
-  flex-shrink: 0;
+  color: var(--text-gray);
+  transition: all .2s;
 }
-
-.step.active .step-num { background: var(--accent); border-color: var(--accent); color: #fff; }
-.step.done .step-num { background: var(--success); border-color: var(--success); color: #fff; }
-
+.step.active .step-num { border-color: var(--ep-green); background: var(--ep-green); color: #fff; }
+.step.done .step-num { border-color: var(--ep-green); background: var(--ep-light); color: var(--ep-green); }
 .step-label {
-  font-family: 'Syne', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: .04em;
+  font-size: 11px;
+  color: var(--text-gray);
+  font-weight: 500;
+}
+.step.active .step-label { color: var(--ep-green); font-weight: 700; }
+
+/* ── Main ── */
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
 }
 
-/* ── Cards ── */
+/* ── Banner ── */
+.banner {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  display: none;
+}
+.banner.show { display: block; }
+.banner.success { background: var(--ep-light); border: 1px solid #a8dfc4; color: #006e40; }
+.banner.error   { background: #fff0f0; border: 1px solid #ffc0c0; color: var(--red); }
+.banner.info    { background: #e8f0ff; border: 1px solid #b3c8ff; color: var(--apple-blue); }
+
+/* ── Card ── */
 .card {
-  background: var(--surface);
+  background: var(--card-white);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 28px;
+  border-radius: 16px;
+  padding: 24px;
   margin-bottom: 16px;
 }
-
 .card-title {
-  font-family: 'Syne', sans-serif;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--ink2);
   margin-bottom: 18px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
-.card-title::before {
-  content: '';
-  width: 3px; height: 16px;
-  background: var(--accent);
-  border-radius: 2px;
+.card-title-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: var(--ep-light);
+  display: grid; place-items: center;
+  font-size: 16px;
 }
 
-/* ── Config fields ── */
-.field-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
+/* ── Fields ── */
+.field { margin-bottom: 12px; }
 .field label {
   display: block;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--ink2);
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  margin-bottom: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-gray);
+  margin-bottom: 4px;
 }
-
 .field input {
   width: 100%;
-  border: 1px solid var(--border2);
-  border-radius: 3px;
-  padding: 9px 12px;
-  font-family: 'Noto Sans TC', sans-serif;
-  font-size: 13px;
-  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--text-dark);
   background: var(--bg);
   outline: none;
   transition: border-color .2s;
+  -webkit-appearance: none;
 }
+.field input:focus { border-color: var(--apple-blue); background: #fff; }
+.field-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-.field input:focus { border-color: var(--accent2); }
+/* ── Buttons ── */
+.btn-row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.btn {
+  padding: 11px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s, background .15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-primary { background: var(--ep-green); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: #009959; }
+.btn-secondary { background: var(--apple-blue); color: #fff; }
+.btn-secondary:hover:not(:disabled) { background: #005bb5; }
+.btn-ghost { background: var(--bg); color: var(--text-gray); border: 1px solid var(--border); }
+.btn-ghost:hover:not(:disabled) { background: var(--border); color: var(--text-dark); }
 
 /* ── Upload area ── */
 .upload-area {
-  border: 2px dashed var(--border2);
-  border-radius: 4px;
-  padding: 40px 24px;
+  border: 2px dashed var(--border);
+  border-radius: 14px;
+  padding: 36px 20px;
   text-align: center;
   cursor: pointer;
   transition: all .2s;
   background: var(--bg);
 }
-
 .upload-area:hover, .upload-area.drag-over {
-  border-color: var(--accent2);
+  border-color: var(--apple-blue);
   background: #f0f5ff;
 }
-
 .upload-area.has-file {
-  border-color: var(--success);
-  background: #e8f5ee;
+  border-color: var(--ep-green);
+  background: var(--ep-light);
 }
+.upload-icon { font-size: 36px; margin-bottom: 10px; }
+.upload-text { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.upload-sub { font-size: 12px; color: var(--text-gray); }
 
-.upload-icon { font-size: 32px; margin-bottom: 10px; }
-
-.upload-text {
-  font-family: 'Syne', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink);
-  margin-bottom: 4px;
-}
-
-.upload-sub { font-size: 12px; color: var(--ink2); }
-
-/* ── CSV format hint ── */
 .format-hint {
   background: #fff8f0;
   border: 1px solid #fde2b8;
-  border-radius: 3px;
-  padding: 14px 16px;
+  border-radius: 10px;
+  padding: 12px 14px;
   margin-top: 14px;
   font-size: 12px;
-  color: var(--warn);
+  color: #a05a00;
+  line-height: 1.6;
 }
-
-.format-hint strong {
-  font-family: 'Syne', sans-serif;
-  display: block;
-  margin-bottom: 4px;
-}
-
 code {
-  background: #f0ece8;
+  background: rgba(0,0,0,.06);
   padding: 1px 5px;
-  border-radius: 2px;
+  border-radius: 4px;
   font-size: 11px;
   font-family: monospace;
-  color: var(--ink);
 }
 
-/* ── Preview table ── */
-.table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-
-thead tr {
-  background: var(--ink);
-  color: var(--bg);
-}
-
-thead th {
-  padding: 10px 14px;
-  font-family: 'Syne', sans-serif;
-  font-weight: 600;
-  font-size: 11px;
-  letter-spacing: .06em;
-  text-align: left;
-  white-space: nowrap;
-}
-
-tbody tr { border-bottom: 1px solid var(--border); }
-tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: var(--bg); }
-
-tbody td {
-  padding: 9px 14px;
-  color: var(--ink);
-  white-space: nowrap;
-}
-
-.td-model { font-weight: 500; color: var(--ink); }
-.td-price { font-family: monospace; text-align: right; color: var(--accent2); }
-.td-epbox { font-family: monospace; font-weight: 700; text-align: right; color: var(--accent); }
-
-.row-count {
-  font-size: 12px;
-  color: var(--ink2);
-  margin-top: 8px;
-  text-align: right;
-}
-
-/* ── Buttons ── */
-.btn-row { display: flex; gap: 10px; margin-top: 20px; }
-
-.btn {
-  padding: 11px 24px;
-  border-radius: 3px;
-  font-family: 'Syne', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  border: none;
-  cursor: pointer;
-  transition: all .15s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn:disabled { opacity: .4; cursor: not-allowed; }
-
-.btn-primary {
-  background: var(--accent);
-  color: #fff;
-}
-.btn-primary:hover:not(:disabled) { background: #a83a20; }
-
-.btn-secondary {
-  background: var(--ink);
-  color: var(--bg);
-}
-.btn-secondary:hover:not(:disabled) { background: #333; }
-
-.btn-ghost {
-  background: transparent;
-  color: var(--ink2);
-  border: 1px solid var(--border2);
-}
-.btn-ghost:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); }
-
-/* ── Progress ── */
-.progress-wrap {
-  background: var(--border);
-  border-radius: 2px;
-  height: 6px;
-  margin: 16px 0;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  background: var(--accent2);
-  border-radius: 2px;
-  transition: width .3s;
-  width: 0%;
-}
-
-/* ── Log ── */
-.log-area {
-  background: var(--ink);
-  color: #a8e6cf;
-  border-radius: 4px;
-  padding: 16px;
-  font-family: monospace;
-  font-size: 11px;
-  line-height: 1.7;
-  max-height: 240px;
-  overflow-y: auto;
-  display: none;
-}
-
-.log-area.show { display: block; }
-.log-err { color: #ff8a80; }
-.log-ok  { color: #b9f6ca; }
-.log-inf { color: #80d8ff; }
-
-/* ── Status banner ── */
-.banner {
-  padding: 12px 16px;
-  border-radius: 3px;
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 14px;
-  display: none;
-}
-
-.banner.show { display: block; }
-.banner.success { background: #e8f5ee; border: 1px solid #a8d8b8; color: var(--success); }
-.banner.error   { background: #ffeaea; border: 1px solid #ffb3b3; color: var(--accent); }
-.banner.info    { background: #e8f0ff; border: 1px solid #b3c8ff; color: var(--accent2); }
-
-/* ── Template download ── */
 .template-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: 'Syne', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--accent2);
-  text-decoration: none;
-  border: 1px solid var(--accent2);
-  border-radius: 3px;
+  color: var(--apple-blue);
+  border: 1px solid var(--apple-blue);
+  border-radius: 8px;
   padding: 5px 12px;
   cursor: pointer;
   transition: all .2s;
+  background: none;
 }
-.template-btn:hover { background: var(--accent2); color: #fff; }
+.template-btn:hover { background: var(--apple-blue); color: #fff; }
 
-/* ── Hide sections ── */
+/* ── Table ── */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead tr { background: var(--ep-dark); color: #fff; }
+thead th { padding: 10px 14px; font-weight: 600; font-size: 12px; text-align: left; white-space: nowrap; }
+thead th:first-child { border-radius: 12px 0 0 0; }
+thead th:last-child { border-radius: 0 12px 0 0; }
+tbody tr { border-bottom: 1px solid var(--border); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg); }
+tbody td { padding: 9px 14px; white-space: nowrap; }
+.td-model { font-weight: 600; }
+.td-epbox { font-weight: 700; color: var(--ep-orange); }
+.td-price { color: var(--apple-blue); }
+.row-count { font-size: 12px; color: var(--text-gray); margin-top: 8px; text-align: right; }
+
+/* ── Progress ── */
+.progress-wrap {
+  background: var(--border);
+  border-radius: 6px;
+  height: 8px;
+  margin: 16px 0 8px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: var(--ep-green);
+  border-radius: 6px;
+  transition: width .3s;
+  width: 0%;
+}
+.progress-label { font-size: 12px; color: var(--text-gray); margin-bottom: 14px; }
+
+/* ── Log ── */
+.log-area {
+  background: var(--ep-dark);
+  color: #a8e6cf;
+  border-radius: 12px;
+  padding: 14px;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.8;
+  max-height: 220px;
+  overflow-y: auto;
+  display: none;
+  margin-bottom: 14px;
+}
+.log-area.show { display: block; }
+.log-err { color: #ff8a80; }
+.log-ok  { color: #b9f6ca; }
+
+/* ── Section ── */
 .section { display: none; }
 .section.active { display: block; }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">
-    <div class="logo-mark">EP</div>
-    EPBOX
+<!-- Header -->
+<div class="header">
+  <div class="header-logo">
+    <span class="logo-badge">EPBOX</span>
+    價格管理後台
   </div>
-  <span class="header-badge">價格管理後台</span>
-</header>
+  <div class="header-sub">上傳 CSV 更新各通路回收價格</div>
+</div>
 
-<main>
-
-  <!-- Steps -->
+<!-- Steps -->
+<div class="steps-wrap">
   <div class="steps">
     <div class="step active" id="step1" onclick="goStep(1)">
       <div class="step-num">1</div>
-      <div class="step-label">Firebase 設定</div>
+      <div class="step-label">連線設定</div>
     </div>
     <div class="step" id="step2" onclick="goStep(2)">
       <div class="step-num">2</div>
@@ -433,34 +353,36 @@ tbody td {
     </div>
     <div class="step" id="step4" onclick="goStep(4)">
       <div class="step-num">4</div>
-      <div class="step-label">寫入 Firebase</div>
+      <div class="step-label">寫入完成</div>
     </div>
   </div>
+</div>
 
+<main>
   <div id="banner" class="banner"></div>
 
-  <!-- ── Step 1: Firebase Config ── -->
+  <!-- Step 1 -->
   <div class="section active" id="s1">
     <div class="card">
-      <div class="card-title">Firebase 連線設定</div>
-      <div class="field-row">
+      <div class="card-title"><div class="card-title-icon">🔗</div>Firebase 連線設定</div>
+      <div class="field-2col">
         <div class="field">
-          <label>API Key</label>
+          <label>API KEY</label>
           <input id="cfg-key" type="text" placeholder="AIzaSy...">
         </div>
         <div class="field">
-          <label>Database URL</label>
-          <input id="cfg-db" type="text" value="https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app">
+          <label>DATABASE URL</label>
+          <input id="cfg-db" type="text">
         </div>
       </div>
-      <div class="field-row">
+      <div class="field-2col">
         <div class="field">
-          <label>Auth Domain</label>
-          <input id="cfg-auth" type="text" value="trade-in-5135c.firebaseapp.com">
+          <label>AUTH DOMAIN</label>
+          <input id="cfg-auth" type="text">
         </div>
         <div class="field">
-          <label>Project ID</label>
-          <input id="cfg-proj" type="text" value="trade-in-5135c">
+          <label>PROJECT ID</label>
+          <input id="cfg-proj" type="text">
         </div>
       </div>
       <div class="btn-row">
@@ -469,77 +391,62 @@ tbody td {
     </div>
   </div>
 
-  <!-- ── Step 2: Upload CSV ── -->
+  <!-- Step 2 -->
   <div class="section" id="s2">
     <div class="card">
-      <div class="card-title">上傳價格 CSV</div>
-
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <span style="font-size:12px;color:var(--ink2);">支援 .csv 或 .xlsx 格式（建議先下載範本）</span>
-        <span class="template-btn" onclick="downloadTemplate()">⬇ 下載 CSV 範本</span>
+      <div class="card-title"><div class="card-title-icon">📂</div>上傳價格 CSV</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:13px;color:var(--text-gray);">支援 .csv 格式，建議先下載範本</span>
+        <button class="template-btn" onclick="downloadTemplate()">⬇ 下載範本</button>
       </div>
-
       <div class="upload-area" id="upload-area"
            onclick="document.getElementById('file-input').click()"
            ondragover="event.preventDefault();this.classList.add('drag-over')"
            ondragleave="this.classList.remove('drag-over')"
            ondrop="handleDrop(event)">
-        <div class="upload-icon">📂</div>
-        <div class="upload-text" id="upload-text">點擊或拖曳 CSV 檔案到此處</div>
+        <div class="upload-icon">📁</div>
+        <div class="upload-text" id="upload-text">點擊或拖曳 CSV 到此處</div>
         <div class="upload-sub" id="upload-sub">支援 UTF-8 編碼的 .csv 檔案</div>
       </div>
       <input type="file" id="file-input" accept=".csv" style="display:none" onchange="handleFile(event)">
-
       <div class="format-hint">
-        <strong>📋 CSV 欄位格式</strong>
-        必要欄位：<code>機型</code>、<code>EPBOX</code>（自助回收機）<br>
-        可選欄位：<code>APPLE BAR</code>、<code>STUDIO</code>、<code>台北101</code>、<code>台哥大</code>、<code>地標</code>、<code>平均回收價</code><br>
-        機型名稱範例：<code>IPHONE 15 PRO 256GB</code>（大寫，空格分隔）
+        📋 必要欄位：<code>機型</code>、<code>EPBOX</code>　可選：<code>APPLE BAR</code>、<code>STUDIO</code>、<code>台北101</code>、<code>台哥大</code>、<code>地標</code>、<code>平均回收價</code><br>
+        機型格式範例：<code>IPHONE 15 PRO 256GB</code>（大寫，空格分隔）
       </div>
-
       <div class="btn-row">
         <button class="btn btn-ghost" onclick="goStep(1)">← 上一步</button>
       </div>
     </div>
   </div>
 
-  <!-- ── Step 3: Preview ── -->
+  <!-- Step 3 -->
   <div class="section" id="s3">
     <div class="card">
-      <div class="card-title">預覽資料</div>
-      <div id="preview-container">
-        <div class="table-wrap">
-          <table>
-            <thead id="preview-head"></thead>
-            <tbody id="preview-body"></tbody>
-          </table>
-        </div>
-        <div class="row-count" id="row-count"></div>
+      <div class="card-title"><div class="card-title-icon">👁</div>預覽資料</div>
+      <div class="table-wrap">
+        <table>
+          <thead id="preview-head"></thead>
+          <tbody id="preview-body"></tbody>
+        </table>
       </div>
+      <div class="row-count" id="row-count"></div>
       <div class="btn-row">
         <button class="btn btn-ghost" onclick="goStep(2)">← 重新上傳</button>
-        <button class="btn btn-primary" onclick="goStep(4)">✓ 確認，寫入 Firebase →</button>
+        <button class="btn btn-primary" onclick="goStep(4)">✓ 確認寫入 Firebase →</button>
       </div>
     </div>
   </div>
 
-  <!-- ── Step 4: Upload to Firebase ── -->
+  <!-- Step 4 -->
   <div class="section" id="s4">
     <div class="card">
-      <div class="card-title">寫入 Firebase</div>
-
-      <div style="margin-bottom:16px;padding:14px 16px;background:var(--bg);border-radius:3px;border:1px solid var(--border);">
-        <div style="font-size:13px;color:var(--ink);margin-bottom:4px;">⚠️ 寫入模式</div>
-        <div style="font-size:12px;color:var(--ink2);">將會覆蓋 Firebase <code>/tradein_prices/prices</code> 路徑下，與本次 CSV 相同機型的資料。未出現在 CSV 的機型不受影響。</div>
+      <div class="card-title"><div class="card-title-icon">🚀</div>寫入 Firebase</div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--text-gray);">
+        ⚠️ 將覆蓋 <code>/tradein_prices/prices</code> 中與 CSV 相同機型的資料，未出現在 CSV 的機型不受影響。
       </div>
-
-      <div class="progress-wrap">
-        <div class="progress-bar" id="progress-bar"></div>
-      </div>
-      <div style="font-size:12px;color:var(--ink2);margin-bottom:12px;" id="progress-label">等待開始...</div>
-
+      <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+      <div class="progress-label" id="progress-label">等待開始...</div>
       <div class="log-area" id="log-area"></div>
-
       <div class="btn-row">
         <button class="btn btn-ghost" onclick="goStep(3)">← 返回預覽</button>
         <button class="btn btn-secondary" id="upload-btn" onclick="uploadToFirebase()">🚀 開始寫入</button>
@@ -547,57 +454,41 @@ tbody td {
       </div>
     </div>
   </div>
-
 </main>
-
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-<!-- PapaParse for CSV -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <script>
 const LS_KEY = 'epbox_uploader_cfg';
-let db = null;
-let parsedRows = [];
-let currentStep = 1;
+const DEFAULTS = {
+  apiKey:      'AIzaSyCuK7MkMN_ZIUxv0cOA7zq_OMcR-2kaJBY',
+  databaseURL: 'https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app',
+  authDomain:  'trade-in-5135c.firebaseapp.com',
+  projectId:   'trade-in-5135c',
+};
+let db = null, parsedRows = [], headers = [], currentStep = 1;
 
-// ── Auto-load config ──
 window.addEventListener('DOMContentLoaded', () => {
-  const saved = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch { return null; }})();
-  const defaults = {
-    apiKey:      'AIzaSyCuK7MkMN_ZIUxv0cOA7zq_OMcR-2kaJBY',
-    databaseURL: 'https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app',
-    authDomain:  'trade-in-5135c.firebaseapp.com',
-    projectId:   'trade-in-5135c',
-  };
-  const cfg = saved || defaults;
-  document.getElementById('cfg-key').value  = cfg.apiKey     || defaults.apiKey;
-  document.getElementById('cfg-db').value   = cfg.databaseURL|| defaults.databaseURL;
-  document.getElementById('cfg-auth').value = cfg.authDomain || defaults.authDomain;
-  document.getElementById('cfg-proj').value = cfg.projectId  || defaults.projectId;
+  const s = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch { return null; }})() || {};
+  document.getElementById('cfg-key').value  = s.apiKey      || DEFAULTS.apiKey;
+  document.getElementById('cfg-db').value   = s.databaseURL || DEFAULTS.databaseURL;
+  document.getElementById('cfg-auth').value = s.authDomain  || DEFAULTS.authDomain;
+  document.getElementById('cfg-proj').value = s.projectId   || DEFAULTS.projectId;
 });
 
-// ── Step navigation ──
 function goStep(n) {
   if (n > currentStep + 1) return;
   if (n === 2 && !db) { showBanner('請先完成 Firebase 連線', 'error'); return; }
   if (n === 3 && !parsedRows.length) { showBanner('請先上傳 CSV 檔案', 'error'); return; }
-
   currentStep = n;
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('s' + n).classList.add('active');
-
   document.querySelectorAll('.step').forEach((el, i) => {
     el.classList.remove('active', 'done');
-    if (i + 1 < n) el.classList.add('done');
-    if (i + 1 === n) el.classList.add('active');
+    if (i+1 < n) el.classList.add('done');
+    if (i+1 === n) el.classList.add('active');
   });
-
   clearBanner();
 }
 
-// ── Firebase connect ──
 async function connectFirebase() {
   const cfg = {
     apiKey:      document.getElementById('cfg-key').value.trim(),
@@ -605,69 +496,40 @@ async function connectFirebase() {
     authDomain:  document.getElementById('cfg-auth').value.trim(),
     projectId:   document.getElementById('cfg-proj').value.trim(),
   };
-
-  if (!cfg.apiKey || !cfg.databaseURL) {
-    showBanner('請填入 API Key 和 Database URL', 'error'); return;
-  }
-
+  if (!cfg.apiKey || !cfg.databaseURL) { showBanner('請填入 API Key 和 Database URL', 'error'); return; }
   localStorage.setItem(LS_KEY, JSON.stringify(cfg));
-
   try {
-    if (firebase.apps.length) await firebase.app().delete().catch(() => {});
+    if (firebase.apps.length) await firebase.app().delete().catch(()=>{});
     firebase.initializeApp(cfg);
     db = firebase.database();
-
-    // Test read
     await db.ref('/tradein_prices/prices').limitToFirst(1).once('value');
     showBanner('✅ Firebase 連線成功！', 'success');
     setTimeout(() => goStep(2), 800);
-  } catch (e) {
-    showBanner('連線失敗：' + e.message, 'error');
-    db = null;
-  }
+  } catch(e) { showBanner('連線失敗：' + e.message, 'error'); db = null; }
 }
 
-// ── File handling ──
 function handleDrop(e) {
   e.preventDefault();
   document.getElementById('upload-area').classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
   if (file) processFile(file);
 }
-
-function handleFile(e) {
-  const file = e.target.files[0];
-  if (file) processFile(file);
-}
+function handleFile(e) { const f = e.target.files[0]; if (f) processFile(f); }
 
 function processFile(file) {
-  if (!file.name.endsWith('.csv')) {
-    showBanner('請上傳 .csv 格式的檔案', 'error'); return;
-  }
-
+  if (!file.name.endsWith('.csv')) { showBanner('請上傳 .csv 格式', 'error'); return; }
   Papa.parse(file, {
-    header: true,
-    skipEmptyLines: true,
+    header: true, skipEmptyLines: true,
     complete: (result) => {
-      if (!result.data.length) { showBanner('CSV 檔案是空的', 'error'); return; }
-
-      const headers = result.meta.fields;
-      if (!headers.includes('機型')) {
-        showBanner('CSV 缺少「機型」欄位', 'error'); return;
-      }
-      if (!headers.includes('EPBOX') && !headers.includes('trade in價')) {
-        showBanner('CSV 缺少「EPBOX」欄位', 'error'); return;
-      }
-
-      parsedRows = result.data;
-
-      // Update upload area
+      if (!result.data.length) { showBanner('CSV 是空的', 'error'); return; }
+      const h = result.meta.fields;
+      if (!h.includes('機型')) { showBanner('CSV 缺少「機型」欄位', 'error'); return; }
+      parsedRows = result.data; headers = h;
       const area = document.getElementById('upload-area');
       area.classList.add('has-file');
       document.getElementById('upload-text').textContent = '✅ ' + file.name;
-      document.getElementById('upload-sub').textContent = `${parsedRows.length} 筆機型資料已讀取`;
-
-      buildPreview(headers, parsedRows);
+      document.getElementById('upload-sub').textContent = `${parsedRows.length} 筆機型已讀取`;
+      buildPreview();
       showBanner(`✅ 成功讀取 ${parsedRows.length} 筆資料`, 'success');
       setTimeout(() => goStep(3), 600);
     },
@@ -675,131 +537,90 @@ function processFile(file) {
   });
 }
 
-// ── Build preview table ──
-function buildPreview(headers, rows) {
-  const head = document.getElementById('preview-head');
-  const body = document.getElementById('preview-body');
-
-  head.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
-
-  body.innerHTML = rows.slice(0, 50).map(row => {
-    return '<tr>' + headers.map(h => {
-      const val = row[h] || '';
-      let cls = '';
-      if (h === '機型') cls = 'td-model';
-      else if (h === 'EPBOX' || h === 'trade in價') cls = 'td-epbox';
-      else if (val && !isNaN(Number(val))) cls = 'td-price';
-      return `<td class="${cls}">${val}</td>`;
-    }).join('') + '</tr>';
-  }).join('');
-
-  const shown = Math.min(50, rows.length);
-  document.getElementById('row-count').textContent =
-    `顯示 ${shown} / ${rows.length} 筆（超過 50 筆僅顯示前 50 筆，全部都會寫入）`;
+function buildPreview() {
+  document.getElementById('preview-head').innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+  document.getElementById('preview-body').innerHTML = parsedRows.slice(0,50).map(row =>
+    '<tr>' + headers.map(h => {
+      const v = row[h] || '';
+      let cls = h==='機型' ? 'td-model' : (h==='EPBOX'||h==='trade in價') ? 'td-epbox' : (!isNaN(Number(v))&&v) ? 'td-price' : '';
+      return `<td class="${cls}">${v}</td>`;
+    }).join('') + '</tr>'
+  ).join('');
+  document.getElementById('row-count').textContent = `顯示 ${Math.min(50,parsedRows.length)} / ${parsedRows.length} 筆`;
 }
 
-// ── Upload to Firebase ──
 async function uploadToFirebase() {
   if (!db || !parsedRows.length) return;
-
-  const btn = document.getElementById('upload-btn');
-  btn.disabled = true;
-
+  document.getElementById('upload-btn').disabled = true;
   const log = document.getElementById('log-area');
-  log.classList.add('show');
-  log.innerHTML = '';
-
+  log.classList.add('show'); log.innerHTML = '';
   const total = parsedRows.length;
   let done = 0, errors = 0;
-
-  addLog('inf', `開始寫入 ${total} 筆資料...`);
-
+  addLog('ok', `開始寫入 ${total} 筆...`);
   for (const row of parsedRows) {
-    const model = (row['機型'] || '').trim().toUpperCase();
+    const model = (row['機型']||'').trim().toUpperCase();
     if (!model) { done++; continue; }
-
-    // Build Firebase object
     const obj = { model };
-    for (const [k, v] of Object.entries(row)) {
-      if (k === '機型') continue;
-      const num = parseFloat(v);
-      obj[k] = isNaN(num) ? v : num;
+    for (const [k,v] of Object.entries(row)) {
+      if (k==='機型') continue;
+      const n = parseFloat(v);
+      obj[k] = isNaN(n) ? v : n;
     }
-
     try {
       await db.ref('/tradein_prices/prices/' + model).set(obj);
       done++;
       addLog('ok', `✓ ${model}`);
-    } catch (e) {
+    } catch(e) {
       errors++;
       addLog('err', `✗ ${model}：${e.message}`);
     }
-
-    // Update progress
-    const pct = Math.round((done + errors) / total * 100);
+    const pct = Math.round((done+errors)/total*100);
     document.getElementById('progress-bar').style.width = pct + '%';
-    document.getElementById('progress-label').textContent =
-      `進度：${done + errors} / ${total}（${errors > 0 ? errors + ' 筆錯誤' : '全部成功'}）`;
+    document.getElementById('progress-label').textContent = `進度：${done+errors} / ${total}`;
   }
-
-  if (errors === 0) {
-    addLog('ok', `\n✅ 全部 ${done} 筆寫入完成！`);
-    showBanner(`✅ 成功寫入 ${done} 筆資料到 Firebase`, 'success');
-  } else {
-    addLog('err', `\n⚠️ 完成，${done} 筆成功，${errors} 筆失敗`);
-    showBanner(`⚠️ ${done} 筆成功，${errors} 筆失敗`, 'info');
-  }
-
+  const msg = errors === 0 ? `✅ 全部 ${done} 筆寫入完成！` : `⚠️ ${done} 筆成功，${errors} 筆失敗`;
+  addLog(errors===0?'ok':'err', '\n' + msg);
+  showBanner(msg, errors===0?'success':'info');
   document.getElementById('reset-btn').style.display = 'flex';
 }
 
-// ── Download template ──
 function downloadTemplate() {
-  const headers = '機型,EPBOX,APPLE BAR,STUDIO,台北101,台哥大,地標,平均回收價';
-  const sample = [
+  const h = '機型,EPBOX,APPLE BAR,STUDIO,台北101,台哥大,地標,平均回收價';
+  const rows = [
     'IPHONE 15 PRO 256GB,12000,12500,12300,12400,11800,12200,12200',
     'IPHONE 15 PRO 512GB,13500,14000,13800,13900,13200,13700,13700',
     'IPHONE 15 128GB,9500,9800,9600,9700,9200,9500,9550',
-    'IPHONE 14 PRO MAX 256GB,10500,11000,10800,10900,10300,10700,10700',
   ].join('\n');
-
-  const blob = new Blob(['\uFEFF' + headers + '\n' + sample], { type: 'text/csv;charset=utf-8' });
+  const blob = new Blob(['\uFEFF'+h+'\n'+rows], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'epbox_price_template.csv';
   a.click();
 }
 
-// ── Helpers ──
 function addLog(type, msg) {
   const log = document.getElementById('log-area');
-  const line = document.createElement('div');
-  line.className = 'log-' + type;
-  line.textContent = msg;
-  log.appendChild(line);
+  const div = document.createElement('div');
+  div.className = 'log-' + type;
+  div.textContent = msg;
+  log.appendChild(div);
   log.scrollTop = log.scrollHeight;
 }
 
 function showBanner(msg, type) {
   const el = document.getElementById('banner');
-  el.textContent = msg;
-  el.className = `banner show ${type}`;
+  el.textContent = msg; el.className = `banner show ${type}`;
 }
-
-function clearBanner() {
-  document.getElementById('banner').className = 'banner';
-}
+function clearBanner() { document.getElementById('banner').className = 'banner'; }
 
 function resetAll() {
-  parsedRows = [];
-  db = null;
-  currentStep = 1;
+  parsedRows = []; db = null; currentStep = 1;
   document.getElementById('log-area').classList.remove('show');
   document.getElementById('log-area').innerHTML = '';
   document.getElementById('progress-bar').style.width = '0%';
   document.getElementById('progress-label').textContent = '等待開始...';
   document.getElementById('upload-area').classList.remove('has-file');
-  document.getElementById('upload-text').textContent = '點擊或拖曳 CSV 檔案到此處';
+  document.getElementById('upload-text').textContent = '點擊或拖曳 CSV 到此處';
   document.getElementById('upload-sub').textContent = '支援 UTF-8 編碼的 .csv 檔案';
   document.getElementById('file-input').value = '';
   document.getElementById('reset-btn').style.display = 'none';
