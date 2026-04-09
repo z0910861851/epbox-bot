@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPBOX · 回收最划算機型</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+:root {
+  --ep-green: #00b96b;
+  --ep-orange: #ff6b00;
+  --apple-blue: #0071e3;
+  --ep-dark: #1a1a2e;
+  --card-white: #ffffff;
+  --text-dark: #1d1d1f;
+  --text-gray: #86868b;
+  --border: #e5e5e7;
+  --bg: #f5f5f7;
+  --ep-light: #f0faf5;
+  --gold: #ff9500;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text-dark);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  background: var(--ep-dark);
+  color: #fff;
+  padding: 20px 24px 16px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+.header-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.logo-badge {
+  background: var(--ep-green);
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 800;
+}
+.header-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 2px;
+}
+.header-updated {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  margin-top: 6px;
+}
+
+/* ── Hero banner ── */
+.hero {
+  background: linear-gradient(135deg, #00b96b 0%, #009959 100%);
+  color: #fff;
+  text-align: center;
+  padding: 28px 20px;
+}
+.hero-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.hero-sub {
+  font-size: 14px;
+  opacity: .85;
+  margin-bottom: 16px;
+}
+.hero-tags {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.hero-tag {
+  background: rgba(255,255,255,.2);
+  border: 1px solid rgba(255,255,255,.35);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── Filter bar ── */
+.filter-bar {
+  background: var(--card-white);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.filter-btn {
+  flex-shrink: 0;
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-gray);
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.filter-btn.active {
+  background: var(--ep-dark);
+  border-color: var(--ep-dark);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Main ── */
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+/* ── Summary stats ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--card-white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ep-green);
+  margin-bottom: 4px;
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text-gray);
+}
+
+/* ── Section ── */
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 20px 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--ep-green);
+}
+
+/* ── Model cards ── */
+.model-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.model-card {
+  background: var(--card-white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform .15s, box-shadow .15s;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+.model-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+.model-card.top1 { border-color: var(--gold); background: linear-gradient(135deg, #fffbf0 0%, #fff 60%); }
+.model-card.top2 { border-color: #c0c0c0; }
+.model-card.top3 { border-color: #cd7f32; }
+
+/* Rank badge */
+.rank-badge {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.rank-badge.r1 { background: var(--gold); color: #fff; }
+.rank-badge.r2 { background: #c0c0c0; color: #fff; }
+.rank-badge.r3 { background: #cd7f32; color: #fff; }
+.rank-badge.rn { background: var(--bg); border: 1px solid var(--border); color: var(--text-gray); font-size: 12px; }
+
+/* Model info */
+.model-info { flex: 1; min-width: 0; }
+.model-name {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.model-name .series {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-gray);
+  margin-left: 4px;
+}
+.model-tags {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.model-tag {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.tag-best {
+  background: var(--ep-light);
+  color: var(--ep-green);
+  border: 1px solid #a8dfc4;
+}
+.tag-diff-pos {
+  background: #fff8f0;
+  color: var(--ep-orange);
+  border: 1px solid #fde2b8;
+}
+
+/* Prices */
+.model-prices {
+  text-align: right;
+  flex-shrink: 0;
+}
+.price-epbox {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ep-green);
+  line-height: 1;
+  margin-bottom: 3px;
+}
+.price-epbox small {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-gray);
+}
+.price-diff {
+  font-size: 12px;
+  font-weight: 600;
+}
+.price-diff.pos { color: var(--ep-green); }
+.price-diff.neg { color: var(--text-gray); }
+.price-diff.zero { color: var(--apple-blue); }
+
+/* ── Empty / loading ── */
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-gray);
+}
+.loading-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--ep-green);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Tie / lower sections ── */
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--card-white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  transition: background .2s;
+}
+.collapsible-header:hover { background: var(--bg); }
+.collapsible-arrow { transition: transform .2s; font-size: 12px; color: var(--text-gray); }
+.collapsible-header.open .collapsible-arrow { transform: rotate(180deg); }
+.collapsible-body { display: none; }
+.collapsible-body.open { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-logo">
+    <span class="logo-badge">EPBOX</span>
+    回收最划算機型
+  </div>
+  <div class="header-sub">即時比較各通路，找出 EPBOX 最有優勢的機型</div>
+  <div class="header-updated" id="updated-time">資料載入中...</div>
+</div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-title">🏆 這些機型在 EPBOX 回收最划算</div>
+  <div class="hero-sub">比其他通路更高或同等價格，還享有即時入帳、免預約等優勢</div>
+  <div class="hero-tags">
+    <span class="hero-tag">⚡ 即時入帳</span>
+    <span class="hero-tag">🕐 24小時免預約</span>
+    <span class="hero-tag">😌 無議價壓力</span>
+    <span class="hero-tag">📍 南台灣就近</span>
+  </div>
+</div>
+
+<!-- Filter -->
+<div class="filter-bar" id="filter-bar">
+  <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">全部機型</button>
+  <button class="filter-btn" data-filter="iphone16" onclick="setFilter('iphone16',this)">iPhone 16</button>
+  <button class="filter-btn" data-filter="iphone15" onclick="setFilter('iphone15',this)">iPhone 15</button>
+  <button class="filter-btn" data-filter="iphone14" onclick="setFilter('iphone14',this)">iPhone 14</button>
+  <button class="filter-btn" data-filter="iphone13" onclick="setFilter('iphone13',this)">iPhone 13</button>
+  <button class="filter-btn" data-filter="iphone12" onclick="setFilter('iphone12',this)">iPhone 12</button>
+  <button class="filter-btn" data-filter="older" onclick="setFilter('older',this)">其他</button>
+</div>
+
+<main>
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-best">—</div>
+      <div class="stat-label">EPBOX 最高優勢機型</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-count">—</div>
+      <div class="stat-label">EPBOX 領先機型數量</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-tie">—</div>
+      <div class="stat-label">同價持平機型數量</div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <div>正在讀取最新價格資料...</div>
+  </div>
+
+  <!-- EPBOX wins -->
+  <div id="wins-section" style="display:none">
+    <div class="section-title">
+      <span class="section-dot"></span>
+      EPBOX 價格領先 🏆
+      <span style="font-size:12px;color:var(--text-gray);font-weight:400;" id="wins-count"></span>
+    </div>
+    <div class="model-grid" id="wins-list"></div>
+  </div>
+
+  <!-- Ties -->
+  <div id="ties-section" style="display:none;margin-top:16px;">
+    <div class="collapsible-header" onclick="toggleSection('ties')">
+      <span>⚖️ 同價持平（用 EPBOX 更方便）</span>
+      <span class="collapsible-arrow" id="ties-arrow">▼</span>
+    </div>
+    <div class="collapsible-body" id="ties-body">
+      <div class="model-grid" id="ties-list"></div>
+    </div>
+  </div>
+
+  <!-- EPBOX lower - collapsed by default -->
+  <div id="lower-section" style="display:none;margin-top:8px;">
+    <div class="collapsible-header" onclick="toggleSection('lower')">
+      <span>📊 其他機型（其他通路較高）</span>
+      <span class="collapsible-arrow" id="lower-arrow">▼</span>
+    </div>
+    <div class="collapsible-body" id="lower-body">
+      <div class="model-grid" id="lower-list"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const DB_URL = 'https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app';
+let allData = [];
+let currentFilter = 'all';
+
+firebase.initializeApp({
+  apiKey: 'AIzaSyCuK7MkMN_ZIUxv0cOA7zq_OMcR-2kaJBY',
+  authDomain: 'trade-in-5135c.firebaseapp.com',
+  databaseURL: DB_URL,
+  projectId: 'trade-in-5135c',
+});
+
+const db = firebase.database();
+
+async function loadData() {
+  try {
+    const snap = await db.ref('/tradein_prices/prices').once('value');
+    const prices = snap.val();
+    if (!prices) return;
+
+    const OTHER_KEYS = ['APPLE BAR','STUDIO','台北101','台哥大','地標'];
+
+    allData = Object.entries(prices).map(([model, p]) => {
+      const epbox = Math.round(p['trade in價'] || p['EPBOX'] || 0);
+      const others = OTHER_KEYS.map(k => Number(p[k]) || 0).filter(v => v > 0);
+      const maxOther = others.length ? Math.max(...others) : 0;
+      const diff = epbox - maxOther;
+      return { model, epbox, maxOther, diff, raw: p };
+    }).filter(d => d.epbox > 0 && d.maxOther > 0);
+
+    allData.sort((a,b) => b.diff - a.diff || b.epbox - a.epbox);
+
+    // Stats
+    const wins = allData.filter(d => d.diff > 0);
+    const ties = allData.filter(d => d.diff === 0);
+    const bestDiff = wins[0]?.diff || 0;
+    document.getElementById('stat-best').textContent = bestDiff > 0 ? `+NT$${Math.round(bestDiff)}` : '—';
+    document.getElementById('stat-count').textContent = wins.length + ' 款';
+    document.getElementById('stat-tie').textContent = ties.length + ' 款';
+    document.getElementById('updated-time').textContent = '資料更新：' + new Date().toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+    renderAll();
+    document.getElementById('loading').style.display = 'none';
+  } catch(e) {
+    document.getElementById('loading').innerHTML = '<div style="color:#d70015">⚠ 資料載入失敗：' + e.message + '</div>';
+  }
+}
+
+function getModelSeries(model) {
+  const m = model.toUpperCase();
+  if (m.includes('IPHONE 16')) return 'iphone16';
+  if (m.includes('IPHONE 15')) return 'iphone15';
+  if (m.includes('IPHONE 14')) return 'iphone14';
+  if (m.includes('IPHONE 13')) return 'iphone13';
+  if (m.includes('IPHONE 12')) return 'iphone12';
+  return 'older';
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+
+function filtered(arr) {
+  if (currentFilter === 'all') return arr;
+  return arr.filter(d => getModelSeries(d.model) === currentFilter);
+}
+
+function renderAll() {
+  const wins  = filtered(allData.filter(d => d.diff > 0));
+  const ties  = filtered(allData.filter(d => d.diff === 0));
+  const lower = filtered(allData.filter(d => d.diff < 0));
+
+  // wins section
+  const winsEl = document.getElementById('wins-section');
+  if (wins.length) {
+    winsEl.style.display = 'block';
+    document.getElementById('wins-count').textContent = `(${wins.length} 款)`;
+    document.getElementById('wins-list').innerHTML = wins.map((d, i) => modelCard(d, i)).join('');
+  } else {
+    winsEl.style.display = 'none';
+  }
+
+  // ties
+  const tiesEl = document.getElementById('ties-section');
+  if (ties.length) {
+    tiesEl.style.display = 'block';
+    document.getElementById('ties-list').innerHTML = ties.map((d, i) => modelCard(d, -1)).join('');
+  } else {
+    tiesEl.style.display = 'none';
+  }
+
+  // lower
+  const lowerEl = document.getElementById('lower-section');
+  if (lower.length) {
+    lowerEl.style.display = 'block';
+    document.getElementById('lower-list').innerHTML = lower.map((d, i) => modelCard(d, -2)).join('');
+  } else {
+    lowerEl.style.display = 'none';
+  }
+}
+
+function modelCard(d, rank) {
+  const rankClass = rank === 0 ? 'top1' : rank === 1 ? 'top2' : rank === 2 ? 'top3' : '';
+  const badgeClass = rank === 0 ? 'r1' : rank === 1 ? 'r2' : rank === 2 ? 'r3' : 'rn';
+  const badgeText = rank === 0 ? '🥇' : rank === 1 ? '🥈' : rank === 2 ? '🥉' : rank >= 3 ? (rank+1) : '';
+
+  const diffText = d.diff > 0 ? `+NT$${Math.round(d.diff)} 領先` : d.diff === 0 ? '同價持平' : `NT$${Math.round(Math.abs(d.diff))} 落後`;
+  const diffClass = d.diff > 0 ? 'pos' : d.diff === 0 ? 'zero' : 'neg';
+
+  const modelDisplay = d.model.replace('IPHONE ', 'iPhone ');
+
+  // Parse model name to separate series and capacity
+  const parts = modelDisplay.match(/^(iPhone \d+(?:\s+Pro(?:\s+Max)?)?(?:\s+Plus)?(?:\s+mini)?)\s+(.+)$/i);
+  const name = parts ? parts[1] : modelDisplay;
+  const cap  = parts ? parts[2] : '';
+
+  return `
+    <div class="model-card ${rankClass}" onclick="window.open('https://epbox-line-bot.onrender.com/epbox.html','_blank')">
+      <div class="rank-badge ${badgeClass}">${badgeText || (rank+1)}</div>
+      <div class="model-info">
+        <div class="model-name">${name}<span class="series">${cap}</span></div>
+        <div class="model-tags">
+          ${d.diff > 0 ? '<span class="model-tag tag-best">✓ EPBOX 最高價</span>' : ''}
+          <span class="model-tag tag-diff-pos">${diffText}</span>
+        </div>
+      </div>
+      <div class="model-prices">
+        <div class="price-epbox">NT$${d.epbox.toLocaleString()}<small>/台</small></div>
+        <div class="price-diff ${diffClass}">${diffText}</div>
+      </div>
+    </div>`;
+}
+
+function toggleSection(id) {
+  const body = document.getElementById(id + '-body');
+  const header = body.previousElementSibling;
+  const arrow = document.getElementById(id + '-arrow');
+  body.classList.toggle('open');
+  header.classList.toggle('open');
+}
+
+loadData();
+</script>
+</body>
+</html>
