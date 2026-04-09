@@ -39,6 +39,7 @@ app.post(
 // ── 舊換新網頁 ───────────────────────────────────
 app.get('/', (_, res) => res.sendFile(path.join(__dirname, '..', 'epbox.html')));
 app.get('/epbox-analytics.html', (_, res) => res.sendFile(path.join(__dirname, '..', 'epbox-analytics.html')));
+app.get('/epbox-price-uploader.html', (_, res) => res.sendFile(path.join(__dirname, '..', 'epbox-price-uploader.html')));
 app.get('/epbox.html', (_, res) => res.sendFile(path.join(__dirname, '..', 'epbox.html')));
 
 app.get('/health', (_, res) => res.json({ ok: true, time: new Date().toISOString() }));
