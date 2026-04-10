@@ -40,19 +40,7 @@ async function runPriceCheck(client) {
                 try {
                             await client.pushMessage({
                                           to: sub.userId,
-                                          messages: [{
-                                                          type: 'text',
-                                                          text: [
-                                                                            `📉 ${sub.model}`,
-                                                                            `EPBOX 回收價下跌！`,
-                                                                            ``,
-                                                                            `昨日：NT$${drop.prev.toLocaleString()}`,
-                                                                            `今日：NT$${drop.curr.toLocaleString()}`,
-                                                                            `跌幅：NT$${(drop.prev - drop.curr).toLocaleString()}`,
-                                                                            ``,
-                                                                            `建議盡快前往回收！`,
-                                                                          ].join('\n'),
-                                          }],
+                                          messages: [buildDropFlex(sub.model, drop)],
                             });
                             sent++;
                 } catch (e) {
@@ -77,6 +65,70 @@ async function runPriceCheck(client) {
     } catch (e) {
           console.error('[排程] 錯誤:', e);
     }
+}
+
+function buildDropFlex(model, drop) {
+    const diff = drop.prev - drop.curr;
+    return {
+        type: 'flex',
+        altText: `📉 ${model} EPBOX 回收價下跌 NT$${diff.toLocaleString()}`,
+        contents: {
+            type: 'bubble',
+            size: 'mega',
+            header: {
+                type: 'box',
+                layout: 'vertical',
+                backgroundColor: '#1a1a1a',
+                paddingAll: '16px',
+                contents: [
+                    { type: 'text', text: '📉 EPBOX 回收價下跌通知', size: 'xs', color: '#aaaaaa' },
+                    { type: 'text', text: model, size: 'md', color: '#ffffff', weight: 'bold', wrap: true, margin: '4px' },
+                    { type: 'text', text: `NT$${drop.curr.toLocaleString()}`, size: 'xxl', color: '#ff4444', weight: 'bold', margin: '8px' },
+                ],
+            },
+            body: {
+                type: 'box',
+                layout: 'vertical',
+                paddingAll: '16px',
+                spacing: 'sm',
+                contents: [
+                    {
+                        type: 'box',
+                        layout: 'horizontal',
+                        contents: [
+                            { type: 'text', text: '前次記錄', size: 'sm', color: '#888888', flex: 3 },
+                            { type: 'text', text: `NT$${drop.prev.toLocaleString()}`, size: 'sm', color: '#888888', align: 'end', flex: 2 },
+                        ],
+                    },
+                    {
+                        type: 'box',
+                        layout: 'horizontal',
+                        contents: [
+                            { type: 'text', text: '目前價格', size: 'sm', color: '#ff4444', weight: 'bold', flex: 3 },
+                            { type: 'text', text: `NT$${drop.curr.toLocaleString()}`, size: 'sm', color: '#ff4444', weight: 'bold', align: 'end', flex: 2 },
+                        ],
+                    },
+                    { type: 'separator', margin: 'md' },
+                    { type: 'text', text: `▼ 跌幅 NT$${diff.toLocaleString()}`, size: 'sm', color: '#ff4444', margin: 'md' },
+                    { type: 'text', text: '建議盡快前往回收！', size: 'sm', color: '#555555', margin: 'sm' },
+                ],
+            },
+            footer: {
+                type: 'box',
+                layout: 'horizontal',
+                paddingAll: '12px',
+                contents: [
+                    {
+                        type: 'button',
+                        style: 'primary',
+                        color: '#ff6b00',
+                        height: 'sm',
+                        action: { type: 'message', label: '我的訂閱', text: '我的訂閱' },
+                    },
+                ],
+            },
+        },
+    };
 }
 
 module.exports = { runPriceCheck };

@@ -84,7 +84,9 @@ async function cmdSetup(event, client) {
           // 直接用 Firebase 完整 key（含容量），確保訂閱資料與 Firebase 一致
       const names = Object.keys(data).sort().slice(0, 13);
           items = names.map(n => qr(shortLabel(n), n));
-    } catch {}
+    } catch (e) {
+          console.error('[cmdSetup] 無法取得機型清單，使用預設值:', e.message);
+    }
 
   return client.replyMessage({
         replyToken: event.replyToken,
@@ -455,10 +457,6 @@ async function handlePostback(event, client) {
 }
 
 // ── 工具函式 ─────────────────────────────────────
-function baseModel(name = '') {
-    return name.replace(/\s*(64|128|256|512|1T)GB\s*/i, '').trim();
-}
-
 /** Quick Reply label 上限 20 字元，超過則截斷 */
 function shortLabel(name = '') {
     return name.length > 20 ? name.slice(0, 19) + '…' : name;

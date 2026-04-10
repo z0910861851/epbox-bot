@@ -6,7 +6,6 @@ const line    = require('@line/bot-sdk');
 const cron    = require('node-cron');
 const fetch   = require('node-fetch');
 
-const { initDB }        = require('./db');
 const { handleEvent }   = require('./handlers');
 const { runPriceCheck } = require('./scheduler');
 
@@ -38,9 +37,10 @@ app.post(
 
 // ── 舊換新網頁 ───────────────────────────────────
 app.get('/', (_, res) => res.sendFile(path.join(__dirname, '..', 'epbox.html')));
-app.get('/epbox-analytics.html', (_, res) => res.sendFile(path.join(__dirname, '..', 'epbox-analytics.html')));
-app.get('/epbox-price-uploader.html', (_, res) => res.sendFile(path.join(__dirname, '..', 'epbox-price-uploader.html')));
 app.get('/epbox.html', (_, res) => res.sendFile(path.join(__dirname, '..', 'epbox.html')));
+app.get('/epbox-analytics.html', (_, res) => res.sendFile(path.join(__dirname, '..', 'epbox-analytics.html')));
+app.get('/epbox-best-deals.html', (_, res) => res.sendFile(path.join(__dirname, '..', 'epbox-best-deals.html')));
+app.get('/epbox-price-uploader.html', (_, res) => res.sendFile(path.join(__dirname, '..', 'epbox-price-uploader.html')));
 
 app.get('/health', (_, res) => res.json({ ok: true, time: new Date().toISOString() }));
 
@@ -109,7 +109,7 @@ app.post('/claude-proxy', express.json({ limit: '15mb' }), async (req, res) => {
                         'anthropic-version': '2023-06-01',
               },
               body: JSON.stringify({
-                        model: 'claude-sonnet-4-20250514',
+                        model: 'claude-sonnet-4-6',
                         max_tokens: 2500,
                         messages: [{
                                     role: 'user',
@@ -134,9 +134,7 @@ app.post('/claude-proxy', express.json({ limit: '15mb' }), async (req, res) => {
     }
 });
 
-// ── 初始化 & 排程 ──────────────────────────────────
-initDB();
-
+// ── 排程 ─────────────────────────────────────────
 // 每天早上 9:00 台灣時間（UTC+8）= UTC 01:00
 cron.schedule('0 1 * * *', () => runPriceCheck(client));
 

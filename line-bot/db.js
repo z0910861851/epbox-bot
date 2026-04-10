@@ -4,10 +4,10 @@
  */
 const fetch = require('node-fetch');
 
+const FIREBASE_BASE = 'https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app';
+
 function alertsUrl() {
-    const base = (process.env.FIREBASE_URL || '')
-      .replace(/\/[^/]+\.json$/, '');
-    return `${base}/epbox_bot_alerts`;
+    return `${FIREBASE_BASE}/epbox_bot_alerts`;
 }
 
 async function _getAll() {
@@ -66,7 +66,4 @@ async function removeSubscriptionByIndex(userId, index) {
     return true;
 }
 
-// 保留相容介面
-function initDB() {}
-
-module.exports = { initDB, addSubscription, removeSubscriptionByIndex, getUserSubscriptions, getAllSubscriptions, getSubscribersByModel };
+module.exports = { addSubscription, removeSubscriptionByIndex, getUserSubscriptions, getAllSubscriptions, getSubscribersByModel };
