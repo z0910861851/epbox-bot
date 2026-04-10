@@ -381,6 +381,7 @@ body {
 <!-- Tabs -->
 <div class="tab-nav">
   <button class="tab-btn active" onclick="switchTab('compare', this)"><i data-lucide="bar-chart-2"></i>各通路比較</button>
+  <button class="tab-btn" onclick="switchTab('epbox', this)"><i data-lucide="bot"></i>EPBOX 回收價</button>
   <button class="tab-btn" onclick="switchTab('calc', this)"><i data-lucide="calculator"></i>換機試算</button>
   <button class="tab-btn" onclick="switchTab('alerts', this)"><i data-lucide="bell"></i>回收價提醒</button>
   <button class="tab-btn" onclick="switchTab('analytics', this)"><i data-lucide="activity"></i>EPBOX 分析</button>
@@ -623,26 +624,6 @@ body {
     </div>
   </div>
 
-</div>
-
-<!-- ══════════ Tab 6: 設置地點 ══════════ -->
-<div id="tab-locations" class="tab-content">
-  <div class="card" style="padding:14px 16px;">
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
-      <div class="card-title" style="margin:0;">EPBOX 自助回收機設置地點</div>
-      <span class="count-badge" id="loc-count">共 0 台</span>
-    </div>
-    <div class="loc-filter">
-      <input type="text" id="loc-search" placeholder="🔍 搜尋店家或地址…" oninput="renderLocations()">
-      <select id="loc-city" onchange="renderLocations()">
-        <option value="">全部縣市</option>
-        <option value="高雄市">高雄市</option>
-        <option value="台南市">台南市</option>
-        <option value="雲林縣">雲林縣</option>
-      </select>
-    </div>
-    <div id="loc-grid" class="loc-grid"></div>
-  </div>
 </div>
 
 <script>
