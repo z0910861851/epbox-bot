@@ -355,6 +355,59 @@ body {
 .ai-history-item { padding:12px 0; border-bottom:1px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:space-between; }
 .ai-history-item:last-child { border-bottom:none; }
 
+/* ── Battery option buttons ── */
+.sp-batt-btn {
+  padding: 10px 8px; border-radius: 12px; font-size: 13px; font-weight: 600;
+  border: 1.5px solid var(--border); background: var(--bg); color: var(--text-gray);
+  cursor: pointer; transition: all .15s; text-align: center; line-height: 1.6;
+}
+.sp-batt-btn.active {
+  border-color: var(--ep-green); background: var(--ep-light); color: #00855c;
+}
+
+/* ── Best Deals Tab ── */
+.bd-filter-bar { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; margin-bottom: 14px; scrollbar-width: none; }
+.bd-filter-bar::-webkit-scrollbar { display: none; }
+.bd-filter-btn { flex-shrink: 0; padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: var(--bg); color: var(--text-gray); cursor: pointer; transition: all .2s; white-space: nowrap; }
+.bd-filter-btn.active { background: var(--ep-dark); border-color: var(--ep-dark); color: #fff; font-weight: 600; }
+
+/* Section headers */
+.bd-sec-hdr { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.bd-sec-hdr.green { background: #e6f9f0; color: #00855c; }
+.bd-sec-hdr.gray  { background: #f5f5f7; color: var(--text-gray); cursor: pointer; justify-content: space-between; }
+.bd-sec-hdr .bd-count { font-size: 12px; font-weight: 500; opacity: .75; margin-left: 4px; }
+.bd-sec-arrow { font-size: 11px; transition: transform .2s; }
+.bd-sec-arrow.open { transform: rotate(180deg); }
+
+/* Row list */
+.bd-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+.bd-row {
+  background: #fff; border-radius: 14px;
+  padding: 12px 14px 12px 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border: 1px solid var(--border);
+  border-left: 5px solid transparent;
+}
+.bd-row.win  { border-left-color: var(--ep-green); }
+.bd-row.tie  { border-left-color: var(--apple-blue); }
+.bd-row.low  { border-left-color: #d0d0d5; opacity: .75; }
+
+.bd-row-left { min-width: 0; flex: 1; }
+.bd-row-model { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bd-row-cap   { font-size: 12px; color: var(--text-gray); font-weight: 400; margin-left: 5px; }
+.bd-row-sub   { font-size: 12px; margin-top: 3px; font-weight: 600; }
+.bd-row-sub.win  { color: var(--ep-green); }
+.bd-row-sub.tie  { color: var(--apple-blue); }
+.bd-row-sub.low  { color: var(--text-gray); }
+
+.bd-row-right  { text-align: right; flex-shrink: 0; }
+.bd-row-price  { font-size: 18px; font-weight: 900; color: var(--text-dark); line-height: 1; }
+.bd-row-price small { font-size: 11px; font-weight: 400; color: var(--text-gray); }
+
+/* collapsed lower */
+.bd-lower-body { display: none; }
+.bd-lower-body.open { display: block; }
+
 /* ── Lucide icons ── */
 .tab-btn svg { width: 15px; height: 15px; vertical-align: -2px; margin-right: 5px; stroke-width: 2.2; }
 .card-title svg { width: 17px; height: 17px; vertical-align: -3px; stroke-width: 2; }
@@ -381,10 +434,10 @@ body {
 <!-- Tabs -->
 <div class="tab-nav">
   <button class="tab-btn active" onclick="switchTab('compare', this)"><i data-lucide="bar-chart-2"></i>各通路比較</button>
-  <button class="tab-btn" onclick="switchTab('epbox', this)"><i data-lucide="bot"></i>EPBOX 回收價</button>
+  <button class="tab-btn" onclick="switchTab('epbox', this)"><i data-lucide="trophy"></i>回收最划算</button>
   <button class="tab-btn" onclick="switchTab('calc', this)"><i data-lucide="calculator"></i>換機試算</button>
   <button class="tab-btn" onclick="switchTab('alerts', this)"><i data-lucide="bell"></i>回收價提醒</button>
-  <button class="tab-btn" onclick="switchTab('analytics', this)"><i data-lucide="activity"></i>EPBOX 分析</button>
+  <button class="tab-btn" onclick="switchTab('analytics', this)"><i data-lucide="message-circle"></i>話術生成</button>
 </div>
 
 <!-- ══════════ Tab 1: 各通路回收比較 ══════════ -->
@@ -406,6 +459,13 @@ body {
     <div id="storage-row" style="display:none;">
       <div style="font-size:13px;color:var(--text-gray);font-weight:500;margin-bottom:8px;">容量</div>
       <div class="storage-pills" id="storage-pills"></div>
+    </div>
+    <div id="battery-row" style="display:none;">
+      <div style="font-size:13px;color:var(--text-gray);font-weight:500;margin-bottom:8px;">電池健康度</div>
+      <div class="storage-pills" id="battery-pills">
+        <button class="pill active" onclick="setBattery(true)">🟢 電池 ≥ 80%</button>
+        <button class="pill" onclick="setBattery(false)">🔴 電池 &lt; 80%</button>
+      </div>
     </div>
   </div>
 
@@ -429,68 +489,38 @@ body {
   </div>
 </div>
 
-<!-- ══════════ Tab 2: EPBOX 回收參考價 ══════════ -->
+<!-- ══════════ Tab 2: 回收最划算 ══════════ -->
 <div id="tab-epbox" class="tab-content">
   <div class="updated" id="last-updated-2">更新時間：載入中…</div>
 
-  <div class="info-box">
-    <span class="info-icon"><i data-lucide="bot"></i></span><strong>EPBOX 自助回收機：</strong>「trade in價」為 EPBOX 自助機回收參考報價，全程自助 5-10 分鐘完成，即時入帳。
+  <!-- Filter -->
+  <div class="bd-filter-bar">
+    <button class="bd-filter-btn active" onclick="setBestFilter('all',this)">全部機型</button>
+    <button class="bd-filter-btn" onclick="setBestFilter('iphone16',this)">iPhone 16</button>
+    <button class="bd-filter-btn" onclick="setBestFilter('iphone15',this)">iPhone 15</button>
+    <button class="bd-filter-btn" onclick="setBestFilter('iphone14',this)">iPhone 14</button>
+    <button class="bd-filter-btn" onclick="setBestFilter('iphone13',this)">iPhone 13</button>
+    <button class="bd-filter-btn" onclick="setBestFilter('iphone12',this)">iPhone 12</button>
+    <button class="bd-filter-btn" onclick="setBestFilter('older',this)">其他</button>
   </div>
 
-  <div class="models-filter">
-    <select id="epbox-series" onchange="renderEpboxTable()">
-      <option value="">全部系列</option>
-      <option value="17">iPhone 17 系列</option>
-      <option value="16">iPhone 16 系列</option>
-      <option value="15">iPhone 15 系列</option>
-      <option value="14">iPhone 14 系列</option>
-      <option value="13">iPhone 13 系列</option>
-      <option value="12">iPhone 12 系列</option>
-      <option value="11">iPhone 11 系列</option>
-    </select>
-  </div>
-
-  <div class="card" style="padding:0 0 8px;">
-    <div class="price-table-wrap">
-      <table class="price-table">
-        <thead>
-          <tr>
-            <th>型號</th>
-            <th><span class="th-icon"><i data-lucide="bot"></i></span>EPBOX 回收參考價</th>
-            <th><span class="th-icon"><i data-lucide="trending-up"></i></span>近期漲跌</th>
-            <th><span class="th-icon"><i data-lucide="bar-chart-2"></i></span>6家平均</th>
-            <th><span class="th-icon"><i data-lucide="crown"></i></span>最高通路</th>
-          </tr>
-        </thead>
-        <tbody id="epbox-table-body"></tbody>
-      </table>
+  <!-- 推薦區 (wins + ties) -->
+  <div id="bd-good-section" style="display:none">
+    <div class="bd-sec-hdr green">
+      <span>✅ 推薦用 EPBOX</span>
+      <span class="bd-count" id="bd-good-count"></span>
     </div>
+    <div class="bd-list" id="bd-good-list"></div>
   </div>
 
-  <!-- Flow steps -->
-  <div class="card">
-    <div class="card-title"><i data-lucide="refresh-cw"></i> EPBOX 回收流程</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;text-align:center;">
-      <div style="background:#f7fdf9;border-radius:12px;padding:16px 8px;">
-        <div class="step-icon"><i data-lucide="smartphone"></i></div>
-        <div style="font-size:13px;font-weight:700;">① 放入手機</div>
-        <div style="font-size:11px;color:var(--text-gray);margin-top:4px;">放入機器感應槽</div>
-      </div>
-      <div style="background:#f7fdf9;border-radius:12px;padding:16px 8px;">
-        <div class="step-icon"><i data-lucide="scan-eye"></i></div>
-        <div style="font-size:13px;font-weight:700;">② 自動鑑定</div>
-        <div style="font-size:11px;color:var(--text-gray);margin-top:4px;">AI 外觀與功能檢測</div>
-      </div>
-      <div style="background:#f7fdf9;border-radius:12px;padding:16px 8px;">
-        <div class="step-icon"><i data-lucide="banknote"></i></div>
-        <div style="font-size:13px;font-weight:700;">③ 確認報價</div>
-        <div style="font-size:11px;color:var(--text-gray);margin-top:4px;">查看即時金額</div>
-      </div>
-      <div style="background:#f7fdf9;border-radius:12px;padding:16px 8px;">
-        <div class="step-icon"><i data-lucide="circle-check"></i></div>
-        <div style="font-size:13px;font-weight:700;">④ 即時入帳</div>
-        <div style="font-size:11px;color:var(--text-gray);margin-top:4px;">轉帳 / 現金取得</div>
-      </div>
+  <!-- 其他通路較高 (lower, 預設收起) -->
+  <div id="bd-low-section" style="display:none;margin-bottom:20px;">
+    <div class="bd-sec-hdr gray" onclick="toggleBdLower()">
+      <span>⚠️ 其他通路較高 <span class="bd-count" id="bd-low-count"></span></span>
+      <span class="bd-sec-arrow" id="bd-low-arrow">▼</span>
+    </div>
+    <div class="bd-lower-body" id="bd-low-list-wrap">
+      <div class="bd-list" id="bd-low-list"></div>
     </div>
   </div>
 </div>
@@ -552,78 +582,66 @@ body {
   </div>
 </div>
 
-<!-- ══════════ Tab 5: EPBOX 分析 ══════════ -->
+<!-- ══════════ Tab 5: 話術生成 ══════════ -->
 <div id="tab-analytics" class="tab-content">
 
-  <!-- Header -->
-  <div class="card" style="display:flex;align-items:center;gap:14px;padding:18px;">
-    <div style="width:50px;height:50px;flex-shrink:0;border-radius:14px;background:linear-gradient(135deg,#30d158,#0071e3);display:flex;align-items:center;justify-content:center;">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><circle cx="18" cy="6" r="3" fill="white" stroke="none"/></svg>
-    </div>
-    <div style="flex:1;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-        <span style="font-size:15px;font-weight:800;">EPBOX AI 說服分析</span>
-        <span style="font-size:10px;font-weight:700;color:#30d158;background:rgba(48,209,88,.12);padding:2px 8px;border-radius:6px;">AI</span>
-      </div>
-      <p style="font-size:12px;color:var(--text-gray);margin:0;">拍攝 EPBOX 估價畫面，AI 自動解析數據並生成說服話術</p>
-    </div>
-  </div>
-
-  <!-- Photo Area -->
-  <div class="card" style="padding:18px;">
-    <input type="file" id="ai-file-camera" accept="image/*" capture="environment" style="display:none">
-    <input type="file" id="ai-file-picker" accept="image/*" style="display:none">
-
-    <div id="ai-no-photo">
-      <button class="ai-upload-btn" onclick="document.getElementById('ai-file-camera').click()">
-        <div class="ai-upload-icon">📷</div>
-        <div class="ai-upload-label">拍攝 EPBOX 估價畫面</div>
-        <div class="ai-upload-sub">直接拍攝螢幕畫面，效果最佳</div>
+  <!-- 外觀狀況選擇器 -->
+  <div style="padding:16px 16px 0;">
+    <div style="font-size:11px;font-weight:700;color:var(--text-gray);margin-bottom:8px;letter-spacing:0.5px;">顧客手機外觀</div>
+    <div style="display:flex;gap:8px;">
+      <button class="cond-btn" data-cond="perfect"
+        onclick="setCondition('perfect')"
+        style="flex:1;padding:11px 4px;border:2px solid var(--ep-green);background:#edfaf3;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ep-green);">
+        ✨ 外觀完美
       </button>
-      <button class="ai-picker-btn" onclick="document.getElementById('ai-file-picker').click()">從相簿選擇</button>
-    </div>
-
-    <div id="ai-has-photo" style="display:none;">
-      <img id="ai-preview-img" style="width:100%;max-height:260px;object-fit:contain;border-radius:14px;margin-bottom:12px;">
-      <div style="display:flex;gap:10px;">
-        <button class="ai-repick-btn" onclick="document.getElementById('ai-file-camera').click()">📷 重新拍攝</button>
-        <button class="ai-repick-btn secondary" onclick="document.getElementById('ai-file-picker').click()">從相簿選擇</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Analyze Button -->
-  <button id="ai-analyze-btn" class="ai-analyze-btn" style="display:none;" onclick="epboxAnalyze()">✨ 開始 AI 分析</button>
-
-  <!-- Loading -->
-  <div id="ai-loading" class="card" style="display:none;text-align:center;padding:36px 20px;">
-    <div class="spinner" style="margin:0 auto 14px;width:34px;height:34px;border-width:3px;border-color:rgba(48,209,88,.2);border-top-color:#30d158;"></div>
-    <div style="font-size:14px;font-weight:700;margin-bottom:4px;">AI 正在分析中...</div>
-    <div style="font-size:12px;color:var(--text-gray);">辨識 EPBOX 資料並生成說服話術</div>
-  </div>
-
-  <!-- Error -->
-  <div id="ai-error" style="display:none;" class="card">
-    <div style="display:flex;gap:10px;align-items:flex-start;">
-      <span style="font-size:20px;flex-shrink:0;">⚠️</span>
-      <div id="ai-error-msg" style="font-size:13px;color:#c0392b;line-height:1.5;"></div>
+      <button class="cond-btn" data-cond="scratched"
+        onclick="setCondition('scratched')"
+        style="flex:1;padding:11px 4px;border:2px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-gray);">
+        🔸 有刮痕
+      </button>
+      <button class="cond-btn" data-cond="damaged"
+        onclick="setCondition('damaged')"
+        style="flex:1;padding:11px 4px;border:2px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-gray);">
+        🔴 螢幕損壞
+      </button>
     </div>
   </div>
 
-  <!-- Result -->
-  <div id="ai-result"></div>
-
-  <!-- History -->
-  <div class="card" style="padding:16px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="epboxToggleHistory()">
-      <div style="font-size:14px;font-weight:700;">🕐 分析記錄</div>
-      <span id="ai-history-chevron" style="font-size:12px;color:var(--text-gray);">展開 ▼</span>
-    </div>
-    <div id="ai-history-content" style="display:none;margin-top:12px;">
-      <div id="ai-history-list"><div style="text-align:center;padding:20px;color:var(--text-gray);font-size:13px;">尚無記錄</div></div>
+  <!-- 電池健康度 -->
+  <div style="padding:10px 16px 0;">
+    <div style="font-size:11px;font-weight:700;color:var(--text-gray);margin-bottom:8px;letter-spacing:0.5px;">電池健康度</div>
+    <div style="display:flex;gap:8px;">
+      <button class="sp-batt-pill" data-good="1" onclick="setBattery(true)"
+        style="flex:1;padding:11px 4px;border:2px solid var(--ep-green);background:#edfaf3;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ep-green);">
+        🟢 電池 ≥ 80%
+      </button>
+      <button class="sp-batt-pill" data-good="0" onclick="setBattery(false)"
+        style="flex:1;padding:11px 4px;border:2px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-gray);">
+        🔴 電池 &lt; 80%
+      </button>
     </div>
   </div>
 
+  <!-- 舊機去向 -->
+  <div style="padding:10px 16px 0;">
+    <div style="font-size:11px;font-weight:700;color:var(--text-gray);margin-bottom:8px;letter-spacing:0.5px;">舊機去向</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="dest-btn" data-dest="none" onclick="setDestination('none')"
+        style="flex:1;min-width:90px;padding:11px 4px;border:2px solid var(--apple-blue);background:#e8f0ff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;color:var(--apple-blue);">
+        🗑️ 沒有人承接
+      </button>
+      <button class="dest-btn" data-dest="family" onclick="setDestination('family')"
+        style="flex:1;min-width:90px;padding:11px 4px;border:2px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-gray);">
+        👨‍👩‍👧 有家人承接
+      </button>
+      <button class="dest-btn" data-dest="backup" onclick="setDestination('backup')"
+        style="flex:1;min-width:90px;padding:11px 4px;border:2px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-gray);">
+        🔒 當備用機
+      </button>
+    </div>
+  </div>
+
+  <div id="sp-result" style="padding:14px 16px 20px;"></div>
 </div>
 
 <script>
@@ -700,6 +718,13 @@ const VENDOR_NOTES = {
 let allModels = [];      // [{name, prices:{vendor:price}}]
 let selectedBase = "";
 let selectedStorage = 0;
+let batteryGood = true;
+let appCondition    = 'perfect'; // 'perfect' | 'scratched' | 'damaged'
+let phoneDestination = 'none';   // 'none' | 'family'
+
+const COND_MULT  = { perfect: 1.0, scratched: 0.9, damaged: 0.6 };
+const COND_LABEL = { perfect: '外觀完美', scratched: '有刮痕', damaged: '螢幕損壞' };
+const COND_EMOJI = { perfect: '✨', scratched: '🔸', damaged: '🔴' };
 let lastUpdated = "";
 let lastKnownPrices = {}; // { modelName: price } from Firebase
 
@@ -805,14 +830,13 @@ async function fetchData() {
 
     saveHistorySnapshot(allModels);
     initCompare();
-    renderEpboxTable();
+    computeBestData();
+    renderBestAll();
     checkAlerts(allModels);
   } catch (e) {
     console.error(e);
     document.getElementById("compare-result").innerHTML =
       '<div class="no-result">⚠️ 無法載入資料，請確認網路連線後重新整理</div>';
-    document.getElementById("epbox-table-body").innerHTML =
-      '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-gray)">⚠️ 無法載入資料</td></tr>';
   }
 }
 
@@ -856,9 +880,45 @@ function initCompare() {
   initAlerts();
 }
 
+function setBattery(good) {
+  batteryGood = good;
+
+  // 同步 Tab 1 電池 pills
+  document.querySelectorAll('#battery-pills .pill').forEach(p => {
+    const isGoodPill = p.textContent.includes('≥');
+    p.classList.toggle('active', isGoodPill === good);
+  });
+
+  // 同步 Tab 5 電池 pills
+  document.querySelectorAll('.sp-batt-pill').forEach(b => {
+    const isGoodBtn = b.dataset.good === '1';
+    const isActive  = isGoodBtn === good;
+    b.style.border     = isActive ? '2px solid var(--ep-green)' : '2px solid var(--border)';
+    b.style.background = isActive ? '#edfaf3' : '#fff';
+    b.style.color      = isActive ? 'var(--ep-green)' : 'var(--text-gray)';
+    b.style.fontWeight = isActive ? '700' : '500';
+  });
+
+  renderCompare();
+  generateSalesScript();
+}
+
+function getBatteryDeduction(modelName) {
+  if (batteryGood) return 0;
+  // iPhone 14+：原廠 NT$2,290 / 副廠 ~NT$1,000 → 中位數 NT$1,600
+  // iPhone 13-：原廠 NT$1,590 / 副廠 ~NT$1,000 → 中位數 NT$1,300
+  return getSeriesNum(modelName) >= 14 ? 1600 : 1300;
+}
+
 function onModelChange() {
   selectedBase = document.getElementById("compare-model").value;
-  if (!selectedBase) { document.getElementById("storage-row").style.display = "none"; renderCompare(); return; }
+  const batteryRow = document.getElementById("battery-row");
+  if (!selectedBase) {
+    document.getElementById("storage-row").style.display = "none";
+    batteryRow.style.display = "none";
+    renderCompare();
+    return;
+  }
   const storages = availableStorages(selectedBase);
   const row = document.getElementById("storage-row");
   if (storages.length > 1) {
@@ -870,13 +930,14 @@ function onModelChange() {
       const btn = document.createElement("button");
       btn.className = "pill" + (gb === selectedStorage ? " active" : "");
       btn.textContent = storageLabel(gb);
-      btn.onclick = () => { selectedStorage = gb; document.querySelectorAll(".pill").forEach(p => p.classList.remove("active")); btn.classList.add("active"); renderCompare(); };
+      btn.onclick = () => { selectedStorage = gb; document.querySelectorAll("#storage-pills .pill").forEach(p => p.classList.remove("active")); btn.classList.add("active"); renderCompare(); };
       pills.appendChild(btn);
     });
   } else {
     row.style.display = "none";
     selectedStorage = storages[0] ?? 0;
   }
+  batteryRow.style.display = "block";
   renderCompare();
 }
 
@@ -887,9 +948,17 @@ function renderCompare() {
   if (!model) { container.innerHTML = '<div class="no-result">找不到此機型資料</div>'; return; }
 
   const prices = model.prices;
-  const avg = averagePrice(prices);
-  const epboxPrice = prices["trade in價"];
-  const vendorPrices = Object.entries(prices)
+  const deduction = getBatteryDeduction(model.name);
+
+  // 建立扣款後的價格（EPBOX 不扣，其他通路扣）
+  const adjustedPrices = {};
+  for (const [v, p] of Object.entries(prices)) {
+    adjustedPrices[v] = v === "trade in價" ? p : Math.max(0, p - deduction);
+  }
+
+  const avg = averagePrice(adjustedPrices);
+  const epboxPrice = adjustedPrices["trade in價"];
+  const vendorPrices = Object.entries(adjustedPrices)
     .filter(([v]) => v !== "trade in價")
     .map(([v, p]) => ({ vendor: v, price: p }))
     .sort((a, b) => b.price - a.price);
@@ -897,6 +966,18 @@ function renderCompare() {
   const diff = (epboxPrice && avg) ? epboxPrice - avg : null;
 
   let html = "";
+
+  // 電池 < 80% 優勢橫幅
+  if (!batteryGood) {
+    html += `
+    <div style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d);border-radius:16px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
+      <div style="font-size:24px;flex-shrink:0;">🔋</div>
+      <div>
+        <div style="font-size:13px;font-weight:800;color:#30d158;">EPBOX 不扣換電池費用！</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px;">其他通路已扣除換電池估算費用 NT$${fmt(deduction)}，EPBOX 不受影響</div>
+      </div>
+    </div>`;
+  }
 
   // Average banner
   if (avg) {
@@ -919,7 +1000,7 @@ function renderCompare() {
       <div class="epbox-ref-icon">${ic(P.bot,'#ff6b00',22)}</div>
       <div>
         <div class="epbox-ref-name">EPBOX 自助回收機 ${epDelta}</div>
-        <div class="epbox-ref-sub">24小時自助 · 即時入帳</div>
+        <div class="epbox-ref-sub">24小時自助 · 即時入帳${!batteryGood ? ' · <span style="color:#30d158;font-weight:700">電池不扣款</span>' : ''}</div>
       </div>
       <div class="epbox-ref-price">
         <div class="p">$${fmt(epboxPrice)}</div>
@@ -938,12 +1019,13 @@ function renderCompare() {
       const color = VENDOR_COLORS[vendor] ?? "#86868b";
       const barColor = isBest ? "linear-gradient(to right, #ff9500, #ffcc00)" : `linear-gradient(to right, ${color}99, ${color}55)`;
       const vDelta = deltaBadge(getPriceDelta(model.name, vendor));
+      const deductNote = !batteryGood ? `<span style="font-size:10px;color:#e74c3c;">已扣換電池費 $${fmt(deduction)}</span>` : '';
       html += `
       <div class="vendor-row${isBest ? " best" : ""}">
         <div class="vendor-icon" style="background:${color}18">${ic(VENDOR_ICONS[vendor] ?? P.store, color, 20)}</div>
         <div>
           <div class="vendor-name">${vendor}${isBest ? '<span class="best-chip">最高</span>' : ""}</div>
-          <div class="vendor-note">${VENDOR_NOTES[vendor] ?? ""}</div>
+          <div class="vendor-note">${VENDOR_NOTES[vendor] ?? ""} ${deductNote}</div>
         </div>
         <div class="vendor-right">
           <div class="vendor-price${isBest ? " best-price" : ""}">$${fmt(price)} ${vDelta}</div>
@@ -968,46 +1050,111 @@ function renderCompare() {
   }
 
   // Disclaimer
-  html += `<div class="disclaimer" style="gap:8px">${ic(P.info,'#86868b',14)} 以上為參考估算，實際回收價依各通路現場評估、機況及活動優惠而不同。</div>`;
+  const batteryNote = !batteryGood ? `換電池費用以原廠 / 副廠中位數估算（NT$${fmt(deduction)}），實際扣款依各通路現場而定。` : '';
+  html += `<div class="disclaimer" style="gap:8px">${ic(P.info,'#86868b',14)} 以上為參考估算，實際回收價依各通路現場評估、機況及活動優惠而不同。${batteryNote}</div>`;
   container.innerHTML = html;
 }
 
 /* ════════════════════════════════
    Tab 2: EPBOX Table
 ════════════════════════════════ */
-function renderEpboxTable() {
-  const series = document.getElementById("epbox-series").value;
-  const tbody = document.getElementById("epbox-table-body");
+/* ════════════════════════════════
+   Tab 2: Best Deals
+════════════════════════════════ */
+const BD_OTHER_KEYS = ['APPLE BAR','STUDIO','台北101','台哥大','地標'];
+let bdAllData = [];
+let bdCurrentFilter = 'all';
+let bdReady = false;
 
-  let data = allModels.filter(m => m.prices["trade in價"] > 0);
-  if (series) data = data.filter(m => {
-    const n = getSeriesNum(m.name);
-    return String(n) === series;
-  });
+function computeBestData() {
+  bdAllData = allModels.map(m => {
+    const epbox = Math.round(Number(m.prices['trade in價']) || 0);
+    const others = BD_OTHER_KEYS.map(k => Number(m.prices[k]) || 0).filter(v => v > 0);
+    const maxOther = others.length ? Math.max(...others) : 0;
+    const diff = epbox - maxOther;
+    return { model: m.name, epbox, maxOther, diff };
+  }).filter(d => d.epbox > 0 && d.maxOther > 0);
+  bdAllData.sort((a,b) => b.diff - a.diff || b.epbox - a.epbox);
+  bdReady = true;
+}
 
-  if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-gray)">載入中…</td></tr>';
-    return;
+function getBdModelSeries(model) {
+  const m = model.toUpperCase();
+  if (m.includes('IPHONE 16')) return 'iphone16';
+  if (m.includes('IPHONE 15')) return 'iphone15';
+  if (m.includes('IPHONE 14')) return 'iphone14';
+  if (m.includes('IPHONE 13')) return 'iphone13';
+  if (m.includes('IPHONE 12')) return 'iphone12';
+  return 'older';
+}
+
+function setBestFilter(filter, btn) {
+  bdCurrentFilter = filter;
+  document.querySelectorAll('.bd-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBestAll();
+}
+
+function bdFiltered(arr) {
+  if (bdCurrentFilter === 'all') return arr;
+  return arr.filter(d => getBdModelSeries(d.model) === bdCurrentFilter);
+}
+
+function renderBestAll() {
+  if (!bdReady) return;
+  const good  = bdFiltered(bdAllData.filter(d => d.diff >= 0)); // wins + ties
+  const lower = bdFiltered(bdAllData.filter(d => d.diff < 0));
+
+  const goodEl = document.getElementById('bd-good-section');
+  if (good.length) {
+    goodEl.style.display = 'block';
+    document.getElementById('bd-good-count').textContent = `${good.length} 款`;
+    document.getElementById('bd-good-list').innerHTML = good.map(d => bdRow(d)).join('');
+  } else { goodEl.style.display = 'none'; }
+
+  const lowEl = document.getElementById('bd-low-section');
+  if (lower.length) {
+    lowEl.style.display = 'block';
+    document.getElementById('bd-low-count').textContent = `${lower.length} 款`;
+    document.getElementById('bd-low-list').innerHTML = lower.map(d => bdRow(d)).join('');
+  } else { lowEl.style.display = 'none'; }
+}
+
+function bdRow(d) {
+  const modelDisplay = d.model.replace('IPHONE ', 'iPhone ');
+  const parts = modelDisplay.match(/^(iPhone \d+(?:\s+Pro(?:\s+Max)?)?(?:\s+Plus)?(?:\s+mini)?)\s+(.+)$/i);
+  const name = parts ? parts[1] : modelDisplay;
+  const cap  = parts ? parts[2] : '';
+
+  let rowClass, subClass, subText;
+  if (d.diff > 0) {
+    rowClass = 'win';  subClass = 'win';
+    subText = `比其他通路多 NT$${Math.round(d.diff).toLocaleString()}`;
+  } else if (d.diff === 0) {
+    rowClass = 'tie';  subClass = 'tie';
+    subText = '各通路同價，EPBOX 更方便';
+  } else {
+    rowClass = 'low';  subClass = 'low';
+    subText = `其他通路多 NT$${Math.round(Math.abs(d.diff)).toLocaleString()}`;
   }
 
-  tbody.innerHTML = data.map(m => {
-    const ep = m.prices["trade in價"];
-    const avg = averagePrice(m.prices);
-    const vendorEntries = Object.entries(m.prices).filter(([v]) => v !== "trade in價" && m.prices[v] > 0);
-    const best = vendorEntries.sort((a, b) => b[1] - a[1])[0];
-    const delta = getPriceDelta(m.name, "trade in價");
-    const deltaCell = delta === null ? '<span style="color:var(--text-gray);font-size:11px">─</span>'
-                    : delta > 0 ? `<span class="delta-up">▲ +$${fmt(Math.abs(delta))}</span>`
-                    : delta < 0 ? `<span class="delta-down">▼ −$${fmt(Math.abs(delta))}</span>`
-                    : '<span style="color:var(--text-gray);font-size:11px">持平</span>';
-    return `<tr>
-      <td>${m.name}</td>
-      <td class="ep-price">${ep ? "$" + fmt(ep) : "─"}</td>
-      <td>${deltaCell}</td>
-      <td class="avg-price">${avg ? "$" + fmt(avg) : "─"}</td>
-      <td class="best-vendor">${best ? `${ic(VENDOR_ICONS[best[0]] ?? P.store, VENDOR_COLORS[best[0]] ?? '#86868b', 13)} ${VENDOR_DISPLAY_NAMES[best[0]] ?? best[0]}<br><span style="color:var(--text-dark);font-weight:700">$${fmt(best[1])}</span>` : "─"}</td>
-    </tr>`;
-  }).join("");
+  return `
+    <div class="bd-row ${rowClass}">
+      <div class="bd-row-left">
+        <div class="bd-row-model">${name}<span class="bd-row-cap">${cap}</span></div>
+        <div class="bd-row-sub ${subClass}">${subText}</div>
+      </div>
+      <div class="bd-row-right">
+        <div class="bd-row-price">NT$${d.epbox.toLocaleString()}<small> /台</small></div>
+      </div>
+    </div>`;
+}
+
+function toggleBdLower() {
+  const wrap  = document.getElementById('bd-low-list-wrap');
+  const arrow = document.getElementById('bd-low-arrow');
+  wrap.classList.toggle('open');
+  arrow.classList.toggle('open');
 }
 
 /* ════════════════════════════════
@@ -1397,294 +1544,228 @@ function updateNotifyTip() {
 /* ════════════════════════════════
    Tab 5: EPBOX AI 分析
 ════════════════════════════════ */
-const CLAUDE_PROXY_URL = 'https://epbox-line-bot.onrender.com/claude-proxy';
-
-// ── Firebase Analytics ──
-const ANALYTICS_BASE = 'https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/tradein_prices/analytics';
-async function writeAnalytics(model, batteryPct, warnings) {
-  const incr = async (path) => {
-    try {
-      const r = await fetch(ANALYTICS_BASE + '/' + path + '.json');
-      const val = (await r.json()) || 0;
-      await fetch(ANALYTICS_BASE + '/' + path + '.json', { method: 'PUT', body: JSON.stringify(val + 1) });
-    } catch(e) { console.warn('analytics err:', path, e); }
-  };
-  const today = new Date().toISOString().slice(0,10);
-  incr('summary/totalEvaluations');
-  incr('summary/monthly/' + today.slice(0,7));
-  incr('trend/' + today);
-  if (model) incr('topModels/' + model.replace(/[\s\/]/g, '_'));
-  if (!isNaN(batteryPct)) {
-    const b = batteryPct>=100?'100':batteryPct>=95?'95-99':batteryPct>=90?'90-94':batteryPct>=85?'85-89':batteryPct>=80?'80-84':batteryPct>=75?'75-79':batteryPct>=70?'70-74':batteryPct>=65?'65-69':batteryPct>=60?'60-64':'<60';
-    incr('batteryDistribution/' + b);
-  }
-  if (warnings && warnings.length) warnings.forEach(w => incr('warnings/' + w.replace(/[\s\/]/g, '_')));
-}
-const FB_ANALYTICS     = 'https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/tradein_prices/analytics.json';
-
-let aiSelectedFile = null;   // File object
-let aiRecords = [];          // localStorage history
-
 /* ── Battery replacement fee ── */
 function batteryReplacementFee(model) {
   const n = (model || '').toUpperCase();
-  if (n.includes('AIR')) return 4150;
-  if (n.includes('17') && n.includes('PRO')) return 4150;
   if (n.includes('16') && n.includes('PRO')) return 4150;
-  if (n.includes('17')) return 3350;
+  if (n.includes('15') && n.includes('PRO')) return 4150;
   if (n.includes('16')) return 3350;
   if (n.includes('15')) return 3350;
   if (n.includes('14')) return 3350;
   if (n.includes('13')) return 2990;
   if (n.includes('12')) return 2990;
   if (n.includes('11')) return 2990;
-  if (n.includes('XR') || n.includes('XS')) return 2990;
-  return 2290;
+  return 2990;
 }
 
-/* ── File input handlers ── */
-function epboxHandleFile(file) {
-  if (!file) return;
-  aiSelectedFile = file;
-  const url = URL.createObjectURL(file);
-  document.getElementById('ai-preview-img').src = url;
-  document.getElementById('ai-no-photo').style.display = 'none';
-  document.getElementById('ai-has-photo').style.display = 'block';
-  document.getElementById('ai-analyze-btn').style.display = 'block';
-  document.getElementById('ai-result').innerHTML = '';
-  document.getElementById('ai-error').style.display = 'none';
-}
-document.getElementById('ai-file-camera').addEventListener('change', e => epboxHandleFile(e.target.files[0]));
-document.getElementById('ai-file-picker').addEventListener('change', e => epboxHandleFile(e.target.files[0]));
-
-/* ── Main analyze ── */
-async function epboxAnalyze() {
-  if (!aiSelectedFile) return;
-  document.getElementById('ai-analyze-btn').style.display = 'none';
-  document.getElementById('ai-loading').style.display = 'block';
-  document.getElementById('ai-error').style.display = 'none';
-  document.getElementById('ai-result').innerHTML = '';
-
-  try {
-    const base64 = await fileToBase64(aiSelectedFile);
-    const mediaType = aiSelectedFile.type || 'image/jpeg';
-    const record = await callClaudeAPI(base64, mediaType);
-    document.getElementById('ai-loading').style.display = 'none';
-    epboxRenderResult(record);
-    epboxSaveRecord(record);
-    epboxUploadFirebase(record);
-  } catch (e) {
-    document.getElementById('ai-loading').style.display = 'none';
-    document.getElementById('ai-analyze-btn').style.display = 'block';
-    document.getElementById('ai-error').style.display = 'block';
-    document.getElementById('ai-error-msg').textContent = '分析失敗：' + e.message;
-  }
-}
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result.split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+/* ════════════════════════════════
+   Tab 5: Condition Selector
+════════════════════════════════ */
+function setCondition(lvl) {
+  appCondition = lvl;
+  document.querySelectorAll('.cond-btn').forEach(btn => {
+    const isActive = btn.dataset.cond === lvl;
+    if (btn.dataset.cond === 'perfect') {
+      btn.style.border      = isActive ? '2px solid var(--ep-green)' : '2px solid var(--border)';
+      btn.style.background  = isActive ? '#edfaf3' : '#fff';
+      btn.style.color       = isActive ? 'var(--ep-green)' : 'var(--text-gray)';
+      btn.style.fontWeight  = isActive ? '700' : '500';
+    } else if (btn.dataset.cond === 'scratched') {
+      btn.style.border      = isActive ? '2px solid var(--gold)' : '2px solid var(--border)';
+      btn.style.background  = isActive ? '#fff8e6' : '#fff';
+      btn.style.color       = isActive ? '#b07000' : 'var(--text-gray)';
+      btn.style.fontWeight  = isActive ? '700' : '500';
+    } else {
+      btn.style.border      = isActive ? '2px solid var(--red)' : '2px solid var(--border)';
+      btn.style.background  = isActive ? '#fff0f0' : '#fff';
+      btn.style.color       = isActive ? 'var(--red)' : 'var(--text-gray)';
+      btn.style.fontWeight  = isActive ? '700' : '500';
+    }
   });
+  generateSalesScript();
 }
 
-async function callClaudeAPI(base64, mediaType) {
-  const res = await fetch(CLAUDE_PROXY_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ base64, mediaType: mediaType || 'image/jpeg' })
-  });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error);
-  const parsed = data.result;
-  const now = new Date();
-  return {
-    ...parsed,
-    warnings: (parsed.warnings || []).filter(w => w.trim()),
-    timestamp: Math.floor(Date.now() / 1000),
-    dateString: now.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+function setDestination(dest) {
+  phoneDestination = dest;
+  const DEST_STYLE = {
+    none:   { border: 'var(--apple-blue)', bg: '#e8f0ff', color: 'var(--apple-blue)' },
+    family: { border: 'var(--apple-blue)', bg: '#e8f0ff', color: 'var(--apple-blue)' },
+    backup: { border: 'var(--purple)',     bg: '#f0eeff', color: 'var(--purple)' },
   };
+  document.querySelectorAll('.dest-btn').forEach(btn => {
+    const isActive = btn.dataset.dest === dest;
+    const s = DEST_STYLE[btn.dataset.dest] || DEST_STYLE.none;
+    btn.style.border     = isActive ? `2px solid ${s.border}` : '2px solid var(--border)';
+    btn.style.background = isActive ? s.bg : '#fff';
+    btn.style.color      = isActive ? s.color : 'var(--text-gray)';
+    btn.style.fontWeight = isActive ? '700' : '500';
+  });
+  generateSalesScript();
 }
 
-/* ── Render result ── */
-function epboxRenderResult(r) {
-  const battVal = parseInt((r.batteryHealth || '').replace('%', ''));
-    writeAnalytics(r.modelName, battVal, r.warnings);
-  const lowBatt = !isNaN(battVal) && battVal < 80;
-  const fee = batteryReplacementFee(r.modelName);
-  const feePercent = r.finalPrice > 0 ? Math.round(fee / r.finalPrice * 100) : 0;
-  const notWorth = feePercent >= 80;
+/* ════════════════════════════════
+   Tab 5: Sales Script Generator
+════════════════════════════════ */
+function generateSalesScript() {
+  const resultEl = document.getElementById('sp-result');
 
-  let html = `<div class="card" style="padding:20px;margin-bottom:4px;">`;
-
-  // Title row
-  html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-    <div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;">
-      <span style="color:var(--apple-blue);">📋</span> 分析結果
-    </div>
-    <div style="font-size:11px;color:var(--text-gray);">${r.dateString}</div>
-  </div>
-  <div style="border-top:1px solid var(--border);margin-bottom:14px;"></div>`;
-
-  // Info rows
-  html += `<div>`;
-  html += infoRow('機型', r.modelName || '—');
-  html += infoRow('電池健康度', batteryHealthBadge(r.batteryHealth));
-
-  // Battery warning
-  if (lowBatt) {
-    const color = notWorth ? '#e74c3c' : '#ff9500';
-    const bg    = notWorth ? 'rgba(231,76,60,.07)' : 'rgba(255,149,0,.07)';
-    const border= notWorth ? 'rgba(231,76,60,.2)' : 'rgba(255,149,0,.2)';
-    html += `<div class="ai-battery-warn" style="background:${bg};border:1px solid ${border};">
-      <span style="font-size:18px;flex-shrink:0;">${notWorth ? '❌' : '⚠️'}</span>
-      <div>
-        <div style="font-size:12px;font-weight:700;color:${color};margin-bottom:5px;">電池健康度低於 80%，建議換電池</div>
-        <div style="font-size:12px;color:var(--text-gray);">
-          官方換電池費用：<strong style="color:${color};">NT$${fee.toLocaleString()}</strong>
-          <span>（佔回收價 ${feePercent}%）</span>
-        </div>
-        ${notWorth ? `<div style="font-size:12px;font-weight:700;color:${color};margin-top:4px;">換電池費用偏高，建議直接回收換現金！</div>` : ''}
-      </div>
-    </div>`;
-  }
-
-  // Warnings / condition
-  if (r.warnings && r.warnings.length > 0) {
-    html += `<div class="ai-info-row">
-      <span class="ai-info-label">外觀狀況</span>
-      <div style="flex:1;text-align:right;">${r.warnings.map(w => `<span class="ai-warning-tag">${w}</span>`).join('')}</div>
-    </div>`;
-  } else {
-    html += infoRow('外觀狀況', r.condition || '—');
-  }
-
-  html += infoRow('基本回收價', `NT$${fmt(r.basePrice || 0)}`);
-  html += infoRow('加碼補貼', `+NT$${fmt(r.bonus || 0)}`);
-  html += `</div>`;
-
-  // Final price
-  html += `<div class="ai-price-final">
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span style="color:var(--ep-green);font-size:16px;">✅</span>
-      <span style="font-size:14px;color:var(--text-gray);">補貼後回收價</span>
-    </div>
-    <div style="font-size:22px;font-weight:900;color:var(--ep-green);">NT$${fmt(r.finalPrice || 0)}</div>
-  </div>
-
-  <div style="border-top:1px solid var(--border);margin:16px 0;"></div>`;
-
-  // AI advice
-  html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-    <span style="color:#5e5ce6;font-size:15px;">💬</span>
-    <span style="font-size:14px;font-weight:700;">AI 建議話術</span>
-    <span style="font-size:10px;font-weight:700;color:#5e5ce6;background:rgba(94,92,230,.1);padding:2px 7px;border-radius:5px;">AI 生成</span>
-  </div>
-  <div class="ai-advice-wrap">${renderAdviceLines(r.aiAdvice)}</div>`;
-
-  // Copy button
-  const escapedAdvice = (r.aiAdvice || '').replace(/'/g, "\\'").replace(/\n/g, '\\n');
-  html += `<button class="ai-copy-btn" onclick="navigator.clipboard.writeText('${escapedAdvice}').then(()=>{ this.textContent='✅ 已複製！'; setTimeout(()=>this.textContent='複製話術',1500); })">複製話術</button>`;
-
-  html += `</div>`;
-  document.getElementById('ai-result').innerHTML = html;
-}
-
-function infoRow(label, val) {
-  return `<div class="ai-info-row"><span class="ai-info-label">${label}</span><span class="ai-info-val">${val}</span></div>`;
-}
-
-function batteryHealthBadge(health) {
-  const v = parseInt((health || '').replace('%', ''));
-  if (isNaN(v)) return health || '—';
-  const color = v >= 80 ? '#1a7a47' : v >= 70 ? '#b7791f' : '#c0392b';
-  const bg    = v >= 80 ? '#e8f8ee'  : v >= 70 ? '#fff3cd'  : '#fdecea';
-  return `<span style="background:${bg};color:${color};padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;">${health}</span>`;
-}
-
-function renderAdviceLines(text) {
-  if (!text) return '';
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  return lines.map(line => {
-    const clean = line.replace(/^[•\-]+\s*/, '');
-    if (clean.startsWith('【詢問顧客】')) {
-      return `<div class="ai-advice-question">
-        <div style="font-size:10px;font-weight:700;color:var(--apple-blue);margin-bottom:4px;">詢問顧客</div>
-        <div style="font-size:14px;font-weight:600;color:var(--apple-blue);">${clean.replace('【詢問顧客】','').trim()}</div>
+  // 讀 Tab 1 已選的狀態
+  const model = getModel(selectedBase, selectedStorage);
+  if (!model) {
+    resultEl.innerHTML = `
+      <div style="text-align:center;padding:48px 20px;color:var(--text-gray);">
+        <div style="font-size:36px;margin-bottom:12px;">👈</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text-dark);margin-bottom:6px;">請先選好機型</div>
+        <div style="font-size:13px;line-height:1.6;">到「各通路比較」選好顧客的手機型號和容量，<br>回到這裡話術就會自動出現。</div>
       </div>`;
-    }
-    if (clean.startsWith('【') && clean.includes('】')) {
-      return `<div><span class="ai-advice-section-hdr">${clean}</span></div>`;
-    }
-    return `<div class="ai-advice-bullet"><div class="ai-advice-dot"></div><div>${clean}</div></div>`;
-  }).join('');
-}
-
-/* ── Save / upload ── */
-function epboxSaveRecord(record) {
-  try {
-    const data = JSON.parse(localStorage.getItem('epbox_ai_records') || '[]');
-    data.unshift(record);
-    if (data.length > 100) data.splice(100);
-    localStorage.setItem('epbox_ai_records', JSON.stringify(data));
-    aiRecords = data;
-    epboxRenderHistory();
-  } catch(e) {}
-}
-
-async function epboxUploadFirebase(record) {
-  try {
-    await fetch(FB_ANALYTICS, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...record, storeName: '網站版' })
-    });
-  } catch(e) {}
-}
-
-/* ── History ── */
-function epboxLoadHistory() {
-  try { aiRecords = JSON.parse(localStorage.getItem('epbox_ai_records') || '[]'); } catch(e) { aiRecords = []; }
-  epboxRenderHistory();
-}
-
-function epboxRenderHistory() {
-  const el = document.getElementById('ai-history-list');
-  if (!aiRecords.length) {
-    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-gray);font-size:13px;">尚無記錄</div>';
     return;
   }
-  el.innerHTML = aiRecords.map((r, i) => `
-    <div class="ai-history-item" onclick="epboxShowHistoryRecord(${i})">
+
+  const modelDisplay = model.name.replace('IPHONE ', 'iPhone ');
+  const basePrice    = Math.round(Number(model.prices['trade in價']) || 0);
+  const mult         = COND_MULT[appCondition];
+  const adjBase      = Math.round(basePrice * mult);
+  const adjBonus     = Math.round(adjBase * 0.1);
+  const adjTotal     = adjBase + adjBonus;
+
+  const otherPrices  = BD_OTHER_KEYS.map(k => Number(model.prices[k]) || 0).filter(v => v > 0);
+  const maxOther     = otherPrices.length ? Math.max(...otherPrices) : 0;
+  const diff         = adjTotal - maxOther;
+  const fee          = batteryReplacementFee(model.name);
+  const deduction    = getBatteryDeduction(model.name);
+
+  const sections = [];
+
+  // 開場（依外觀狀況調整說法）
+  if (appCondition === 'perfect') {
+    sections.push({ icon: '👋', label: '開場白', color: '#e8f4ff', border: '#b0d4f0', text:
+      `我幫您查了一下，您的 ${modelDisplay} 外觀這麼好，EPBOX 自助回收報價大約是 NT$${adjTotal.toLocaleString()}（回收 ${adjBase.toLocaleString()} + 10% 補貼 ${adjBonus.toLocaleString()}）。`
+    });
+  } else if (appCondition === 'scratched') {
+    sections.push({ icon: '👋', label: '開場白', color: '#e8f4ff', border: '#b0d4f0', text:
+      `我幫您查了一下，即使外觀有些刮痕，EPBOX 自助回收報價大約還是 NT$${adjTotal.toLocaleString()}（回收 ${adjBase.toLocaleString()} + 10% 補貼 ${adjBonus.toLocaleString()}）。`
+    });
+  } else {
+    sections.push({ icon: '👋', label: '開場白', color: '#e8f4ff', border: '#b0d4f0', text:
+      `我幫您查了一下，螢幕有損傷的話，EPBOX 自助回收報價大約是 NT$${adjTotal.toLocaleString()}（回收 ${adjBase.toLocaleString()} + 10% 補貼 ${adjBonus.toLocaleString()}）。`
+    });
+  }
+
+  // 價格優勢 / 外觀加分說明
+  if (appCondition === 'scratched') {
+    sections.push({ icon: '💡', label: '外觀刮痕說明', color: '#fff8e6', border: '#ffd880', text:
+      `其他通路遇到有刮痕的手機也會扣錢，而且通常沒有明確標準、講不清楚。EPBOX 固定只扣一成，非常透明，不會被殺價。`
+    });
+  } else if (appCondition === 'damaged') {
+    sections.push({ icon: '💡', label: '螢幕損壞說明', color: '#fff0f0', border: '#f0b0b0', text:
+      `其他通路遇到螢幕損壞大多是直接大砍或不收。EPBOX 還是給六成的回收價，加上 10% 補貼，這個條件下算是相當好的選擇了。`
+    });
+  } else if (diff > 0) {
+    sections.push({ icon: '💰', label: '價格優勢', color: '#edfaf3', border: '#a8e0c4', text:
+      `這個價格比 Apple Bar、台哥大、遠傳等其他通路都還要高，比最高的通路還多 NT$${diff.toLocaleString()}，是目前市場上最好的回收價！`
+    });
+  } else if (diff >= -1000) {
+    sections.push({ icon: '💰', label: '價格說明', color: '#edf4ff', border: '#b0c8f0', text:
+      `這個價格跟其他通路差不多，但 EPBOX 不用預約、不用等、不用議價，現在就能馬上完成，比去其他地方方便很多。`
+    });
+  } else {
+    sections.push({ icon: '💰', label: '價格說明', color: '#f5f5f7', border: '#d0d0d5', text:
+      `雖然其他通路報價稍高一些，但 EPBOX 全程自助、即時入帳，不用跑去別家，就在這裡幾分鐘搞定。`
+    });
+  }
+
+  // 電池 × 去向 — 四種組合
+  if (!batteryGood && phoneDestination === 'family') {
+    // 有家人承接 + 電池差 → 最強勸回收論點
+    sections.push({ icon: '👨‍👩‍👧🔋', label: '傳家人 × 電池考量', color: '#fff4e6', border: '#ffc078', text:
+      `想傳給家人用，但電池低於 80%，直接拿去用會很快沒電、體驗很差，傳之前通常要先換電池。官方換電池要 NT$${fee.toLocaleString()}，加上手機本身年紀，花這筆錢維修其實不太划算。\n\n不如現在用 EPBOX 回收拿到 NT$${adjTotal.toLocaleString()}，再用這筆錢幫家人貼一支新機，從頭到尾都是新的，用起來也更安心！`
+    });
+  } else if (!batteryGood && phoneDestination === 'none') {
+    // 沒有人承接 + 電池差 → 雙重理由立即回收
+    sections.push({ icon: '🔋', label: '電池建議', color: '#fff8e6', border: '#ffd880', text:
+      `電池低於 80%，換電池官方要 NT$${fee.toLocaleString()}，維修成本偏高。加上手機沒有人要承接，放著只會越來越不值錢。現在回收能拿 NT$${adjTotal.toLocaleString()}，是目前最划算的選擇！`
+    });
+  } else if (!batteryGood) {
+    // 電池差（去向未選）
+    const notWorth = deduction >= adjTotal * 0.8;
+    sections.push({ icon: '🔋', label: '電池建議', color: '#fff8e6', border: '#ffd880', text:
+      notWorth
+        ? `您的電池健康度低，換電池官方要收 NT$${fee.toLocaleString()}，換了也沒多少錢，直接回收換現金反而比較划算！`
+        : `您的電池健康度偏低，換電池大概要 NT$${fee.toLocaleString()}。直接回收省掉這筆開銷，把現金拿去貼換新機更實在。`
+    });
+  }
+
+  // 舊機去向建議
+  if (phoneDestination === 'none') {
+    sections.push({ icon: '📅', label: '舊機去向', color: '#f0f0ff', border: '#c0b8f0', text:
+      `如果沒有家人要承接這支手機，放著只會越來越不值錢——手機殘值每年都在下滑，現在能拿 NT$${adjTotal.toLocaleString()}，放個一兩年可能就剩一半。趁現在殘值還在，早回收早划算！`
+    });
+  } else if (phoneDestination === 'family' && batteryGood) {
+    // 有家人承接 + 電池健康 → 溫和建議，不強推
+    sections.push({ icon: '👨‍👩‍👧', label: '傳家人建議', color: '#f0f4ff', border: '#b0c4f0', text:
+      `如果家人確定要用，電池狀況還不錯，傳下去完全沒問題。不過這支手機現在還有 NT$${adjTotal.toLocaleString()} 的回收殘值，也可以評估看看：用這筆錢幫家人貼一支更新的機型，使用體驗會更好，之後換機也更有彈性。`
+    });
+  } else if (phoneDestination === 'backup') {
+    // 備用機 — 兩段：修機空窗 + 資料安全
+    const batteryNote = !batteryGood
+      ? `而且電池低於 80%，備用機本身撐不了多久，緊急時刻根本不夠用。` : '';
+    sections.push({ icon: '🔒', label: '備用機：修機空窗？', color: '#f3eeff', border: '#c8b0f0', text:
+      `如果留備用機是為了修機期間有機可用——現在 Apple 授權維修站都可以線上預約，在預約時間內送到就好，當天就能取機，完全不需要備用機來填空窗期。${batteryNote}`
+    });
+    sections.push({ icon: '☁️', label: '備用機：資料安全？', color: '#e8f4ff', border: '#b0d4f0', text:
+      `如果是擔心手機突然壞掉、資料不見才留備用機——這個邏輯其實有個盲點：手機如果嚴重到無法開機，根本沒辦法手動把資料轉移到備用機，備用機這時候完全幫不上忙。\n\n真正的解法是開啟 iCloud 備份，只要有在充電、連 Wi-Fi，資料就自動上雲端。手機壞了換新機直接還原，完全不依賴備用機。iCloud 50GB 方案一個月才幾十塊，比讓舊機閒置折舊划算太多了。\n\n現在回收拿 NT$${adjTotal.toLocaleString()}，再訂個 iCloud，兩個問題一次解決！`
+    });
+  }
+
+  // EPBOX 優點
+  sections.push({ icon: '⚡', label: 'EPBOX 優點', color: '#f3eeff', border: '#c8b0f0', text:
+    `EPBOX 全程自助，大概 5 到 10 分鐘就完成，錢馬上就到帳。不用預約、不用跑去別的地方，就在我們店裡現在就可以做。`
+  });
+
+  // 邀請
+  sections.push({ icon: '😊', label: '邀請試算', color: '#edfaf3', border: '#a8e0c4', text:
+    `要不要讓我帶您去試試看？放進去完全免費估價，不滿意可以不用賣，完全沒有任何壓力！`
+  });
+
+  const fullText = sections.map(s => `【${s.label}】\n${s.text}`).join('\n\n');
+  const safeText = fullText.replace(/\\/g,'\\\\').replace(/`/g,'\\`');
+
+  // 標題列：機型 + 外觀 + 電池 badge
+  const condBadgeColor = appCondition === 'perfect' ? '#00b96b' : appCondition === 'scratched' ? '#b07000' : 'var(--red)';
+  let html = `
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <div style="font-size:15px;font-weight:800;">${modelDisplay}</div>
+      <div style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:${condBadgeColor};color:#fff;">
+        ${COND_EMOJI[appCondition]} ${COND_LABEL[appCondition]}
+      </div>
+      <div style="font-size:11px;color:var(--text-gray);font-weight:500;">${batteryGood ? '🟢 電池健康' : '🔴 電池偏低'}</div>
+    </div>
+    <div style="background:#f0faf5;border:1px solid #a8e0c4;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <div style="font-size:13px;font-weight:700;">${r.modelName || '—'}</div>
-        <div style="font-size:11px;color:var(--text-gray);margin-top:2px;">${r.dateString || ''}</div>
+        <div style="font-size:11px;color:var(--text-gray);font-weight:600;margin-bottom:2px;">EPBOX 預估報價</div>
+        <div style="font-size:22px;font-weight:900;color:var(--ep-green);">NT$${adjTotal.toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--text-gray);margin-top:2px;">回收 ${adjBase.toLocaleString()} + 補貼 ${adjBonus.toLocaleString()}</div>
       </div>
-      <div style="text-align:right;">
-        <div style="font-size:14px;font-weight:800;color:var(--ep-green);">NT$${fmt(r.finalPrice||0)}</div>
-        <div style="font-size:11px;color:var(--text-gray);">${r.batteryHealth || ''}</div>
+      <div style="text-align:right;font-size:11px;color:var(--text-gray);line-height:1.8;">
+        <div>× ${(mult * 100).toFixed(0)}% 機況</div>
+        <div>× 110% 含補貼</div>
       </div>
-    </div>`).join('');
-}
+    </div>`;
 
-function epboxShowHistoryRecord(i) {
-  const r = aiRecords[i];
-  if (!r) return;
-  epboxRenderResult(r);
-  document.getElementById('ai-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
+  sections.forEach(s => {
+    html += `<div style="background:${s.color};border:1px solid ${s.border};border-radius:14px;padding:14px 16px;margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:700;color:#555;margin-bottom:6px;">${s.icon} ${s.label}</div>
+      <div style="font-size:15px;line-height:1.75;color:var(--text-dark);font-weight:500;">${s.text}</div>
+    </div>`;
+  });
 
-function epboxToggleHistory() {
-  const content = document.getElementById('ai-history-content');
-  const chevron = document.getElementById('ai-history-chevron');
-  const open = content.style.display === 'none';
-  content.style.display = open ? 'block' : 'none';
-  chevron.textContent = open ? '收起 ▲' : '展開 ▼';
-}
+  html += `<button style="width:100%;padding:14px;background:var(--ep-dark);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:2px;"
+    onclick="(function(btn){ navigator.clipboard.writeText(\`${safeText}\`).then(()=>{ btn.textContent='✅ 已複製！'; setTimeout(()=>{ btn.textContent='📋 複製完整話術'; },1500); }); })(this)">
+    📋 複製完整話術
+  </button>`;
 
-epboxLoadHistory();
+  resultEl.innerHTML = html;
+}
 
 /* ════════════════════════════════
    Tab Switch
@@ -1694,13 +1775,13 @@ function switchTab(id, btn) {
   document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
   document.getElementById("tab-" + id).classList.add("active");
   btn.classList.add("active");
+  if (id === 'analytics') generateSalesScript();
 }
 
 /* ════════════════════════════════
    INIT
 ════════════════════════════════ */
 document.getElementById("compare-result").innerHTML = '<div class="loading-state"><div class="spinner"></div>載入最新回收價格中…</div>';
-document.getElementById("epbox-table-body").innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-gray)"><div class="spinner"></div><br>載入中…</td></tr>';
 
 renderLocations();
 fetchData();
