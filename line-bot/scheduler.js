@@ -116,12 +116,19 @@ function buildDropFlex(model, drop) {
             footer: {
                 type: 'box',
                 layout: 'horizontal',
+                spacing: 'sm',
                 paddingAll: '12px',
                 contents: [
                     {
                         type: 'button',
                         style: 'primary',
                         color: '#ff6b00',
+                        height: 'sm',
+                        action: { type: 'message', label: '查詢最新價格', text: `查詢 ${model}` },
+                    },
+                    {
+                        type: 'button',
+                        style: 'secondary',
                         height: 'sm',
                         action: { type: 'message', label: '我的訂閱', text: '我的訂閱' },
                     },

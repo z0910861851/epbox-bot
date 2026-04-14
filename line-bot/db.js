@@ -28,10 +28,13 @@ async function getAllSubscriptions() {
     return _getAll();
 }
 
+const MAX_SUBSCRIPTIONS = 10;
+
 async function addSubscription(userId, model) {
     // 防止重複訂閱同一機型
   const existing = await getUserSubscriptions(userId);
     if (existing.some(s => s.model === model)) return { duplicate: true };
+    if (existing.length >= MAX_SUBSCRIPTIONS) return { limitReached: true };
 
   await fetch(`${alertsUrl()}.json`, {
         method:  'POST',

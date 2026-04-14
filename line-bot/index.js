@@ -134,6 +134,17 @@ app.post('/claude-proxy', express.json({ limit: '15mb' }), async (req, res) => {
     }
 });
 
+// ── 手動觸發價格比對推播 ──────────────────────────
+// POST /price-check  Header: x-admin-secret: <ADMIN_SECRET>
+app.post('/price-check', express.json(), async (req, res) => {
+    const secret = process.env.ADMIN_SECRET;
+    if (secret && req.headers['x-admin-secret'] !== secret) {
+        return res.status(401).json({ error: '未授權' });
+    }
+    res.json({ ok: true, message: '已開始執行價格比對，結果請查看伺服器 log' });
+    runPriceCheck(client).catch(e => console.error('[手動觸發] 錯誤:', e));
+});
+
 // ── 排程 ─────────────────────────────────────────
 // 每天早上 9:00 台灣時間（UTC+8）= UTC 01:00
 cron.schedule('0 1 * * *', () => runPriceCheck(client));

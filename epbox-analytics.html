@@ -366,43 +366,43 @@ main {
   <!-- KPIs -->
   <div class="kpi-grid">
     <div class="kpi-card c0">
-      <div class="kpi-icon">📊</div>
-      <div class="kpi-label">總評估次數</div>
+      <div class="kpi-icon">🔔</div>
+      <div class="kpi-label">總訂閱筆數</div>
       <div class="kpi-value" id="kpi-total">—</div>
       <div class="kpi-sub">累計</div>
     </div>
     <div class="kpi-card c1">
       <div class="kpi-icon">📅</div>
-      <div class="kpi-label">本月評估</div>
+      <div class="kpi-label">本月新增訂閱</div>
       <div class="kpi-value" id="kpi-month">—</div>
       <div class="kpi-sub" id="kpi-month-sub">—</div>
     </div>
     <div class="kpi-card c2">
-      <div class="kpi-icon">🔋</div>
-      <div class="kpi-label">平均電池健康</div>
+      <div class="kpi-icon">👤</div>
+      <div class="kpi-label">訂閱人數</div>
       <div class="kpi-value" id="kpi-battery">—</div>
-      <div class="kpi-sub">% 中位數</div>
+      <div class="kpi-sub">位使用者</div>
     </div>
     <div class="kpi-card c3">
       <div class="kpi-icon">📱</div>
-      <div class="kpi-label">機型總數</div>
+      <div class="kpi-label">收錄機型數</div>
       <div class="kpi-value" id="kpi-models">—</div>
-      <div class="kpi-sub">已收錄機型</div>
+      <div class="kpi-sub">筆價格資料</div>
     </div>
   </div>
 
   <!-- Trend -->
   <div class="section-title"><span class="dot"></span>使用量趨勢</div>
   <div class="chart-card">
-    <div class="chart-card-title">每日評估次數 <span class="chart-tag">近 30 天</span></div>
+    <div class="chart-card-title">每日新增訂閱數 <span class="chart-tag">近 30 天</span></div>
     <div class="chart-wrap"><canvas id="chart-trend"></canvas></div>
   </div>
 
   <!-- Rankings + Battery -->
-  <div class="section-title"><span class="dot"></span>機型排行 & 電池分布</div>
+  <div class="section-title"><span class="dot"></span>機型排行</div>
   <div class="chart-2col">
     <div class="chart-card">
-      <div class="chart-card-title">熱門機型 Top 10 <span class="chart-tag">評估次數</span></div>
+      <div class="chart-card-title">熱門訂閱機型 Top 10 <span class="chart-tag">訂閱次數</span></div>
       <div class="rank-list" id="model-ranking"></div>
     </div>
     <div class="chart-card">
@@ -476,31 +476,73 @@ function showError(msg) {
 
 async function loadFromFirebase() {
   try {
-    const snap = await db.ref('/tradein_prices/analytics').once('value');
-    let data = snap.val();
-    if (!data) {
-      showError('⚠ /tradein_prices/analytics 無資料，嘗試從 /prices 彙整');
-      data = await deriveFromPrices();
-    }
-    if (!data) { useMockData(); return; }
-    renderAll(data); stamp();
+    const [alertsSnap, pricesSnap] = await Promise.all([
+      db.ref('/epbox_bot_alerts').once('value'),
+      db.ref('/tradein_prices/prices').once('value'),
+    ]);
+    const alerts = alertsSnap.val();
+    const prices = pricesSnap.val();
+    if (!alerts && !prices) { useMockData(); return; }
+    renderAll(deriveFromAlerts(alerts, prices)); stamp();
   } catch(e) { showError('讀取失敗：' + e.message); useMockData(); }
 }
 
-async function deriveFromPrices() {
-  try {
-    const snap = await db.ref('/tradein_prices/prices').once('value');
-    const prices = snap.val();
-    if (!prices) return null;
-    const models = Object.keys(prices);
-    const topModels = models.map(m => ({ model: m.replace(/_/g,' '), count: prices[m]?.epbox || 0 }))
-      .sort((a,b) => b.count - a.count).slice(0,10);
-    return {
-      summary: { totalEvaluations: null, thisMonth: null, avgBattery: null, totalModels: models.length },
-      trend: Array.from({length:30},(_,i)=>{ const d=new Date(); d.setDate(d.getDate()-(29-i)); return {date:`${d.getMonth()+1}/${d.getDate()}`,count:0}; }),
-      topModels, batteryDistribution: null, warnings: null,
-    };
-  } catch { return null; }
+function deriveFromAlerts(alerts, prices) {
+  const rows = alerts ? Object.values(alerts) : [];
+  const now = new Date();
+
+  // 唯一訂閱者
+  const userIds = new Set(rows.map(r => r.userId));
+
+  // 本月 / 上月新增
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth()-1, 1).toISOString();
+  const thisMonth = rows.filter(r => r.createdAt >= thisMonthStart).length;
+  const lastMonth = rows.filter(r => r.createdAt >= lastMonthStart && r.createdAt < thisMonthStart).length;
+
+  // 近 30 天趨勢（以訂閱建立時間）
+  const trendMap = {};
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now); d.setDate(d.getDate()-i);
+    trendMap[d.toISOString().slice(0,10)] = 0;
+  }
+  rows.forEach(r => {
+    const day = (r.createdAt||'').slice(0,10);
+    if (trendMap[day] !== undefined) trendMap[day]++;
+  });
+  const trend = Object.entries(trendMap).map(([date, count]) => {
+    const d = new Date(date);
+    return { date: `${d.getMonth()+1}/${d.getDate()}`, count };
+  });
+
+  // 熱門機型
+  const modelCount = {};
+  rows.forEach(r => { if (r.model) modelCount[r.model] = (modelCount[r.model]||0)+1; });
+  const topModels = Object.entries(modelCount)
+    .sort((a,b) => b[1]-a[1]).slice(0,10)
+    .map(([model, count]) => ({ model: model.replace('IPHONE ','iPhone '), count }));
+
+  // EPBOX 平均回收價（從 prices 計算）
+  let avgEpbox = null;
+  if (prices) {
+    const epboxPrices = Object.values(prices).map(p => p['trade in價']).filter(v => v && typeof v === 'number');
+    avgEpbox = epboxPrices.length ? Math.round(epboxPrices.reduce((a,b)=>a+b,0)/epboxPrices.length) : null;
+  }
+
+  return {
+    summary: {
+      totalEvaluations: rows.length,
+      thisMonth,
+      lastMonth,
+      avgBattery: avgEpbox ? Math.round(avgEpbox/1000) : null,
+      totalModels: prices ? Object.keys(prices).length : 0,
+      totalUsers: userIds.size,
+    },
+    trend,
+    topModels,
+    batteryDistribution: null,
+    warnings: null,
+  };
 }
 
 function refreshData() { if (db) loadFromFirebase(); else useMockData(); }
@@ -555,7 +597,7 @@ function renderKPIs(s) {
   };
   animCount('kpi-total', s.totalEvaluations);
   animCount('kpi-month', s.thisMonth);
-  animCount('kpi-battery', s.avgBattery);
+  animCount('kpi-battery', s.totalUsers ?? s.avgBattery);
   animCount('kpi-models', s.totalModels);
   if (s.lastMonth && s.thisMonth) {
     const d = s.thisMonth - s.lastMonth;
@@ -641,6 +683,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cfg-authDomain').value= s.authDomain || PROJECT_DEFAULTS.authDomain;
     document.getElementById('cfg-dbUrl').value     = s.databaseURL|| PROJECT_DEFAULTS.databaseURL;
     document.getElementById('cfg-projectId').value = s.projectId  || PROJECT_DEFAULTS.projectId;
+    connectFirebase();
   }
 });
 </script>

@@ -281,6 +281,9 @@ main {
 .price-diff.neg { color: var(--text-gray); }
 .price-diff.zero { color: var(--apple-blue); }
 
+/* ── Sparkline ── */
+.sparkline { display: block; margin-top: 6px; }
+
 /* ── Empty / loading ── */
 .loading {
   text-align: center;
@@ -473,6 +476,7 @@ function setFilter(filter, btn) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderAll();
+  setTimeout(drawSparklines, 50);
 }
 
 function filtered(arr) {
@@ -530,7 +534,7 @@ function modelCard(d, rank) {
   const cap  = parts ? parts[2] : '';
 
   return `
-    <div class="model-card ${rankClass}" onclick="window.open('https://epbox-line-bot.onrender.com/epbox.html','_blank')">
+    <div class="model-card ${rankClass}" onclick="window.open('/epbox.html','_blank')">
       <div class="rank-badge ${badgeClass}">${badgeText || (rank+1)}</div>
       <div class="model-info">
         <div class="model-name">${name}<span class="series">${cap}</span></div>
@@ -542,8 +546,35 @@ function modelCard(d, rank) {
       <div class="model-prices">
         <div class="price-epbox">NT$${d.epbox.toLocaleString()}<small>/台</small></div>
         <div class="price-diff ${diffClass}">${diffText}</div>
+        <canvas class="sparkline" id="spark-${d.model.replace(/\s+/g,'-')}" width="80" height="24"></canvas>
       </div>
     </div>`;
+}
+
+function drawSparklines() {
+  const history = (() => { try { return JSON.parse(localStorage.getItem('epbox_ph')||'{}'); } catch { return {}; } })();
+  const days = Object.keys(history).sort().slice(-7);
+  if (days.length < 2) return;
+  allData.forEach(d => {
+    const canvas = document.getElementById('spark-' + d.model.replace(/\s+/g,'-'));
+    if (!canvas) return;
+    const vals = days.map(day => history[day]?.[d.model]?.['trade in價']).filter(v => v);
+    if (vals.length < 2) return;
+    const ctx = canvas.getContext('2d');
+    const min = Math.min(...vals), max = Math.max(...vals);
+    const range = max - min || 1;
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.beginPath();
+    ctx.strokeStyle = d.diff >= 0 ? '#00b96b' : '#86868b';
+    ctx.lineWidth = 1.5;
+    vals.forEach((v, i) => {
+      const x = (i / (vals.length - 1)) * w;
+      const y = h - ((v - min) / range) * (h - 4) - 2;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  });
 }
 
 function toggleSection(id) {

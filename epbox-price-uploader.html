@@ -334,7 +334,7 @@ tbody td { padding: 9px 14px; white-space: nowrap; }
     <span class="logo-badge">EPBOX</span>
     價格管理後台
   </div>
-  <div class="header-sub">上傳 CSV 更新各通路回收價格</div>
+  <div class="header-sub">上傳 Excel／CSV 更新各通路回收價格</div>
 </div>
 
 <!-- Steps -->
@@ -346,7 +346,7 @@ tbody td { padding: 9px 14px; white-space: nowrap; }
     </div>
     <div class="step" id="step2" onclick="goStep(2)">
       <div class="step-num">2</div>
-      <div class="step-label">上傳 CSV</div>
+      <div class="step-label">上傳檔案</div>
     </div>
     <div class="step" id="step3" onclick="goStep(3)">
       <div class="step-num">3</div>
@@ -481,7 +481,7 @@ window.addEventListener('DOMContentLoaded', () => {
 function goStep(n) {
   if (n > currentStep + 1) return;
   if (n === 2 && !db) { showBanner('請先完成 Firebase 連線', 'error'); return; }
-  if (n === 3 && !parsedRows.length) { showBanner('請先上傳 CSV 檔案', 'error'); return; }
+  if (n === 3 && !parsedRows.length) { showBanner('請先上傳 Excel 或 CSV 檔案', 'error'); return; }
   currentStep = n;
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('s' + n).classList.add('active');
@@ -692,8 +692,8 @@ function resetAll() {
   document.getElementById('progress-bar').style.width = '0%';
   document.getElementById('progress-label').textContent = '等待開始...';
   document.getElementById('upload-area').classList.remove('has-file');
-  document.getElementById('upload-text').textContent = '點擊或拖曳 CSV 到此處';
-  document.getElementById('upload-sub').textContent = '支援 UTF-8 編碼的 .csv 檔案';
+  document.getElementById('upload-text').textContent = '點擊或拖曳檔案到此處';
+  document.getElementById('upload-sub').textContent = '支援 .xlsx（Excel）或 .csv 格式';
   document.getElementById('file-input').value = '';
   document.getElementById('reset-btn').style.display = 'none';
   document.getElementById('upload-btn').disabled = false;
