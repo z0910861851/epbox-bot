@@ -410,6 +410,12 @@ tbody td { padding: 9px 14px; white-space: nowrap; }
         <div class="upload-sub" id="upload-sub">支援 .xlsx（Excel）或 .csv 格式</div>
       </div>
       <input type="file" id="file-input" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFile(event)">
+      <div id="sheet-selector" style="display:none;margin-top:14px;">
+        <label style="font-size:12px;font-weight:600;color:var(--text-gray);display:block;margin-bottom:6px;">📋 選擇工作表</label>
+        <select id="sheet-select" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:14px;background:var(--bg);outline:none;">
+        </select>
+        <button class="btn btn-primary" style="margin-top:10px;width:100%;" onclick="confirmSheetSelection()">✓ 載入此工作表</button>
+      </div>
       <div class="format-hint">
         📋 必要欄位：<code>機型</code>、<code>EPBOX</code>　可選：<code>APPLE BAR</code>、<code>STUDIO</code>、<code>台北101</code>、<code>台哥大</code>、<code>地標</code>、<code>平均回收價</code><br>
         機型格式範例：<code>IPHONE 15 PRO 256GB</code>（大寫，空格分隔）<br>
@@ -541,20 +547,47 @@ function onParsedSuccess(rows, h, fileName) {
   setTimeout(() => goStep(3), 600);
 }
 
+let _workbook = null;
+
 function processExcel(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
       const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-      if (!rows.length) { showBanner('Excel 是空的', 'error'); return; }
-      const h = Object.keys(rows[0]);
-      if (!h.includes('機型')) { showBanner('Excel 缺少「機型」欄位', 'error'); return; }
-      onParsedSuccess(rows, h, file.name);
+      _workbook = wb;
+      if (wb.SheetNames.length === 1) {
+        // 只有一個工作表，直接載入
+        loadSheetFromWorkbook(wb, wb.SheetNames[0], file.name);
+      } else {
+        // 多個工作表，顯示選擇器
+        const sel = document.getElementById('sheet-select');
+        sel.innerHTML = wb.SheetNames.map(n => `<option value="${n}">${n}</option>`).join('');
+        // 嘗試預選最後一個工作表（通常是最新的）
+        sel.selectedIndex = wb.SheetNames.length - 1;
+        document.getElementById('sheet-selector').style.display = 'block';
+        document.getElementById('_excel_filename') && (document.getElementById('_excel_filename').value = file.name);
+        showBanner(`此 Excel 有 ${wb.SheetNames.length} 個工作表，請選擇要上傳的工作表`, 'info');
+      }
     } catch(err) { showBanner('Excel 解析失敗：' + err.message, 'error'); }
   };
   reader.readAsArrayBuffer(file);
+}
+
+function confirmSheetSelection() {
+  if (!_workbook) return;
+  const sheetName = document.getElementById('sheet-select').value;
+  const fileName = document.getElementById('upload-text').textContent.replace('📁', '').trim() || 'Excel';
+  document.getElementById('sheet-selector').style.display = 'none';
+  loadSheetFromWorkbook(_workbook, sheetName, fileName);
+}
+
+function loadSheetFromWorkbook(wb, sheetName, fileName) {
+  const sheet = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+  if (!rows.length) { showBanner('此工作表是空的', 'error'); return; }
+  const h = Object.keys(rows[0]);
+  if (!h.includes('機型')) { showBanner(`工作表「${sheetName}」缺少「機型」欄位`, 'error'); return; }
+  onParsedSuccess(rows, h, `${fileName} [${sheetName}]`);
 }
 
 function processCsv(file) {
