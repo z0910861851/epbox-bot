@@ -593,6 +593,7 @@ function loadSheetFromWorkbook(wb, sheetName, fileName) {
 function processCsv(file) {
   Papa.parse(file, {
     header: true, skipEmptyLines: true,
+    transformHeader: h => h.replace(/[\r\n\t]/g, ' ').trim(), // 清理 header 換行
     complete: (result) => {
       if (!result.data.length) { showBanner('CSV 是空的', 'error'); return; }
       const h = result.meta.fields;
@@ -637,8 +638,9 @@ async function uploadToFirebase() {
       if (!key) continue;
       obj[key] = isNaN(n) ? v : n;
     }
-    // model 用作路徑時同樣需要清理（. 在路徑中會被視為層級分隔）
-    const safePath = model.replace(/[.#$\[\]]/g, '_');
+    // model 用作路徑時清理所有 Firebase 不允許的字元（含 / . # $ [ ]）
+    const safePath = model.replace(/[/.#$\[\]]/g, '_').replace(/_+/g, '_').trim();
+    if (!safePath) { done++; continue; }
     try {
       await db.ref('/tradein_prices/prices/' + safePath).set(obj);
       done++;
