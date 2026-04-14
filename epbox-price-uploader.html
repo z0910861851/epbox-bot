@@ -7,6 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root {
   --ep-green: #00b96b;
@@ -394,9 +395,9 @@ tbody td { padding: 9px 14px; white-space: nowrap; }
   <!-- Step 2 -->
   <div class="section" id="s2">
     <div class="card">
-      <div class="card-title"><div class="card-title-icon">📂</div>上傳價格 CSV</div>
+      <div class="card-title"><div class="card-title-icon">📂</div>上傳價格檔案</div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <span style="font-size:13px;color:var(--text-gray);">支援 .csv 格式，建議先下載範本</span>
+        <span style="font-size:13px;color:var(--text-gray);">支援 .xlsx（Excel）及 .csv 格式</span>
         <button class="template-btn" onclick="downloadTemplate()">⬇ 下載範本</button>
       </div>
       <div class="upload-area" id="upload-area"
@@ -405,13 +406,14 @@ tbody td { padding: 9px 14px; white-space: nowrap; }
            ondragleave="this.classList.remove('drag-over')"
            ondrop="handleDrop(event)">
         <div class="upload-icon">📁</div>
-        <div class="upload-text" id="upload-text">點擊或拖曳 CSV 到此處</div>
-        <div class="upload-sub" id="upload-sub">支援 UTF-8 編碼的 .csv 檔案</div>
+        <div class="upload-text" id="upload-text">點擊或拖曳檔案到此處</div>
+        <div class="upload-sub" id="upload-sub">支援 .xlsx（Excel）或 .csv 格式</div>
       </div>
-      <input type="file" id="file-input" accept=".csv" style="display:none" onchange="handleFile(event)">
+      <input type="file" id="file-input" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFile(event)">
       <div class="format-hint">
         📋 必要欄位：<code>機型</code>、<code>EPBOX</code>　可選：<code>APPLE BAR</code>、<code>STUDIO</code>、<code>台北101</code>、<code>台哥大</code>、<code>地標</code>、<code>平均回收價</code><br>
-        機型格式範例：<code>IPHONE 15 PRO 256GB</code>（大寫，空格分隔）
+        機型格式範例：<code>IPHONE 15 PRO 256GB</code>（大寫，空格分隔）<br>
+        ℹ️ <code>EPBOX</code> 欄位上傳後會自動轉為 <code>trade in價</code> 儲存至 Firebase
       </div>
       <div class="btn-row">
         <button class="btn btn-ghost" onclick="goStep(1)">← 上一步</button>
@@ -451,7 +453,9 @@ tbody td { padding: 9px 14px; white-space: nowrap; }
         <button class="btn btn-ghost" onclick="goStep(3)">← 返回預覽</button>
         <button class="btn btn-secondary" id="upload-btn" onclick="uploadToFirebase()">🚀 開始寫入</button>
         <button class="btn btn-ghost" id="reset-btn" onclick="resetAll()" style="display:none">↺ 重新開始</button>
+        <button class="btn btn-primary" id="notify-btn" onclick="triggerPriceCheck()" style="display:none">📣 立即推播</button>
       </div>
+      <div id="notify-result" style="display:none;margin-top:12px;font-size:13px;padding:10px 14px;border-radius:10px;"></div>
     </div>
   </div>
 </main>
@@ -517,21 +521,50 @@ function handleDrop(e) {
 function handleFile(e) { const f = e.target.files[0]; if (f) processFile(f); }
 
 function processFile(file) {
-  if (!file.name.endsWith('.csv')) { showBanner('請上傳 .csv 格式', 'error'); return; }
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+    processExcel(file);
+  } else if (name.endsWith('.csv')) {
+    processCsv(file);
+  } else {
+    showBanner('請上傳 .xlsx 或 .csv 格式', 'error');
+  }
+}
+
+function onParsedSuccess(rows, h, fileName) {
+  parsedRows = rows; headers = h;
+  document.getElementById('upload-area').classList.add('has-file');
+  document.getElementById('upload-text').textContent = '✅ ' + fileName;
+  document.getElementById('upload-sub').textContent = `${parsedRows.length} 筆機型已讀取`;
+  buildPreview();
+  showBanner(`✅ 成功讀取 ${parsedRows.length} 筆資料`, 'success');
+  setTimeout(() => goStep(3), 600);
+}
+
+function processExcel(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      if (!rows.length) { showBanner('Excel 是空的', 'error'); return; }
+      const h = Object.keys(rows[0]);
+      if (!h.includes('機型')) { showBanner('Excel 缺少「機型」欄位', 'error'); return; }
+      onParsedSuccess(rows, h, file.name);
+    } catch(err) { showBanner('Excel 解析失敗：' + err.message, 'error'); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function processCsv(file) {
   Papa.parse(file, {
     header: true, skipEmptyLines: true,
     complete: (result) => {
       if (!result.data.length) { showBanner('CSV 是空的', 'error'); return; }
       const h = result.meta.fields;
       if (!h.includes('機型')) { showBanner('CSV 缺少「機型」欄位', 'error'); return; }
-      parsedRows = result.data; headers = h;
-      const area = document.getElementById('upload-area');
-      area.classList.add('has-file');
-      document.getElementById('upload-text').textContent = '✅ ' + file.name;
-      document.getElementById('upload-sub').textContent = `${parsedRows.length} 筆機型已讀取`;
-      buildPreview();
-      showBanner(`✅ 成功讀取 ${parsedRows.length} 筆資料`, 'success');
-      setTimeout(() => goStep(3), 600);
+      onParsedSuccess(result.data, h, file.name);
     },
     error: (e) => showBanner('CSV 解析失敗：' + e.message, 'error')
   });
@@ -564,7 +597,9 @@ async function uploadToFirebase() {
     for (const [k,v] of Object.entries(row)) {
       if (k==='機型') continue;
       const n = parseFloat(v);
-      obj[k] = isNaN(n) ? v : n;
+      // 統一欄位名稱：CSV 的 EPBOX 欄位寫入 Firebase 時轉為 'trade in價'
+      const key = k === 'EPBOX' ? 'trade in價' : k;
+      obj[key] = isNaN(n) ? v : n;
     }
     try {
       await db.ref('/tradein_prices/prices/' + model).set(obj);
@@ -582,6 +617,43 @@ async function uploadToFirebase() {
   addLog(errors===0?'ok':'err', '\n' + msg);
   showBanner(msg, errors===0?'success':'info');
   document.getElementById('reset-btn').style.display = 'flex';
+  if (errors === 0) document.getElementById('notify-btn').style.display = 'flex';
+}
+
+async function triggerPriceCheck() {
+  const btn = document.getElementById('notify-btn');
+  const result = document.getElementById('notify-result');
+  btn.disabled = true;
+  btn.textContent = '推播中...';
+  try {
+    const secret = localStorage.getItem('epbox_admin_secret') || prompt('請輸入 ADMIN_SECRET（留空略過驗證）') || '';
+    if (secret) localStorage.setItem('epbox_admin_secret', secret);
+    const res = await fetch('/price-check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret },
+    });
+    const data = await res.json();
+    result.style.display = 'block';
+    if (res.ok) {
+      result.style.background = 'var(--ep-light)';
+      result.style.border = '1px solid #a8dfc4';
+      result.style.color = '#006e40';
+      result.textContent = '✅ ' + data.message;
+    } else {
+      result.style.background = '#fff0f0';
+      result.style.border = '1px solid #ffc0c0';
+      result.style.color = 'var(--red)';
+      result.textContent = '⚠️ ' + (data.error || '推播失敗');
+    }
+  } catch(e) {
+    result.style.display = 'block';
+    result.style.background = '#fff0f0';
+    result.style.border = '1px solid #ffc0c0';
+    result.style.color = 'var(--red)';
+    result.textContent = '⚠️ 無法連線到伺服器：' + e.message;
+  }
+  btn.disabled = false;
+  btn.textContent = '📣 立即推播';
 }
 
 function downloadTemplate() {
