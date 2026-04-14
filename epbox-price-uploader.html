@@ -597,12 +597,17 @@ async function uploadToFirebase() {
     for (const [k,v] of Object.entries(row)) {
       if (k==='機型') continue;
       const n = parseFloat(v);
-      // 統一欄位名稱：CSV 的 EPBOX 欄位寫入 Firebase 時轉為 'trade in價'
-      const key = k === 'EPBOX' ? 'trade in價' : k;
+      // 統一欄位名稱：EPBOX 欄位寫入 Firebase 時轉為 'trade in價'
+      const rawKey = k === 'EPBOX' ? 'trade in價' : k;
+      // Firebase key 不允許 . # $ / [ ]，以 _ 替換；跳過空欄位名稱
+      const key = rawKey.replace(/[.#$\/\[\]]/g, '_').trim();
+      if (!key) continue;
       obj[key] = isNaN(n) ? v : n;
     }
+    // model 用作路徑時同樣需要清理（. 在路徑中會被視為層級分隔）
+    const safePath = model.replace(/[.#$\[\]]/g, '_');
     try {
-      await db.ref('/tradein_prices/prices/' + model).set(obj);
+      await db.ref('/tradein_prices/prices/' + safePath).set(obj);
       done++;
       addLog('ok', `✓ ${model}`);
     } catch(e) {
