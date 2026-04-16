@@ -1625,8 +1625,7 @@ function generateSalesScript() {
   const basePrice    = Math.round(Number(model.prices['trade in價']) || 0);
   const mult         = COND_MULT[appCondition];
   const adjBase      = Math.round(basePrice * mult);
-  const adjBonus     = Math.round(adjBase * 0.1);
-  const adjTotal     = adjBase + adjBonus;
+  const adjTotal     = adjBase;
 
   const otherPrices  = BD_OTHER_KEYS.map(k => Number(model.prices[k]) || 0).filter(v => v > 0);
   const maxOther     = otherPrices.length ? Math.max(...otherPrices) : 0;
@@ -1639,15 +1638,15 @@ function generateSalesScript() {
   // 開場（依外觀狀況調整說法）
   if (appCondition === 'perfect') {
     sections.push({ icon: '👋', label: '開場白', color: '#e8f4ff', border: '#b0d4f0', text:
-      `我幫您查了一下，您的 ${modelDisplay} 外觀這麼好，EPBOX 自助回收報價大約是 NT$${adjTotal.toLocaleString()}（回收 ${adjBase.toLocaleString()} + 10% 補貼 ${adjBonus.toLocaleString()}）。`
+      `我幫您查了一下，您的 ${modelDisplay} 外觀這麼好，EPBOX 自助回收報價大約是 NT$${adjTotal.toLocaleString()}。`
     });
   } else if (appCondition === 'scratched') {
     sections.push({ icon: '👋', label: '開場白', color: '#e8f4ff', border: '#b0d4f0', text:
-      `我幫您查了一下，即使外觀有些刮痕，EPBOX 自助回收報價大約還是 NT$${adjTotal.toLocaleString()}（回收 ${adjBase.toLocaleString()} + 10% 補貼 ${adjBonus.toLocaleString()}）。`
+      `我幫您查了一下，即使外觀有些刮痕，EPBOX 自助回收報價大約還是 NT$${adjTotal.toLocaleString()}。`
     });
   } else {
     sections.push({ icon: '👋', label: '開場白', color: '#e8f4ff', border: '#b0d4f0', text:
-      `我幫您查了一下，螢幕有損傷的話，EPBOX 自助回收報價大約是 NT$${adjTotal.toLocaleString()}（回收 ${adjBase.toLocaleString()} + 10% 補貼 ${adjBonus.toLocaleString()}）。`
+      `我幫您查了一下，螢幕有損傷的話，EPBOX 自助回收報價大約是 NT$${adjTotal.toLocaleString()}。`
     });
   }
 
@@ -1658,7 +1657,7 @@ function generateSalesScript() {
     });
   } else if (appCondition === 'damaged') {
     sections.push({ icon: '💡', label: '螢幕損壞說明', color: '#fff0f0', border: '#f0b0b0', text:
-      `其他通路遇到螢幕損壞大多是直接大砍或不收。EPBOX 還是給六成的回收價，加上 10% 補貼，這個條件下算是相當好的選擇了。`
+      `其他通路遇到螢幕損壞大多是直接大砍或不收。EPBOX 還是給六成的回收價，這個條件下算是相當好的選擇了。`
     });
   } else if (diff > 0) {
     sections.push({ icon: '💰', label: '價格優勢', color: '#edfaf3', border: '#a8e0c4', text:
@@ -1744,11 +1743,9 @@ function generateSalesScript() {
       <div>
         <div style="font-size:11px;color:var(--text-gray);font-weight:600;margin-bottom:2px;">EPBOX 預估報價</div>
         <div style="font-size:22px;font-weight:900;color:var(--ep-green);">NT$${adjTotal.toLocaleString()}</div>
-        <div style="font-size:11px;color:var(--text-gray);margin-top:2px;">回收 ${adjBase.toLocaleString()} + 補貼 ${adjBonus.toLocaleString()}</div>
       </div>
       <div style="text-align:right;font-size:11px;color:var(--text-gray);line-height:1.8;">
         <div>× ${(mult * 100).toFixed(0)}% 機況</div>
-        <div>× 110% 含補貼</div>
       </div>
     </div>`;
 
