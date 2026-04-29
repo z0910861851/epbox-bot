@@ -936,8 +936,8 @@ function renderCompare() {
   const vendorPrices = Object.entries(adjustedPrices)
     .filter(([v]) => v !== "trade in價")
     .map(([v, p]) => ({ vendor: v, price: p }))
-    .sort((a, b) => b.price - a.price);
-  const maxP = vendorPrices.length ? vendorPrices[0].price : 1;
+    .sort((a, b) => a.price - b.price);
+  const maxP = vendorPrices.length ? vendorPrices[vendorPrices.length - 1].price : 1;
   const diff = (epboxPrice && avg) ? epboxPrice - avg : null;
 
   let html = "";
@@ -986,7 +986,7 @@ function renderCompare() {
 
   // Vendor prices
   if (vendorPrices.length) {
-    const best = vendorPrices[0];
+    const best = vendorPrices[vendorPrices.length - 1];
     html += `<div class="vendor-header"><span class="title">各通路回收報價</span><span style="font-size:12px;color:var(--gold);font-weight:600;display:flex;align-items:center;gap:4px">${ic(P.crown,'#ff9500',13)} ${best.vendor}</span></div>`;
     vendorPrices.forEach(({ vendor, price }) => {
       const isBest = vendor === best.vendor;
