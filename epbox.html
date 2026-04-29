@@ -999,7 +999,7 @@ function renderCompare() {
       <div class="vendor-row${isBest ? " best" : ""}">
         <div class="vendor-icon" style="background:${color}18">${ic(VENDOR_ICONS[vendor] ?? P.store, color, 20)}</div>
         <div>
-          <div class="vendor-name">${vendor}${isBest ? '<span class="best-chip">最高</span>' : ""}</div>
+          <div class="vendor-name">${vendor}</div>
           <div class="vendor-note">${VENDOR_NOTES[vendor] ?? ""} ${deductNote}</div>
         </div>
         <div class="vendor-right">
