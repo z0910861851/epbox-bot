@@ -11,36 +11,36 @@ async function runPriceCheck(client) {
 
       if (!currentData) return;
 
-      // 找出 EPBOX 價格下跌的機型
-      const droppedModels = {}; // { modelName: { prev, curr } }
+      // 找出 EPBOX 價格有變動的機型
+      const changedModels = {}; // { modelName: { prev, curr } }
 
       for (const [modelName, priceMap] of Object.entries(currentData)) {
               const curr = priceMap['trade in價'];
               if (!curr || typeof curr !== 'number') continue;
 
             const prev = lastKnown[modelName];
-              if (prev && curr < prev) {
-                        droppedModels[modelName] = { prev, curr };
+              if (prev && curr !== prev) {
+                        changedModels[modelName] = { prev, curr };
               }
       }
 
-      console.log(`[排程] 下跌機型：${Object.keys(droppedModels).join(', ') || '無'}`);
+      console.log(`[排程] 價格變動機型：${Object.keys(changedModels).join(', ') || '無'}`);
 
-      // 如果有下跌，通知訂閱者
-      if (Object.keys(droppedModels).length > 0) {
+      // 如果有變動，通知訂閱者
+      if (Object.keys(changedModels).length > 0) {
               const allSubs = await getAllSubscriptions();
               let sent = 0;
 
             for (const sub of allSubs) {
                       // 完全比對優先；舊訂閱若存的是 base model（無容量），改用 prefix 比對
-                const drop = droppedModels[sub.model]
-                        ?? Object.entries(droppedModels).find(([k]) => k.startsWith(sub.model))?.[1];
-                      if (!drop) continue;
+                const change = changedModels[sub.model]
+                        ?? Object.entries(changedModels).find(([k]) => k.startsWith(sub.model))?.[1];
+                      if (!change) continue;
 
                 try {
                             await client.pushMessage({
                                           to: sub.userId,
-                                          messages: [buildDropFlex(sub.model, drop)],
+                                          messages: [buildChangeFlex(sub.model, change)],
                             });
                             sent++;
                 } catch (e) {
@@ -67,11 +67,20 @@ async function runPriceCheck(client) {
     }
 }
 
-function buildDropFlex(model, drop) {
-    const diff = drop.prev - drop.curr;
+function buildChangeFlex(model, change) {
+    const dropped = change.curr < change.prev;
+    const diff = Math.abs(change.prev - change.curr);
+    const icon = dropped ? '📉' : '📈';
+    const label = dropped ? 'EPBOX 回收價下跌通知' : 'EPBOX 回收價上漲通知';
+    const priceColor = dropped ? '#ff4444' : '#00b96b';
+    const changeText = dropped
+        ? `▼ 跌幅 NT$${diff.toLocaleString()}`
+        : `▲ 漲幅 NT$${diff.toLocaleString()}`;
+    const hintText = dropped ? '建議盡快前往回收！' : '回收價上漲，現在是好時機！';
+
     return {
         type: 'flex',
-        altText: `📉 ${model} EPBOX 回收價下跌 NT$${diff.toLocaleString()}`,
+        altText: `${icon} ${model} EPBOX 回收價${dropped ? '下跌' : '上漲'} NT$${diff.toLocaleString()}`,
         contents: {
             type: 'bubble',
             size: 'mega',
@@ -81,9 +90,9 @@ function buildDropFlex(model, drop) {
                 backgroundColor: '#1a1a1a',
                 paddingAll: '16px',
                 contents: [
-                    { type: 'text', text: '📉 EPBOX 回收價下跌通知', size: 'xs', color: '#aaaaaa' },
+                    { type: 'text', text: `${icon} ${label}`, size: 'xs', color: '#aaaaaa' },
                     { type: 'text', text: model, size: 'md', color: '#ffffff', weight: 'bold', wrap: true, margin: '4px' },
-                    { type: 'text', text: `NT$${drop.curr.toLocaleString()}`, size: 'xxl', color: '#ff4444', weight: 'bold', margin: '8px' },
+                    { type: 'text', text: `NT$${change.curr.toLocaleString()}`, size: 'xxl', color: priceColor, weight: 'bold', margin: '8px' },
                 ],
             },
             body: {
@@ -97,20 +106,20 @@ function buildDropFlex(model, drop) {
                         layout: 'horizontal',
                         contents: [
                             { type: 'text', text: '前次記錄', size: 'sm', color: '#888888', flex: 3 },
-                            { type: 'text', text: `NT$${drop.prev.toLocaleString()}`, size: 'sm', color: '#888888', align: 'end', flex: 2 },
+                            { type: 'text', text: `NT$${change.prev.toLocaleString()}`, size: 'sm', color: '#888888', align: 'end', flex: 2 },
                         ],
                     },
                     {
                         type: 'box',
                         layout: 'horizontal',
                         contents: [
-                            { type: 'text', text: '目前價格', size: 'sm', color: '#ff4444', weight: 'bold', flex: 3 },
-                            { type: 'text', text: `NT$${drop.curr.toLocaleString()}`, size: 'sm', color: '#ff4444', weight: 'bold', align: 'end', flex: 2 },
+                            { type: 'text', text: '目前價格', size: 'sm', color: priceColor, weight: 'bold', flex: 3 },
+                            { type: 'text', text: `NT$${change.curr.toLocaleString()}`, size: 'sm', color: priceColor, weight: 'bold', align: 'end', flex: 2 },
                         ],
                     },
                     { type: 'separator', margin: 'md' },
-                    { type: 'text', text: `▼ 跌幅 NT$${diff.toLocaleString()}`, size: 'sm', color: '#ff4444', margin: 'md' },
-                    { type: 'text', text: '建議盡快前往回收！', size: 'sm', color: '#555555', margin: 'sm' },
+                    { type: 'text', text: changeText, size: 'sm', color: priceColor, margin: 'md' },
+                    { type: 'text', text: hintText, size: 'sm', color: '#555555', margin: 'sm' },
                 ],
             },
             footer: {
