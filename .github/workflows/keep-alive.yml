@@ -11,5 +11,6 @@ jobs:
     steps:
       - name: Ping EPBOX website
         run: |
-          curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" https://epbox-line-bot.onrender.com
+          curl -s -o /dev/null -w "主站 HTTP Status: %{http_code}\n" https://epbox-line-bot.onrender.com
+          curl -s -o /dev/null -w "後台 HTTP Status: %{http_code}\n" https://epbox-line-bot.onrender.com/epbox-analytics.html
           echo "Ping sent at $(date '+%Y-%m-%d %H:%M:%S UTC')"
