@@ -418,6 +418,18 @@ body {
 .th-icon svg { width: 13px; height: 13px; vertical-align: -2px; stroke-width: 2; margin-right: 3px; }
 .step-icon { width: 44px; height: 44px; background: #e8f7ef; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
 .step-icon svg { width: 22px; height: 22px; stroke: var(--ep-green); stroke-width: 1.8; }
+
+/* ── Store Picker Modal ── */
+.store-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.store-modal { background: #fff; border-radius: 20px; padding: 24px 20px 20px; width: 100%; max-width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.store-modal h2 { font-size: 17px; font-weight: 700; color: var(--ep-dark); margin-bottom: 4px; }
+.store-modal p  { font-size: 13px; color: var(--text-gray); margin-bottom: 16px; }
+.store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.store-btn { padding: 10px 8px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg); font-size: 13px; font-weight: 500; color: var(--text-dark); cursor: pointer; transition: all .15s; text-align: center; }
+.store-btn:hover, .store-btn.selected { border-color: var(--ep-green); background: #e6f9f0; color: var(--ep-green); }
+.store-confirm { width: 100%; padding: 13px; border-radius: 12px; border: none; background: var(--ep-green); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+.store-confirm:disabled { opacity: .4; cursor: not-allowed; }
+.store-tag { position: fixed; bottom: 12px; left: 12px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 4px 9px; border-radius: 99px; z-index: 100; cursor: pointer; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -1825,5 +1837,127 @@ if (document.readyState !== "loading") lucide.createIcons();
     <button onclick="closeLineQRModal()" style="background:#00b900;color:#fff;border:none;padding:12px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;">關閉</button>
   </div>
 </div>
+
+<!-- ══════════ 門市選擇彈窗 ══════════ -->
+<div class="store-overlay" id="storeOverlay" style="display:none">
+  <div class="store-modal">
+    <h2>📍 請選擇你的門市</h2>
+    <p>選擇後會記住，下次不會再問。</p>
+    <div class="store-grid" id="storeGrid"></div>
+    <button class="store-confirm" id="storeConfirmBtn" disabled onclick="confirmStore()">確認</button>
+  </div>
+</div>
+<div class="store-tag" id="storeTag" style="display:none" onclick="resetStore()"></div>
+
+<script>
+/* ════════════════════════════════
+   門市選擇 & 使用率追蹤
+════════════════════════════════ */
+const STORE_LIST = [
+  "燦坤 新岡山門市","燦坤 新光華門市","燦坤 斗六門市",
+  "燦坤 自由門市","燦坤 華榮門市","燦坤 永華門市",
+  "燦坤 中華門市","燦坤 五甲門市","燦坤 右昌門市"
+];
+const FIREBASE_USAGE_URL = "https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/usage_logs";
+let _selectedStore = null;
+
+function initStorePicker() {
+  const saved = localStorage.getItem('epbox_store');
+  if (saved) {
+    _selectedStore = saved;
+    showStoreTag(saved);
+    logEvent('open');
+    return;
+  }
+  const grid = document.getElementById('storeGrid');
+  grid.innerHTML = STORE_LIST.map(s =>
+    `<button class="store-btn" onclick="selectStore(this,'${s}')">${s.replace('燦坤 ','').replace('門市','')}</button>`
+  ).join('');
+  document.getElementById('storeOverlay').style.display = 'flex';
+}
+
+function selectStore(btn, name) {
+  document.querySelectorAll('.store-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  _selectedStore = name;
+  document.getElementById('storeConfirmBtn').disabled = false;
+}
+
+function confirmStore() {
+  if (!_selectedStore) return;
+  localStorage.setItem('epbox_store', _selectedStore);
+  document.getElementById('storeOverlay').style.display = 'none';
+  showStoreTag(_selectedStore);
+  logEvent('open');
+}
+
+function resetStore() {
+  localStorage.removeItem('epbox_store');
+  _selectedStore = null;
+  location.reload();
+}
+
+function showStoreTag(name) {
+  const tag = document.getElementById('storeTag');
+  tag.textContent = '📍 ' + name.replace('燦坤 ','').replace('門市','') + ' ✕';
+  tag.style.display = 'block';
+}
+
+/* ── 寫入 Firebase ── */
+function logEvent(type, detail) {
+  if (!_selectedStore) return;
+  const now = new Date();
+  const dateKey = now.toISOString().slice(0,10).replace(/-/g,'');
+  const hourKey = String(now.getHours()).padStart(2,'0');
+  const storeKey = _selectedStore.replace(/\s/g,'_').replace(/[.#$/[\]]/g,'');
+  const payload = {
+    store: _selectedStore,
+    event: type,
+    detail: detail || '',
+    ts: now.toISOString(),
+    hour: hourKey
+  };
+  fetch(`${FIREBASE_USAGE_URL}/${dateKey}/${storeKey}.json`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  }).catch(() => {});
+}
+
+/* ── 攔截關鍵事件 ── */
+// 1. Tab 切換
+const _origSwitchTab = switchTab;
+window.switchTab = function(id, btn) {
+  _origSwitchTab(id, btn);
+  logEvent('tab', id);
+};
+
+// 2. 機型查詢
+const _origOnModelChange = onModelChange;
+window.onModelChange = function() {
+  _origOnModelChange();
+  const sel = document.getElementById('model-select');
+  if (sel) logEvent('model', sel.value);
+};
+
+// 3. 換機試算
+const _origOnCalcModelChange = onCalcModelChange;
+window.onCalcModelChange = function() {
+  _origOnCalcModelChange();
+  const sel = document.getElementById('calc-model');
+  if (sel && sel.value) logEvent('calc', sel.value);
+};
+
+// 4. 回收提醒訂閱（找訂閱按鈕）
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  if (btn.textContent.includes('訂閱') || btn.textContent.includes('提醒'))
+    logEvent('subscribe');
+});
+
+// 啟動
+document.addEventListener('DOMContentLoaded', initStorePicker);
+</script>
 </body>
 </html>
