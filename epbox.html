@@ -652,8 +652,8 @@ body {
 ════════════════════════════════ */
 const FB_URL = "https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/tradein_prices.json";
 
-const VENDORS = ["APPLE BAR", "台哥大", "遠傳", "台北101", "STUDIO", "地標", "米可", "神腦", "trade in價"];
-const AVG_VENDORS = new Set(["APPLE BAR", "台哥大", "遠傳", "台北101", "STUDIO", "神腦"]);
+const VENDORS = ["APPLE BAR", "台哥大", "遠傳", "台北101", "STUDIO A", "地標", "米可", "神腦_門市回收價", "Trade in價"];
+const AVG_VENDORS = new Set(["APPLE BAR", "台哥大", "遠傳", "台北101", "STUDIO A", "神腦_門市回收價"]);
 
 /* ── Inline SVG helper (Lucide-style, stroke-only) ── */
 function ic(path, color = "currentColor", size = 18) {
@@ -691,27 +691,29 @@ const VENDOR_ICONS = {
   "台哥大":     P.store,
   "遠傳":       P.store,
   "台北101":    P.store,
-  "STUDIO":     P.store,
+  "STUDIO A":     P.store,
   "地標":       P.store,
   "米可":       P.store,
-  "神腦":       P.store,
-  "trade in價": P.bot,
+  "神腦_門市回收價":       P.store,
+  "Trade in價": P.bot,
 };
 const VENDOR_COLORS = {
   "APPLE BAR": "#1d1d1f", "台哥大": "#e60012", "遠傳": "#00a0e9",
-  "台北101": "#8B4513", "STUDIO": "#9b59b6", "地標": "#e67e22",
-  "米可": "#8e44ad", "神腦": "#2c3e50", "trade in價": "#ff6b00"
+  "台北101": "#8B4513", "STUDIO A": "#9b59b6", "地標": "#e67e22",
+  "米可": "#8e44ad", "神腦_門市回收價": "#2c3e50", "Trade in價": "#ff6b00"
 };
 const VENDOR_DISPLAY_NAMES = {
-  "trade in價": "EPBOX 自助回收",
+  "STUDIO A": "Studio A",
+  "神腦_門市回收價": "神腦",
+  "Trade in價": "EPBOX 自助回收",
 };
 
 const VENDOR_NOTES = {
   "APPLE BAR": "Apple 授權經銷商", "台哥大": "台灣大哥大門市",
   "遠傳": "遠傳電信門市", "台北101": "台北101門市",
-  "STUDIO": "Studio A 門市", "地標": "地標數位門市",
-  "米可": "米可數位門市", "神腦": "神腦國際門市",
-  "trade in價": "EPBOX 自助回收機參考價"
+  "STUDIO A": "Studio A 門市", "地標": "地標數位門市",
+  "米可": "米可數位門市", "神腦_門市回收價": "神腦國際門市",
+  "Trade in價": "EPBOX 自助回收機參考價"
 };
 
 /* ════════════════════════════════
@@ -964,13 +966,13 @@ function renderCompare() {
   // 建立扣款後的價格（EPBOX 不扣，其他通路扣）
   const adjustedPrices = {};
   for (const [v, p] of Object.entries(prices)) {
-    adjustedPrices[v] = v === "trade in價" ? p : Math.max(0, p - deduction);
+    adjustedPrices[v] = v === "Trade in價" ? p : Math.max(0, p - deduction);
   }
 
   const avg = averagePrice(adjustedPrices);
-  const epboxPrice = adjustedPrices["trade in價"];
+  const epboxPrice = adjustedPrices["Trade in價"];
   const vendorPrices = Object.entries(adjustedPrices)
-    .filter(([v]) => v !== "trade in價")
+    .filter(([v]) => v !== "Trade in價")
     .map(([v, p]) => ({ vendor: v, price: p }))
     .sort((a, b) => a.price - b.price);
   const maxP = vendorPrices.length ? vendorPrices[vendorPrices.length - 1].price : 1;
@@ -1005,7 +1007,7 @@ function renderCompare() {
 
   // EPBOX trade-in ref
   if (epboxPrice) {
-    const epDelta = deltaBadge(getPriceDelta(model.name, 'trade in價'));
+    const epDelta = deltaBadge(getPriceDelta(model.name, 'Trade in價'));
     html += `
     <div class="epbox-ref-card">
       <div class="epbox-ref-icon">${ic(P.bot,'#ff6b00',22)}</div>
@@ -1044,7 +1046,7 @@ function renderCompare() {
       <div class="vendor-row${isBest ? " best" : ""}">
         <div class="vendor-icon" style="background:${color}18">${ic(VENDOR_ICONS[vendor] ?? P.store, color, 20)}</div>
         <div>
-          <div class="vendor-name">${vendor}</div>
+          <div class="vendor-name">${VENDOR_DISPLAY_NAMES[vendor] ?? vendor}</div>
           <div class="vendor-note">${VENDOR_NOTES[vendor] ?? ""} ${deductNote}</div>
         </div>
         <div class="vendor-right">
@@ -1082,14 +1084,14 @@ function renderCompare() {
 /* ════════════════════════════════
    Tab 2: Best Deals
 ════════════════════════════════ */
-const BD_OTHER_KEYS = ['APPLE BAR','STUDIO','台北101','台哥大','地標'];
+const BD_OTHER_KEYS = ['APPLE BAR','STUDIO A','台北101','台哥大','地標'];
 let bdAllData = [];
 let bdCurrentFilter = 'all';
 let bdReady = false;
 
 function computeBestData() {
   bdAllData = allModels.map(m => {
-    const epbox = Math.round(Number(m.prices['trade in價']) || 0);
+    const epbox = Math.round(Number(m.prices['Trade in價']) || 0);
     const others = BD_OTHER_KEYS.map(k => Number(m.prices[k]) || 0).filter(v => v > 0);
     const maxOther = others.length ? Math.max(...others) : 0;
     const diff = epbox - maxOther;
@@ -1269,9 +1271,9 @@ function saveHistorySnapshot(models) {
 }
 
 function getPriceDelta(modelName, vendor) {
-  if (vendor !== "trade in價") return null;
+  if (vendor !== "Trade in價") return null;
   const m = allModels.find(x => x.name === modelName);
-  const cur = m?.prices?.["trade in價"];
+  const cur = m?.prices?.["Trade in價"];
   const old = lastKnownPrices[modelName];
   if (!cur || !old) return null;
   return cur - old;
@@ -1333,10 +1335,10 @@ function renderCalculator() {
   const model = getModel(calcBase, calcStorage);
   if (!model) { container.innerHTML = '<div class="no-result">找不到此機型資料</div>'; return; }
 
-  const tradeIn = model.prices['trade in價'] ?? 0;
+  const tradeIn = model.prices['Trade in價'] ?? 0;
   const avg = averagePrice(model.prices) ?? 0;
-  const bestEntry = Object.entries(model.prices).filter(([v]) => v !== 'trade in價').sort((a,b)=>b[1]-a[1])[0];
-  const epDelta = deltaBadge(getPriceDelta(model.name, 'trade in價'));
+  const bestEntry = Object.entries(model.prices).filter(([v]) => v !== 'Trade in價').sort((a,b)=>b[1]-a[1])[0];
+  const epDelta = deltaBadge(getPriceDelta(model.name, 'Trade in價'));
 
   let html = '';
 
@@ -1406,7 +1408,7 @@ function drawTrendChart(modelName, history, keys) {
   const canvas = document.getElementById('trend-chart');
   if (!canvas) return;
   const labels   = keys.map(k => k.slice(5));
-  const epData   = keys.map(k => history[k]?.[modelName]?.['trade in價'] ?? null);
+  const epData   = keys.map(k => history[k]?.[modelName]?.['Trade in價'] ?? null);
   const avgData  = keys.map(k => {
     const prices = history[k]?.[modelName];
     if (!prices) return null;
@@ -1516,7 +1518,7 @@ function checkAlerts(models) {
   const newPrices = { ...lastPrices };
 
   models.forEach(m => {
-    const epboxPrice = m.prices['trade in價'];
+    const epboxPrice = m.prices['Trade in價'];
     if (!epboxPrice) return;
     const prev = lastPrices[m.name];
     if (subs.includes(m.name) && prev && epboxPrice < prev) {
@@ -1643,7 +1645,7 @@ function generateSalesScript() {
   }
 
   const modelDisplay = model.name.replace('IPHONE ', 'iPhone ');
-  const basePrice    = Math.round(Number(model.prices['trade in價']) || 0);
+  const basePrice    = Math.round(Number(model.prices['Trade in價']) || 0);
   const mult         = COND_MULT[appCondition];
   const adjBase      = Math.round(basePrice * mult);
   const adjTotal     = adjBase;
