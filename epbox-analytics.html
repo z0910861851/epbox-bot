@@ -417,6 +417,41 @@ main {
     <div class="chart-card-title">外觀問題排行 <span class="chart-tag">觸發次數</span></div>
     <div class="warn-list" id="warn-list"></div>
   </div>
+
+  <!-- 門市使用率 -->
+  <div class="section-title" style="margin-top:24px"><span class="dot" style="background:#0071e3"></span>門市使用率</div>
+  <div class="kpi-grid" style="margin-bottom:14px">
+    <div class="kpi-card c0">
+      <div class="kpi-icon">🏪</div>
+      <div class="kpi-label">今日使用門市數</div>
+      <div class="kpi-value" id="store-today-stores">—</div>
+      <div class="kpi-sub">家門市有開啟</div>
+    </div>
+    <div class="kpi-card c1">
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-label">今日總開啟次數</div>
+      <div class="kpi-value" id="store-today-total">—</div>
+      <div class="kpi-sub">次查詢</div>
+    </div>
+    <div class="kpi-card c2">
+      <div class="kpi-icon">🏆</div>
+      <div class="kpi-label">本週最活躍門市</div>
+      <div class="kpi-value" id="store-top-store" style="font-size:14px">—</div>
+      <div class="kpi-sub" id="store-top-count">—</div>
+    </div>
+  </div>
+  <div class="chart-card" style="margin-bottom:14px">
+    <div class="chart-card-title">各門市 本週使用次數
+      <select id="store-range" onchange="renderStoreCharts()" style="float:right;font-size:12px;border:1px solid #e5e5e7;border-radius:6px;padding:2px 6px">
+        <option value="7">近 7 天</option><option value="14">近 14 天</option><option value="30">近 30 天</option>
+      </select>
+    </div>
+    <div id="store-bar-list" style="margin-top:12px"></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-card-title">最常查詢機型 <span class="chart-tag">本週 Top 10</span></div>
+    <div class="warn-list" id="store-model-list"></div>
+  </div>
 </main>
 
 <script>
@@ -483,8 +518,8 @@ async function loadFromFirebase() {
     const alerts = alertsSnap.val();
     const prices = pricesSnap.val();
     if (!alerts && !prices) { useMockData(); return; }
-    renderAll(deriveFromAlerts(alerts, prices)); stamp();
-  } catch(e) { showError('讀取失敗：' + e.message); useMockData(); }
+    renderAll(deriveFromAlerts(alerts, prices)); stamp(); loadStoreData();
+  } catch(e) { showError('讀取失敗：' + e.message); useMockData(); loadStoreData(); }
 }
 
 function deriveFromAlerts(alerts, prices) {
@@ -686,6 +721,115 @@ window.addEventListener('DOMContentLoaded', () => {
     connectFirebase();
   }
 });
+
+/* ════════════════════════════════
+   門市使用率功能
+════════════════════════════════ */
+const FIREBASE_USAGE_URL = 'https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/usage_logs';
+
+function getDateKeys(days) {
+  const keys = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    keys.push(d.toISOString().slice(0,10).replace(/-/g,''));
+  }
+  return keys;
+}
+
+async function loadStoreData() {
+  const days = parseInt(document.getElementById('store-range')?.value || '7');
+  const dateKeys = getDateKeys(days);
+  const todayKey = dateKeys[0];
+
+  // 並行抓所有日期的資料
+  const fetches = dateKeys.map(dk =>
+    fetch()
+      .then(r => r.json()).then(d => ({ date: dk, data: d })).catch(() => ({ date: dk, data: null }))
+  );
+  const results = await Promise.all(fetches);
+
+  // 整理資料
+  const storeCount = {};  // { storeName: totalCount }
+  const modelCount = {};  // { model: count }
+  let todayTotal = 0, todayStores = new Set();
+
+  for (const { date, data } of results) {
+    if (!data) continue;
+    for (const [storeKey, events] of Object.entries(data)) {
+      const storeName = storeKey.replace(/_/g,' ');
+      const evList = Object.values(events);
+      const cnt = evList.length;
+      storeCount[storeName] = (storeCount[storeName] || 0) + cnt;
+
+      if (date === todayKey) {
+        todayTotal += cnt;
+        todayStores.add(storeName);
+      }
+
+      // 機型統計
+      for (const ev of evList) {
+        if (ev.event === 'model' && ev.detail) {
+          const m = ev.detail.replace('IPHONE ','iPhone ');
+          modelCount[m] = (modelCount[m] || 0) + 1;
+        }
+      }
+    }
+  }
+
+  renderStoreKPIs(storeCount, todayTotal, todayStores.size);
+  renderStoreBar(storeCount);
+  renderModelTop(modelCount);
+}
+
+function renderStoreKPIs(storeCount, todayTotal, todayStores) {
+  document.getElementById('store-today-stores').textContent = todayStores || '0';
+  document.getElementById('store-today-total').textContent  = todayTotal  || '0';
+  const sorted = Object.entries(storeCount).sort((a,b) => b[1]-a[1]);
+  if (sorted.length) {
+    document.getElementById('store-top-store').textContent = sorted[0][0].replace('燦坤 ','').replace('門市','');
+    document.getElementById('store-top-count').textContent = sorted[0][1] + ' 次';
+  }
+}
+
+function renderStoreBar(storeCount) {
+  const sorted = Object.entries(storeCount).sort((a,b) => b[1]-a[1]);
+  const max = sorted[0]?.[1] || 1;
+  const colors = ['#00b96b','#0071e3','#ff9500','#e74c3c','#8e44ad','#1abc9c','#e67e22','#2c3e50','#c0392b'];
+  document.getElementById('store-bar-list').innerHTML = sorted.map(([name, cnt], i) => {
+    const pct = Math.round(cnt / max * 100);
+    const label = name.replace('燦坤 ','').replace('門市','');
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span style="font-weight:500">${label}</span>
+        <span style="color:#86868b">${cnt} 次</span>
+      </div>
+      <div style="background:#f0f0f2;border-radius:99px;height:8px">
+        <div style="width:${pct}%;background:${colors[i%colors.length]};height:8px;border-radius:99px;transition:width .3s"></div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:#86868b;font-size:13px;text-align:center;padding:20px">尚無使用資料</div>';
+}
+
+function renderModelTop(modelCount) {
+  const sorted = Object.entries(modelCount).sort((a,b) => b[1]-a[1]).slice(0,10);
+  const max = sorted[0]?.[1] || 1;
+  document.getElementById('store-model-list').innerHTML = sorted.map(([model, cnt]) => {
+    const pct = Math.round(cnt / max * 100);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f0f0f2">
+      <div style="flex:1;font-size:13px;font-weight:500">${model}</div>
+      <div style="font-size:12px;color:#86868b;min-width:40px;text-align:right">${cnt} 次</div>
+      <div style="width:80px;background:#f0f0f2;border-radius:99px;height:5px">
+        <div style="width:${pct}%;background:#0071e3;height:5px;border-radius:99px"></div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:#86868b;font-size:13px;text-align:center;padding:20px">尚無機型查詢資料</div>';
+}
+
+function renderStoreCharts() { loadStoreData(); }
+
+// 連線成功後自動載入門市資料
+const _origConnectFirebase = window.connectFirebase;
+
 </script>
 </body>
 </html>
