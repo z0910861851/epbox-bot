@@ -335,14 +335,12 @@ main {
   const KEY = 'epbox_admin_auth';
   if (sessionStorage.getItem(KEY) === 'ok') {
     document.getElementById('pw-overlay').style.display = 'none';
-    setTimeout(() => loadStoreData(), 500);
   }
   window.checkPw = function() {
     const val = document.getElementById('pw-input').value;
     if (val === '2loxuggu') {
       sessionStorage.setItem(KEY, 'ok');
       document.getElementById('pw-overlay').style.display = 'none';
-      setTimeout(() => loadStoreData(), 500);
     } else {
       const err = document.getElementById('pw-error');
       err.textContent = '密碼錯誤，請重試';
@@ -870,6 +868,13 @@ function renderStoreCharts() { loadStoreData(); }
 
 // 連線成功後自動載入門市資料
 const _origConnectFirebase = window.connectFirebase;
+
+// ── 頁面載入後自動執行（確保函式已定義）──
+window.addEventListener('load', function() {
+  if (sessionStorage.getItem('epbox_admin_auth') === 'ok') {
+    setTimeout(() => loadStoreData(), 600);
+  }
+});
 
 </script>
 </body>
