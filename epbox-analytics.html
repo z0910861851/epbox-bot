@@ -782,7 +782,7 @@ async function loadStoreData() {
 
   // 並行抓所有日期的資料
   const fetches = dateKeys.map(dk =>
-    fetch()
+    fetch(`${FIREBASE_USAGE_URL}/${dk}.json`)
       .then(r => r.json()).then(d => ({ date: dk, data: d })).catch(() => ({ date: dk, data: null }))
   );
   const results = await Promise.all(fetches);
