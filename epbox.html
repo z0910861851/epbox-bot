@@ -1054,7 +1054,7 @@ function renderCompare() {
       const color = VENDOR_COLORS[vendor] ?? "#86868b";
       const barColor = isBest ? "linear-gradient(to right, #ff9500, #ffcc00)" : `linear-gradient(to right, ${color}99, ${color}55)`;
       const vDelta = deltaBadge(getPriceDelta(model.name, vendor));
-      const deductNote = !batteryGood ? `<span style="font-size:10px;color:#e74c3c;">已扣換電池費 $${fmt(deduction)}</span>` : '';
+      const deductNote = '';
       html += `
       <div class="vendor-row${isBest ? " best" : ""}">
         <div class="vendor-icon" style="background:${color}18">${ic(VENDOR_ICONS[vendor] ?? P.store, color, 20)}</div>
