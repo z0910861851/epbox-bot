@@ -869,12 +869,10 @@ function renderStoreCharts() { loadStoreData(); }
 // 連線成功後自動載入門市資料
 const _origConnectFirebase = window.connectFirebase;
 
-// ── 頁面載入後自動執行（確保函式已定義）──
-window.addEventListener('load', function() {
-  if (sessionStorage.getItem('epbox_admin_auth') === 'ok') {
-    setTimeout(() => loadStoreData(), 600);
-  }
-});
+// ── 頁面載入後自動執行 ──
+if (sessionStorage.getItem('epbox_admin_auth') === 'ok') {
+  loadStoreData();
+}
 
 </script>
 </body>
