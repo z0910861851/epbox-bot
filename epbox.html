@@ -1048,6 +1048,7 @@ function renderCompare() {
     </div>
     <div class="vendor-list-wrap open">`;
     vendorPrices.forEach(({ vendor, price }) => {
+      if (!price || isNaN(price) || price <= 0) return;
       const isBest = vendor === best.vendor;
       const barW = Math.round((price / maxP) * 100);
       const color = VENDOR_COLORS[vendor] ?? "#86868b";
@@ -1844,7 +1845,7 @@ if (document.readyState !== "loading") lucide.createIcons();
     <h2>📍 請選擇你的門市</h2>
     <p>選擇後會記住，下次不會再問。</p>
     <div class="store-grid" id="storeGrid"></div>
-    <button class="store-confirm" id="storeConfirmBtn" disabled onclick="confirmStore()">確認</button>
+    <button class="store-confirm" id="storeConfirmBtn" disabled onclick="confirmStore()" style="min-height:54px;font-size:16px">確認</button>
   </div>
 </div>
 <div class="store-tag" id="storeTag" style="display:none" onclick="resetStore()"></div>
@@ -1936,7 +1937,7 @@ window.switchTab = function(id, btn) {
 const _origOnModelChange = onModelChange;
 window.onModelChange = function() {
   _origOnModelChange();
-  const sel = document.getElementById('model-select');
+  const sel = document.getElementById('compare-model');
   if (sel) logEvent('model', sel.value);
 };
 
