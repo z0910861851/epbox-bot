@@ -434,7 +434,6 @@ body {
 <!-- Tabs -->
 <div class="tab-nav">
   <button class="tab-btn active" onclick="switchTab('compare', this)"><i data-lucide="bar-chart-2"></i>各通路比較</button>
-  <button class="tab-btn" onclick="switchTab('alerts', this)"><i data-lucide="bell"></i>回收價提醒</button>
   <button class="tab-btn" onclick="switchTab('analytics', this)"><i data-lucide="message-circle"></i>回收建議</button>
 </div>
 
@@ -737,9 +736,9 @@ async function fetchData() {
         hour: "2-digit", minute: "2-digit"
       }).format(d);
       lastUpdated = tw;
-      document.getElementById("last-updated-1").textContent = "更新時間：" + tw;
-      document.getElementById("last-updated-2").textContent = "更新時間：" + tw;
-      document.getElementById("last-updated-calc").textContent = "更新時間：" + tw;
+      const el1 = document.getElementById("last-updated-1"); if (el1) el1.textContent = "更新時間：" + tw;
+      const el2 = document.getElementById("last-updated-2"); if (el2) el2.textContent = "更新時間：" + tw;
+      const el3 = document.getElementById("last-updated-calc"); if (el3) el3.textContent = "更新時間：" + tw;
     }
 
     // Parse prices
@@ -949,20 +948,36 @@ function renderCompare() {
 
   // Vendor prices
   if (vendorPrices.length) {
-    const uid = 'vsel_' + Date.now();
-    let options = vendorPrices.map(({ vendor, price }) => {
-      const deductNote = !batteryGood ? ` (已扣換電池費 $${fmt(deduction)})` : '';
-      return `<option value="${vendor}">　${vendor}　$${fmt(price)}${deductNote}</option>`;
-    }).join('');
-    const first = vendorPrices[0];
+    const uid = 'vlist_' + Date.now();
     const deductNote = !batteryGood ? `<span style="font-size:10px;color:#e74c3c;margin-left:6px;">已扣換電池費 $${fmt(deduction)}</span>` : '';
+    let rows = vendorPrices.map(({ vendor, price }, i) => {
+      const color = VENDOR_COLORS[vendor] ?? "#86868b";
+      const dn = !batteryGood ? `<span style="font-size:10px;color:#e74c3c;display:block;">已扣換電池費 $${fmt(deduction)}</span>` : '';
+      return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px;${i < vendorPrices.length-1 ? 'border-bottom:1px solid var(--border);' : ''}">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:14px;font-weight:500;color:var(--text-dark);">${vendor}</div>
+            <div style="font-size:11px;color:var(--text-gray);">${VENDOR_NOTES[vendor] ?? ''}${dn}</div>
+          </div>
+        </div>
+        <div style="font-size:15px;font-weight:700;color:${i===0 ? '#ff9500' : 'var(--text-dark)'};">$${fmt(price)}</div>
+      </div>`;
+    }).join('');
     html += `
-    <div class="vendor-header"><span class="title">各通路回收報價</span></div>
-    <div style="padding:0 4px 12px;">
-      <select id="${uid}" style="width:100%;padding:10px 12px;font-size:14px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text-dark);appearance:auto;">
-        ${options}
-      </select>
-      <div style="font-size:12px;color:var(--text-gray);margin-top:6px;padding-left:2px;">${VENDOR_NOTES[first.vendor] ?? ''}${deductNote}</div>
+    <div class="vendor-header" onclick="(function(el){
+      const body = document.getElementById('${uid}');
+      const arrow = el.querySelector('.vlist-arrow');
+      const isOpen = body.style.display !== 'none';
+      body.style.display = isOpen ? 'none' : 'block';
+      arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+    })(this)" style="cursor:pointer;user-select:none;">
+      <span class="title">各通路回收報價</span>
+      <span class="vlist-arrow" style="transition:transform 0.2s;display:inline-block;font-size:12px;color:var(--text-gray);">▼</span>
+    </div>
+    <div id="${uid}" style="display:none;padding:0 4px 12px;">
+      ${rows}
     </div>`;
   }
 
