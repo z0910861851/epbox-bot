@@ -1054,7 +1054,6 @@ function renderBestAll() {
   const good  = bdFiltered(bdAllData.filter(d => d.diff >= 0)); // wins + ties
   const lower = bdFiltered(bdAllData.filter(d => d.diff < 0));
 
-  const goodEl = document.getElementById('bd-good-section');
   if (good.length) {
     goodEl.style.display = 'block';
     document.getElementById('bd-good-count').textContent = `${good.length} 款`;
