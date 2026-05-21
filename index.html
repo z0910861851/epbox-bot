@@ -1048,6 +1048,9 @@ function bdFiltered(arr) {
 
 function renderBestAll() {
   if (!bdReady) return;
+  const goodEl = document.getElementById("bd-good-section");
+  const lowEl = document.getElementById("bd-low-section");
+  if (!goodEl || !lowEl) return;
   const good  = bdFiltered(bdAllData.filter(d => d.diff >= 0)); // wins + ties
   const lower = bdFiltered(bdAllData.filter(d => d.diff < 0));
 
@@ -1215,6 +1218,7 @@ let calcBase = '', calcStorage = 0;
 let trendChartInstance = null;
 
 function initCalc() {
+  if (!document.getElementById('calc-model')) return;
   const sel = document.getElementById('calc-model');
   sel.innerHTML = '<option value="">── 請選擇 ──</option>';
   uniqueBaseNames().forEach(b => {
@@ -1371,6 +1375,7 @@ function getLastPrices() { try { return JSON.parse(localStorage.getItem('epbox_l
 function saveLastPrices(p) { localStorage.setItem('epbox_last_prices', JSON.stringify(p)); }
 
 function initAlerts() {
+  if (!document.getElementById('alert-model-sel')) return;
   const sel = document.getElementById('alert-model-sel');
   sel.innerHTML = '<option value="">── 選擇機型 ──</option>';
   allModels.forEach(m => {
