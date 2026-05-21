@@ -1,1806 +1,939 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HY8ET612N7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-HY8ET612N7');
+</script>
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDZVOTAOB91GQI1QRKysMBy9KsHrPMO-bw",
+    authDomain: "apple-sale.firebaseapp.com",
+    projectId: "apple-sale",
+    storageBucket: "apple-sale.firebasestorage.app",
+    messagingSenderId: "366141813849",
+    appId: "1:366141813849:web:5e55a94d5e92b673186d48",
+    measurementId: "G-WHPWWBP4Y3"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 全域記錄函數
+  window.logToFirestore = async (action, data = {}) => {
+    try {
+      const staff = JSON.parse(localStorage.getItem('salesStaff') || 'null');
+      if (!staff) return;
+      await addDoc(collection(db, 'usage_logs'), {
+        ...data,
+        action,
+        store: staff.store,
+        staff: staff.name,
+        timestamp: serverTimestamp()
+      });
+    } catch(e) { console.log('Firebase log failed:', e); }
+  };
+
+  window.firebaseReady = true;
+</script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>EPBOX 自助回收資訊</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Apple 產品智慧推薦銷售助手">
+<meta name="theme-color" content="#0071e3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="蘋果銷售小工具">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon-192.svg">
+<link rel="apple-touch-icon" href="icon-192.svg">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
+<title>蘋果銷售小工具</title>
 <style>
-:root {
-  --ep-green: #00b96b;
-  --ep-orange: #ff6b00;
-  --apple-blue: #0071e3;
-  --purple: #5e5ce6;
-  --ep-dark: #1a1a2e;
-  --ep-light: #f0faf5;
-  --card-white: #ffffff;
-  --text-dark: #1d1d1f;
-  --text-gray: #86868b;
-  --border: #e5e5e7;
-  --bg: #f5f5f7;
-  --red: #d70015;
-  --gold: #ff9500;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: var(--bg);
-  color: var(--text-dark);
-  min-height: 100vh;
-}
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#000;--sf:#1d1d1f;--el:#2c2c2e;--bd:#424245;--tx:#f5f5f7;--mu:#86868b;--ac:#0071e3;--gr:#30d158;--or:#ff9500;--pu:#bf5af2;}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--tx);}
+.hd{background:rgba(29,29,31,.95);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:100;padding:14px 24px;}
+.hd-in{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;}
+.logo{font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px;}
+.logo-dot{width:28px;height:28px;background:linear-gradient(135deg,#0071e3,#003d82);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.mt{display:flex;gap:6px;background:var(--sf);padding:4px;border-radius:10px;}
+.mb{padding:7px 14px;border-radius:7px;border:none;background:transparent;color:var(--mu);cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;}
+.mb.on{background:var(--ac);color:#fff;}
+.main{max-width:1100px;margin:0 auto;padding:28px 24px 80px;display:grid;grid-template-columns:400px 1fr;gap:24px;align-items:start;}
+@media(max-width:800px){.main{grid-template-columns:1fr;}}
+.ms{display:none;}.ms.on{display:contents;}
+.pp{grid-column:1/-1;}
+.lp{display:flex;flex-direction:column;gap:14px;}
+.blk{background:var(--sf);border:1px solid var(--bd);border-radius:16px;overflow:hidden;transition:opacity .3s;}
+.blk.lk{opacity:.4;pointer-events:none;}
+.bh{padding:16px 20px;display:flex;align-items:center;gap:12px;}
+.bn{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.n1{background:var(--ac);color:#fff;}.n2{background:var(--gr);color:#fff;}
+.bl{font-size:14px;font-weight:700;}.bs{font-size:11px;color:var(--mu);margin-top:2px;}
+.bg{margin-left:auto;font-size:10px;font-weight:600;padding:3px 8px;border-radius:8px;}
+.br{background:rgba(0,113,227,.2);color:var(--ac);}.bo{background:rgba(134,134,139,.2);color:var(--mu);}
+.bb{padding:0 16px 16px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.cd{background:var(--el);border:1.5px solid transparent;border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;}
+.cd:hover{background:#3a3a3c;}.cd.on{background:rgba(0,113,227,.12);border-color:var(--ac);}
+.ci{width:36px;height:36px;margin:0 auto 8px;}.ct{font-size:13px;font-weight:600;}.cs{font-size:10px;color:var(--mu);margin-top:2px;}
+.no{background:var(--el);border:1.5px solid transparent;border-radius:10px;padding:12px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.no:last-child{margin-bottom:0;}.no:hover{background:#3a3a3c;}
+.no.s1{background:rgba(0,113,227,.1);border-color:var(--ac);}
+.no.s2{background:rgba(48,209,88,.1);border-color:var(--gr);}
+.no.hd2{display:none;}
+.ni{width:36px;height:36px;flex-shrink:0;}.ntx{flex:1;}
+.nt{font-size:14px;font-weight:600;}.nd{font-size:11px;color:var(--mu);margin-top:2px;}
+.ck{width:20px;height:20px;border-radius:50%;border:2px solid var(--bd);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.no.s1 .ck{background:var(--ac);border-color:transparent;}
+.no.s2 .ck{background:var(--gr);border-color:transparent;}
+.rp{position:sticky;top:80px;}
+.emp{background:var(--sf);border:1px dashed var(--bd);border-radius:16px;padding:48px 24px;text-align:center;color:var(--mu);}
+.emp svg{width:48px;height:48px;margin:0 auto 16px;opacity:.4;}
+.rc{display:none;background:var(--sf);border:1px solid var(--bd);border-radius:16px;overflow:hidden;}
+.rc.on{display:block;animation:pop .35s cubic-bezier(.4,0,.2,1);}
+@keyframes pop{from{opacity:0;transform:scale(.97) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.rh{background:linear-gradient(135deg,#1a3560,#1d1d1f);padding:24px;}
+.stag{display:inline-flex;align-items:center;gap:5px;background:var(--gr);color:#fff;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;margin-bottom:12px;}
+.rn{font-size:24px;font-weight:800;margin-bottom:8px;}
+.ct2{display:inline-block;background:rgba(0,113,227,.2);color:var(--ac);padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;margin-right:8px;}
+.rb{padding:20px;}
+.st{font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 10px;}
+.st:first-child{margin-top:0;}
+.pt{background:var(--el);border-radius:10px;padding:12px 14px 12px 42px;font-size:13px;line-height:1.6;position:relative;margin-bottom:8px;}
+.pt::before{content:"";position:absolute;left:12px;top:14px;width:18px;height:18px;background:var(--ac);border-radius:50%;}
+.pt::after{content:"✓";position:absolute;left:17px;top:12px;color:#fff;font-size:11px;font-weight:700;}
+.pi{background:rgba(0,113,227,.05);border:1px solid rgba(0,113,227,.2);border-radius:12px;padding:16px;margin-bottom:8px;}
+.pn{font-size:13px;font-weight:700;color:var(--ac);margin-bottom:8px;}
+.ptx{font-size:13px;line-height:1.75;border-left:3px solid var(--ac);padding-left:12px;}
+.ob{background:var(--el);border-radius:10px;padding:16px;margin-bottom:8px;}
+.oq{font-size:13px;font-weight:700;color:var(--or);margin-bottom:8px;display:flex;gap:8px;}
+.obg{background:var(--or);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+.oa{font-size:13px;line-height:1.7;padding-left:28px;}
+.tabs{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px;}
+.tab{background:var(--sf);border:1px solid var(--bd);padding:8px 18px;border-radius:18px;cursor:pointer;white-space:nowrap;font-size:13px;font-weight:500;transition:all .2s;}
+.tab:hover{background:var(--el);}.tab.on{background:var(--ac);border-color:var(--ac);}
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px;}
+.pc{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:20px;cursor:pointer;transition:all .25s;}
+.pc:hover{background:var(--el);border-color:var(--ac);transform:translateY(-3px);}
+.pc.on{background:rgba(0,113,227,.08);border-color:var(--ac);}
+.pbg{display:inline-block;background:var(--ac);color:#fff;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;margin-bottom:10px;}
+.pn2{font-size:16px;font-weight:700;margin-bottom:4px;}.pch{font-size:12px;color:var(--mu);}
+.pd{background:var(--sf);border:1px solid var(--bd);border-radius:16px;overflow:hidden;display:none;}
+.pd.on{display:block;animation:pop .35s cubic-bezier(.4,0,.2,1);}
+.dh{background:linear-gradient(135deg,#1a3560,#1d1d1f);padding:28px;}
+.dn{font-size:24px;font-weight:800;margin-bottom:10px;}
+.ds{padding:20px;border-top:1px solid var(--bd);}
+.dst{font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;}
+.ci2{background:var(--el);border-radius:10px;padding:16px;margin-bottom:8px;}
+.cn{font-size:13px;font-weight:700;color:var(--ac);margin-bottom:8px;}
+.ctx{font-size:13px;line-height:1.7;border-left:3px solid var(--ac);padding-left:12px;}
 
-/* ── Header ── */
-.header {
-  background: var(--ep-dark);
-  color: #fff;
-  padding: 20px 24px 16px;
-  text-align: center;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 20px rgba(0,0,0,0.3);
-}
-.header-logo { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 4px; }
-.logo-box { background: var(--ep-green); color: #fff; font-weight: 900; font-size: 18px; padding: 4px 10px; border-radius: 8px; letter-spacing: 1px; }
-.header h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
-.header p { font-size: 12px; color: #aab; margin-top: 4px; }
+/* 登入 Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+.modal-overlay.hide{display:none;}
+.modal{background:var(--sf);border:1px solid var(--bd);border-radius:20px;padding:32px;width:100%;max-width:400px;margin:16px;}
+.modal-logo{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+.modal-logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#0071e3,#003d82);border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.modal h2{font-size:20px;font-weight:700;margin-bottom:4px;}
+.modal p{font-size:13px;color:var(--mu);margin-bottom:24px;}
+.modal-label{font-size:12px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.modal-select{width:100%;background:var(--el);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;color:var(--tx);font-size:14px;font-family:inherit;outline:none;margin-bottom:16px;appearance:none;cursor:pointer;transition:border-color .2s;}
+.modal-select:focus{border-color:var(--ac);}
+.modal-btn{width:100%;background:var(--ac);border:none;border-radius:10px;padding:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;margin-top:8px;}
+.modal-btn:hover{background:#0077ed;transform:translateY(-1px);}
+.modal-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+/* Header 用戶資訊 */
+.staff-info{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mu);}
+.staff-dot{width:7px;height:7px;background:var(--gr);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.staff-name{color:var(--tx);font-weight:500;}
+.staff-change{color:var(--ac);cursor:pointer;text-decoration:underline;font-size:11px;}
 
-/* ── Tabs ── */
-.tab-nav {
-  display: flex;
-  background: #fff;
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  position: sticky;
-  top: 88px;
-  z-index: 99;
-}
-.tab-nav::-webkit-scrollbar { display: none; }
-.tab-btn {
-  flex: 1; min-width: 100px;
-  padding: 14px 10px;
-  border: none; background: none;
-  font-size: 13px; font-weight: 600;
-  color: var(--text-gray);
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
-  white-space: nowrap; transition: all 0.2s;
-}
-.tab-btn.active { color: var(--ep-green); border-bottom-color: var(--ep-green); }
+/* 場景話術 */
+.sc-block{background:linear-gradient(135deg,rgba(0,113,227,.06),rgba(191,90,242,.04));border:1px solid rgba(0,113,227,.2);border-radius:12px;padding:16px;margin-bottom:10px;transition:all .2s;}
+.sc-block:hover{background:linear-gradient(135deg,rgba(0,113,227,.1),rgba(191,90,242,.07));border-color:rgba(0,113,227,.35);}
+.sc-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--ac);border-radius:50%;font-size:10px;font-weight:800;color:#fff;flex-shrink:0;margin-right:8px;}
+.sc-hook{font-size:13px;font-weight:700;color:#fff;margin-bottom:8px;display:flex;align-items:flex-start;}
+.sc-hook-text{flex:1;line-height:1.5;}
+.sc-divider{border:none;border-top:1px solid rgba(255,255,255,.08);margin:8px 0;}
+.sc-point{font-size:13px;color:var(--ac);font-weight:600;margin-bottom:4px;}
+.sc-scene{font-size:12px;color:var(--mu);line-height:1.6;}
+.sc-loading{text-align:center;padding:20px;color:var(--mu);font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.sc-label{font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 10px;display:flex;align-items:center;gap:8px;}
+.sc-label-badge{background:linear-gradient(135deg,var(--ac),var(--pu));color:#fff;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;letter-spacing:.5px;}
 
-.tab-content { display: none; padding: 16px; max-width: 800px; margin: 0 auto; }
-.tab-content.active { display: block; }
+/* 預算選擇 */
+.n3{background:var(--or);color:#fff;}
+.g3b{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.cd.bg-on-low{background:rgba(255,149,0,.12);border-color:var(--or);}
+.cd.bg-on-mid{background:rgba(48,209,88,.1);border-color:var(--gr);}
 
-/* ── Cards ── */
-.card {
-  background: var(--card-white);
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-}
-.card-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-
-/* ── Info Box ── */
-.info-box {
-  background: #fffbe6; border: 1px solid #ffe58f;
-  border-radius: 12px; padding: 12px 16px;
-  font-size: 12px; color: #7a5a00;
-  margin-bottom: 14px; line-height: 1.7;
-}
-.info-box strong { color: #5a3e00; }
-
-/* ── Loading ── */
-.loading-state {
-  text-align: center; padding: 60px 20px;
-  color: var(--text-gray); font-size: 14px;
-}
-.spinner {
-  width: 36px; height: 36px;
-  border: 3px solid #e5e5e7;
-  border-top-color: var(--ep-green);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 16px;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Model Picker ── */
-.picker-card { margin-bottom: 16px; }
-.picker-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
-.picker-row label { font-size: 13px; color: var(--text-gray); font-weight: 500; white-space: nowrap; }
-.picker-row select {
-  flex: 1; padding: 10px 12px;
-  border: 1px solid var(--border); border-radius: 10px;
-  font-size: 14px; background: #fff; color: var(--text-dark);
-}
-.picker-row select:focus { outline: none; border-color: var(--ep-green); }
-.storage-pills { display: flex; gap: 8px; flex-wrap: wrap; }
-.pill {
-  padding: 6px 16px; border-radius: 20px;
-  font-size: 13px; font-weight: 600; cursor: pointer;
-  border: 1.5px solid var(--apple-blue);
-  color: var(--apple-blue); background: transparent;
-  transition: all 0.15s;
-}
-.pill.active { background: var(--apple-blue); color: #fff; border-color: var(--apple-blue); }
-
-/* ── Average Banner ── */
-.avg-banner {
-  background: linear-gradient(135deg, var(--apple-blue), var(--purple));
-  border-radius: 18px; padding: 18px 20px;
-  display: flex; align-items: center; gap: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 6px 20px rgba(0,113,227,0.25);
-}
-.avg-banner .label { font-size: 12px; color: rgba(255,255,255,0.8); font-weight: 500; }
-.avg-banner .price { font-size: 30px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
-.avg-banner .tag {
-  margin-left: auto; background: rgba(255,255,255,0.2);
-  color: #fff; font-size: 11px; font-weight: 700;
-  padding: 4px 12px; border-radius: 8px;
-}
-
-/* ── EPBOX Trade-in Card ── */
-.epbox-ref-card {
-  background: #fff;
-  border: 1.5px solid rgba(255,107,0,0.3);
-  border-radius: 16px; padding: 16px;
-  margin-bottom: 12px;
-  display: flex; align-items: center; gap: 14px;
-  box-shadow: 0 2px 8px rgba(255,107,0,0.06);
-}
-.epbox-ref-icon {
-  width: 44px; height: 44px; border-radius: 12px;
-  background: rgba(255,107,0,0.1);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px; flex-shrink: 0;
-}
-.epbox-ref-name { font-size: 14px; font-weight: 700; }
-.epbox-ref-sub { font-size: 11px; color: var(--text-gray); margin-top: 2px; }
-.epbox-ref-price { margin-left: auto; text-align: right; }
-.epbox-ref-price .p { font-size: 22px; font-weight: 900; color: var(--ep-orange); }
-.epbox-ref-price .unit { font-size: 11px; color: var(--text-gray); }
-
-/* ── Vendor List ── */
-.vendor-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 10px; padding: 0 2px;
-}
-.vendor-header .title { font-size: 14px; font-weight: 700; }
-.vendor-header .best-tag { font-size: 12px; color: var(--gold); font-weight: 600; display: flex; align-items: center; gap: 4px; }
-
-.vendor-row {
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.05);
-  border-radius: 14px; padding: 12px 14px;
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-}
-.vendor-row.best { border-color: rgba(255,149,0,0.25); }
-.vendor-icon {
-  width: 40px; height: 40px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; flex-shrink: 0;
-}
-.vendor-name { font-size: 13px; font-weight: 700; }
-.vendor-note { font-size: 11px; color: var(--text-gray); margin-top: 1px; }
-.best-chip {
-  display: inline-block; font-size: 9px; font-weight: 700;
-  color: var(--gold); background: rgba(255,149,0,0.12);
-  padding: 1px 6px; border-radius: 4px; margin-left: 6px;
-}
-.vendor-right { margin-left: auto; text-align: right; }
-.vendor-price { font-size: 16px; font-weight: 800; }
-.vendor-price.best-price { color: var(--gold); }
-.price-bar-wrap { width: 80px; height: 4px; background: #f0f0f2; border-radius: 2px; margin-top: 6px; }
-.price-bar { height: 4px; border-radius: 2px; }
-
-/* ── Diff Card ── */
-.diff-card {
-  background: #fff; border: 1px solid rgba(94,92,230,0.15);
-  border-radius: 16px; padding: 14px 16px;
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 12px;
-}
-.diff-icon { width: 40px; height: 40px; border-radius: 50%; background: rgba(94,92,230,0.1); display: flex; align-items: center; justify-content: center; font-size: 18px; }
-.diff-label { font-size: 13px; font-weight: 700; }
-.diff-sub { font-size: 11px; color: var(--text-gray); margin-top: 2px; }
-.diff-val { margin-left: auto; font-size: 20px; font-weight: 900; color: var(--purple); }
-
-/* ── All Models Table (Tab 2) ── */
-.models-filter { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-.models-filter select {
-  flex: 1; min-width: 140px; padding: 10px 12px;
-  border: 1px solid var(--border); border-radius: 10px;
-  font-size: 14px; background: #fff;
-}
-.models-filter select:focus { outline: none; border-color: var(--ep-green); }
-
-.price-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.price-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 420px; }
-.price-table th {
-  background: #f0faf5; padding: 10px 10px;
-  text-align: center; color: var(--ep-green);
-  font-weight: 700; border-bottom: 2px solid #c8f0dc;
-}
-.price-table th:first-child { text-align: left; padding-left: 14px; }
-.price-table td { padding: 12px 10px; text-align: center; border-bottom: 1px solid #f0f0f2; }
-.price-table td:first-child { text-align: left; padding-left: 14px; font-weight: 600; white-space: nowrap; }
-.price-table tr:last-child td { border-bottom: none; }
-.price-table tr:hover td { background: #fafdf9; }
-.ep-price { color: var(--ep-orange); font-weight: 800; font-size: 14px; }
-.avg-price { color: var(--apple-blue); font-weight: 700; }
-.best-vendor { font-size: 11px; color: var(--gold); font-weight: 600; }
-
-/* ── Locations ── */
-.loc-filter { display: flex; gap: 8px; margin-bottom: 14px; }
-.loc-filter input {
-  flex: 1; padding: 11px 14px;
-  border: 1px solid var(--border); border-radius: 10px; font-size: 14px;
-}
-.loc-filter input:focus { outline: none; border-color: var(--ep-green); }
-.loc-filter select { padding: 11px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; background: #fff; }
-.count-badge { font-size: 12px; background: var(--ep-light); color: var(--ep-green); font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-left: 6px; }
-.loc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-.loc-card {
-  background: #fff; border: 1px solid var(--border);
-  border-radius: 14px; padding: 16px;
-  display: flex; gap: 12px; align-items: flex-start;
-  transition: box-shadow 0.2s, border-color 0.2s;
-}
-.loc-card:hover { box-shadow: 0 4px 16px rgba(0,185,107,0.12); border-color: #b0e8cc; }
-.loc-icon { width: 40px; height: 40px; background: var(--ep-light); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-.loc-store { font-size: 14px; font-weight: 700; }
-.loc-addr { font-size: 12px; color: var(--text-gray); margin-top: 3px; line-height: 1.5; }
-.loc-tags { display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap; }
-.loc-tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
-.tag-green { background: #e0f8ec; color: #00915a; }
-.tag-blue { background: #e0eeff; color: #005ab5; }
-.tag-gray { background: #f0f0f2; color: #555; }
-.tag-purple { background: #f0e0ff; color: #7b00d4; }
-.no-result { text-align: center; padding: 40px 20px; color: var(--text-gray); font-size: 14px; }
-.nav-btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  margin-top: 10px; padding: 7px 14px;
-  background: var(--apple-blue); color: #fff;
-  border: none; border-radius: 20px;
-  font-size: 12px; font-weight: 600; cursor: pointer;
-  text-decoration: none; transition: background 0.15s;
-}
-.nav-btn:hover { background: #005bbf; }
-.nav-btn-apple {
-  background: #1d1d1f; margin-left: 6px;
-}
-.nav-btn-apple:hover { background: #3a3a3c; }
-
-/* ── Disclaimer ── */
-.disclaimer {
-  display: flex; gap: 10px; align-items: flex-start;
-  background: rgba(0,0,0,0.03); border-radius: 12px;
-  padding: 12px 14px; margin-top: 8px;
-  font-size: 12px; color: var(--text-gray); line-height: 1.6;
-}
-.updated { font-size: 11px; color: var(--text-gray); text-align: right; margin-bottom: 8px; }
-
-@media (max-width: 600px) {
-  .tab-btn { font-size: 12px; padding: 12px 6px; }
-  .loc-grid { grid-template-columns: 1fr; }
-  .avg-banner .price { font-size: 24px; }
-}
-/* ── Calculator ── */
-.calc-result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(188px, 1fr)); gap: 12px; margin-bottom: 16px; }
-.calc-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 18px 16px; }
-.calc-card.best { background: linear-gradient(135deg, var(--apple-blue), var(--purple)); color: #fff; border-color: transparent; box-shadow: 0 6px 20px rgba(0,113,227,0.22); }
-.calc-model { font-size: 14px; font-weight: 800; margin-bottom: 3px; }
-.calc-gap { font-size: 24px; font-weight: 900; color: var(--red); margin: 8px 0 6px; }
-.calc-card.best .calc-gap { color: #fff; }
-.calc-meta { font-size: 12px; color: var(--text-gray); }
-.calc-card.best .calc-meta { color: rgba(255,255,255,0.75); }
-.calc-daily { font-weight: 800; color: var(--apple-blue); }
-.calc-card.best .calc-daily { color: #fff; }
-
-/* ── Delta badges ── */
-.delta-up   { display:inline-block; font-size:10px; font-weight:700; color:#c0392b; background:#fff0f0; padding:1px 6px; border-radius:4px; margin-left:5px; }
-.delta-down { display:inline-block; font-size:10px; font-weight:700; color:#00915a; background:#e0f8ec; padding:1px 6px; border-radius:4px; margin-left:5px; }
-
-/* ── Trend chart ── */
-.chart-wrap { position:relative; height:200px; }
-.chart-empty { text-align:center; padding:30px 20px; color:var(--text-gray); }
-.chart-empty svg { opacity:.25; }
-
-/* ── Alerts ── */
-.alert-form { display:flex; flex-direction:column; gap:10px; }
-.alert-form select, .alert-form input[type=number] { padding:11px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px; background:#fff; color:var(--text-dark); }
-.alert-form select:focus, .alert-form input:focus { outline:none; border-color:var(--ep-green); }
-.submit-btn { padding:14px; background:var(--ep-green); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; margin-top:4px; }
-.submit-btn:hover { background:#009959; }
-.alert-list { display:flex; flex-direction:column; gap:8px; }
-.alert-item { display:flex; align-items:center; gap:10px; background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px 14px; }
-.alert-item-info { flex:1; }
-.alert-model-name { font-size:13px; font-weight:700; }
-.alert-thresh { font-size:11px; color:var(--text-gray); margin-top:2px; }
-.alert-del { width:30px; height:30px; border-radius:50%; border:none; background:#f5f5f7; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .15s; }
-.alert-del:hover { background:#ffe0e0; }
-.alert-triggered { background:#fffbe6; border-color:#ffe58f; border-radius:10px; padding:10px 14px; font-size:12px; color:#7a5a00; margin-bottom:12px; display:flex; gap:8px; align-items:flex-start; }
-.notify-tip { font-size:11px; color:var(--text-gray); text-align:center; margin-top:6px; line-height:1.6; }
-.perm-btn { display:inline-block; margin-top:8px; padding:7px 16px; background:var(--apple-blue); color:#fff; border:none; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; }
-
-/* ── AI Analysis Tab ── */
-.ai-upload-btn { width:100%; padding:28px 20px; background:rgba(48,209,88,.06); border:1.5px dashed rgba(48,209,88,.4); border-radius:18px; cursor:pointer; text-align:center; display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:10px; transition:background .15s; }
-.ai-upload-btn:hover { background:rgba(48,209,88,.1); }
-.ai-upload-icon { font-size:36px; }
-.ai-upload-label { font-size:15px; font-weight:700; color:var(--text-dark); }
-.ai-upload-sub { font-size:12px; color:var(--text-gray); }
-.ai-picker-btn { width:100%; padding:11px; background:rgba(0,0,0,.04); border:1px solid var(--border); border-radius:12px; cursor:pointer; font-size:13px; color:var(--text-gray); }
-.ai-repick-btn { flex:1; padding:10px; background:rgba(48,209,88,.1); border:1px solid rgba(48,209,88,.25); border-radius:12px; cursor:pointer; font-size:12px; font-weight:600; color:#00915a; }
-.ai-repick-btn.secondary { background:rgba(0,0,0,.04); border:1px solid var(--border); color:var(--text-gray); }
-.ai-analyze-btn { width:100%; padding:16px; background:linear-gradient(135deg,#30d158,#0071e3); color:#fff; border:none; border-radius:18px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 6px 20px rgba(48,209,88,.3); margin-bottom:4px; }
-.ai-info-row { display:flex; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:14px; }
-.ai-info-row:last-child { border-bottom:none; }
-.ai-info-label { color:var(--text-gray); flex-shrink:0; width:90px; }
-.ai-info-val { font-weight:600; flex:1; text-align:right; word-break:break-all; }
-.ai-price-final { background:rgba(0,185,107,.08); border:1px solid rgba(0,185,107,.2); border-radius:14px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
-.ai-battery-warn { border-radius:14px; padding:14px; margin:8px 0; display:flex; gap:10px; align-items:flex-start; }
-.ai-warning-tag { display:inline-block; background:rgba(255,149,0,.1); color:#b36a00; border:1px solid rgba(255,149,0,.25); border-radius:8px; padding:3px 10px; font-size:12px; font-weight:600; margin:2px 2px 2px 0; }
-.ai-advice-wrap { background:rgba(94,92,230,.05); border:1px solid rgba(94,92,230,.12); border-radius:14px; padding:16px; }
-.ai-advice-question { background:rgba(0,113,227,.07); border:1px solid rgba(0,113,227,.2); border-radius:12px; padding:12px; margin-bottom:10px; }
-.ai-advice-section-hdr { display:inline-block; background:#5e5ce6; color:#fff; padding:4px 12px; border-radius:8px; font-size:12px; font-weight:700; margin:8px 0 6px; }
-.ai-advice-bullet { display:flex; gap:10px; align-items:flex-start; margin-bottom:8px; font-size:14px; line-height:1.55; }
-.ai-advice-dot { width:5px; height:5px; border-radius:50%; background:rgba(94,92,230,.5); flex-shrink:0; margin-top:8px; }
-.ai-copy-btn { width:100%; padding:12px; background:rgba(94,92,230,.08); border:1px solid rgba(94,92,230,.2); border-radius:12px; font-size:13px; font-weight:600; color:#5e5ce6; cursor:pointer; margin-top:12px; }
-.ai-history-item { padding:12px 0; border-bottom:1px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:space-between; }
-.ai-history-item:last-child { border-bottom:none; }
-
-/* ── Battery option buttons ── */
-.sp-batt-btn {
-  padding: 10px 8px; border-radius: 12px; font-size: 13px; font-weight: 600;
-  border: 1.5px solid var(--border); background: var(--bg); color: var(--text-gray);
-  cursor: pointer; transition: all .15s; text-align: center; line-height: 1.6;
-}
-.sp-batt-btn.active {
-  border-color: var(--ep-green); background: var(--ep-light); color: #00855c;
-}
-
-/* ── Best Deals Tab ── */
-.bd-filter-bar { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; margin-bottom: 14px; scrollbar-width: none; }
-.bd-filter-bar::-webkit-scrollbar { display: none; }
-.bd-filter-btn { flex-shrink: 0; padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: var(--bg); color: var(--text-gray); cursor: pointer; transition: all .2s; white-space: nowrap; }
-.bd-filter-btn.active { background: var(--ep-dark); border-color: var(--ep-dark); color: #fff; font-weight: 600; }
-
-/* Section headers */
-.bd-sec-hdr { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-.bd-sec-hdr.green { background: #e6f9f0; color: #00855c; }
-.bd-sec-hdr.gray  { background: #f5f5f7; color: var(--text-gray); cursor: pointer; justify-content: space-between; }
-.bd-sec-hdr .bd-count { font-size: 12px; font-weight: 500; opacity: .75; margin-left: 4px; }
-.bd-sec-arrow { font-size: 11px; transition: transform .2s; }
-.bd-sec-arrow.open { transform: rotate(180deg); }
-
-/* Row list */
-.bd-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
-.bd-row {
-  background: #fff; border-radius: 14px;
-  padding: 12px 14px 12px 18px;
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  border: 1px solid var(--border);
-  border-left: 5px solid transparent;
-}
-.bd-row.win  { border-left-color: var(--ep-green); }
-.bd-row.tie  { border-left-color: var(--apple-blue); }
-.bd-row.low  { border-left-color: #d0d0d5; opacity: .75; }
-
-.bd-row-left { min-width: 0; flex: 1; }
-.bd-row-model { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bd-row-cap   { font-size: 12px; color: var(--text-gray); font-weight: 400; margin-left: 5px; }
-.bd-row-sub   { font-size: 12px; margin-top: 3px; font-weight: 600; }
-.bd-row-sub.win  { color: var(--ep-green); }
-.bd-row-sub.tie  { color: var(--apple-blue); }
-.bd-row-sub.low  { color: var(--text-gray); }
-
-.bd-row-right  { text-align: right; flex-shrink: 0; }
-.bd-row-price  { font-size: 18px; font-weight: 900; color: var(--text-dark); line-height: 1; }
-.bd-row-price small { font-size: 11px; font-weight: 400; color: var(--text-gray); }
-
-/* collapsed lower */
-.bd-lower-body { display: none; }
-.bd-lower-body.open { display: block; }
-
-/* ── Lucide icons ── */
-.tab-btn svg { width: 15px; height: 15px; vertical-align: -2px; margin-right: 5px; stroke-width: 2.2; }
-.card-title svg { width: 17px; height: 17px; vertical-align: -3px; stroke-width: 2; }
-.info-icon { display: inline-block; vertical-align: -3px; margin-right: 5px; }
-.info-icon svg { width: 14px; height: 14px; stroke-width: 2; }
-.th-icon svg { width: 13px; height: 13px; vertical-align: -2px; stroke-width: 2; margin-right: 3px; }
-.step-icon { width: 44px; height: 44px; background: #e8f7ef; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
-.step-icon svg { width: 22px; height: 22px; stroke: var(--ep-green); stroke-width: 1.8; }
+/* AI 快速分析 */
+.ai-bar{background:linear-gradient(135deg,rgba(0,113,227,.08),rgba(191,90,242,.06));border-bottom:1px solid rgba(0,113,227,.2);padding:14px 24px;}
+.ai-bar-in{max-width:1100px;margin:0 auto;}
+.ai-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--ac);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.ai-label span{background:var(--ac);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;}
+.ai-row{display:flex;gap:10px;align-items:flex-end;}
+.ai-input{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(0,113,227,.3);border-radius:12px;padding:11px 16px;color:var(--tx);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s;}
+.ai-input:focus{border-color:var(--ac);background:rgba(0,113,227,.05);}
+.ai-input::placeholder{color:var(--mu);}
+.ai-btn{background:linear-gradient(135deg,#0071e3,#5b5de7);border:none;border-radius:12px;padding:11px 22px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:8px;}
+.ai-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,113,227,.4);}
+.ai-btn:disabled{opacity:.5;cursor:not-allowed;}
+.ai-result{margin-top:10px;background:rgba(0,113,227,.06);border:1px solid rgba(0,113,227,.2);border-radius:10px;padding:12px 16px;font-size:13px;line-height:1.7;display:none;}
+.ai-result.on{display:block;animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.ai-pitch-label{font-size:11px;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
+.ai-pitch-text{color:var(--tx);line-height:1.75;}
+.ai-tags-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.ai-tag{padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;}
+.ai-tag-pt{background:rgba(0,113,227,.2);color:var(--ac);}
+.ai-tag-ct{background:rgba(48,209,88,.15);color:var(--gr);}
+.ai-tag-nd{background:rgba(255,149,0,.15);color:var(--or);}
+.ai-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.mic-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:11px 14px;color:var(--tx);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mic-btn:hover{background:rgba(255,255,255,.15);}
+.mic-btn.recording{background:rgba(255,59,48,.2);border-color:rgba(255,59,48,.5);color:#ff3b30;animation:pulse 1s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,48,.4);}50%{box-shadow:0 0 0 8px rgba(255,59,48,0);}}
+.mic-status{font-size:11px;color:var(--mu);margin-top:6px;min-height:16px;transition:all .2s;}
+.mic-status.active{color:#ff3b30;}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<svg style="display:none"><defs>
+<symbol id="iz" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9z" fill="white"/></symbol>
+<symbol id="istar" viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#30d158"/></symbol>
+<symbol id="imb" viewBox="0 0 64 64"><rect x="8" y="14" width="48" height="30" rx="3" fill="#0071e3"/><rect x="12" y="18" width="40" height="22" rx="1" fill="#1d1d1f"/><rect x="2" y="44" width="60" height="5" rx="2" fill="#005bb5"/></symbol>
+<symbol id="iip" viewBox="0 0 64 64"><rect x="14" y="6" width="36" height="52" rx="4" fill="#0071e3"/><rect x="18" y="12" width="28" height="38" rx="1" fill="#1d1d1f"/><circle cx="32" cy="54" r="2.5" fill="#005bb5"/></symbol>
+<symbol id="iph" viewBox="0 0 64 64"><rect x="18" y="6" width="28" height="52" rx="5" fill="#0071e3"/><rect x="22" y="14" width="20" height="34" rx="1" fill="#1d1d1f"/><rect x="27" y="9" width="10" height="2.5" rx="1.5" fill="#005bb5"/></symbol>
+<symbol id="ist" viewBox="0 0 64 64"><circle cx="32" cy="20" r="11" fill="#0071e3"/><path d="M32 33c-10 0-18 5-18 11v8h36v-8c0-6-8-11-18-11z" fill="#0071e3"/><path d="M18 17l14-9 14 9v9H18z" fill="#ff9500"/></symbol>
+<symbol id="iof" viewBox="0 0 64 64"><rect x="14" y="14" width="36" height="36" rx="3" fill="#0071e3"/><rect x="20" y="20" width="24" height="4" rx="1" fill="white"/><rect x="20" y="28" width="18" height="2" rx="1" fill="white" opacity="0.7"/><circle cx="32" cy="44" r="4" fill="#ff9500"/></symbol>
+<symbol id="icr" viewBox="0 0 64 64"><circle cx="32" cy="32" r="22" fill="none" stroke="#0071e3" stroke-width="3"/><circle cx="22" cy="22" r="5" fill="#ff9500"/><circle cx="42" cy="22" r="5" fill="#30d158"/><circle cx="42" cy="42" r="5" fill="#bf5af2"/><circle cx="22" cy="42" r="5" fill="#ff3b30"/></symbol>
+<symbol id="iel" viewBox="0 0 64 64"><circle cx="32" cy="20" r="11" fill="#0071e3"/><path d="M32 33c-10 0-18 5-18 11v8h36v-8c0-6-8-11-18-11z" fill="#0071e3"/><path d="M24 42 Q32 34 40 42" stroke="#ff9500" stroke-width="3" fill="none" stroke-linecap="round"/><line x1="40" y1="42" x2="44" y2="50" stroke="#ff9500" stroke-width="3" stroke-linecap="round"/></symbol>
+<symbol id="ige" viewBox="0 0 64 64"><circle cx="32" cy="32" r="20" fill="#0071e3"/><path d="M24 32h16M32 24v16" stroke="white" stroke-width="3" stroke-linecap="round"/></symbol>
+<symbol id="ivid" viewBox="0 0 64 64"><rect x="8" y="16" width="36" height="30" rx="3" fill="#0071e3"/><path d="M44 22l12-5v28l-12-5z" fill="#ff9500"/><path d="M22 27l12 5-12 5z" fill="white"/></symbol>
+<symbol id="idoc" viewBox="0 0 64 64"><rect x="14" y="8" width="30" height="38" rx="2" fill="#0071e3"/><path d="M44 8l8 8h-8z" fill="#005bb5"/><rect x="20" y="18" width="18" height="2" rx="1" fill="white"/><rect x="20" y="24" width="18" height="2" rx="1" fill="white"/><rect x="20" y="30" width="12" height="2" rx="1" fill="white"/></symbol>
+<symbol id="ics" viewBox="0 0 64 64"><rect x="8" y="14" width="48" height="30" rx="3" fill="#0071e3"/><rect x="12" y="18" width="40" height="22" rx="1" fill="#1d1d1f"/><path d="M26 28l12 1-12 5z" fill="white"/><rect x="20" y="46" width="24" height="4" rx="2" fill="#ff9500"/></symbol>
+<symbol id="idr" viewBox="0 0 64 64"><circle cx="32" cy="32" r="20" fill="none" stroke="#30d158" stroke-width="3"/><circle cx="22" cy="22" r="5" fill="#ff9500"/><circle cx="42" cy="22" r="5" fill="#30d158"/><circle cx="42" cy="42" r="5" fill="#bf5af2"/><circle cx="22" cy="42" r="5" fill="#ff3b30"/></symbol>
+<symbol id="ipho" viewBox="0 0 64 64"><rect x="8" y="14" width="48" height="36" rx="3" fill="#30d158"/><circle cx="32" cy="32" r="8" fill="white" opacity="0.3"/><circle cx="32" cy="32" r="5" fill="#1d1d1f"/><circle cx="46" cy="20" r="3" fill="#ff9500"/></symbol>
+<symbol id="ive" viewBox="0 0 64 64"><rect x="4" y="16" width="36" height="24" rx="3" fill="#30d158"/><path d="M40 22l12-5v22l-12-5z" fill="#30d158"/><rect x="4" y="44" width="56" height="6" rx="2" fill="#ff9500"/></symbol>
+<symbol id="imu" viewBox="0 0 64 64"><circle cx="22" cy="48" r="8" fill="#30d158"/><circle cx="46" cy="44" r="8" fill="#30d158"/><path d="M30 48V20l24-6v28" stroke="#30d158" stroke-width="4" fill="none" stroke-linecap="round"/></symbol>
+<symbol id="i3d" viewBox="0 0 64 64"><path d="M32 8l24 14v20L32 56 8 42V22z" fill="none" stroke="#bf5af2" stroke-width="3"/><path d="M32 8v48M8 22l24 14 24-14" stroke="#bf5af2" stroke-width="2" opacity="0.6"/></symbol>
+<symbol id="icd" viewBox="0 0 64 64"><rect x="8" y="12" width="48" height="40" rx="3" fill="#bf5af2"/><path d="M20 26l-8 6 8 6M44 26l8 6-8 6" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/><line x1="34" y1="20" x2="30" y2="44" stroke="white" stroke-width="2.5" stroke-linecap="round"/></symbol>
+<symbol id="iai" viewBox="0 0 64 64"><circle cx="32" cy="32" r="20" fill="none" stroke="#bf5af2" stroke-width="3"/><circle cx="24" cy="28" r="4" fill="#bf5af2"/><circle cx="40" cy="28" r="4" fill="#bf5af2"/><path d="M22 40 Q32 48 42 40" stroke="#bf5af2" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="32" cy="14" r="3" fill="#ff9500"/><circle cx="46" cy="22" r="3" fill="#ff9500"/><circle cx="18" cy="22" r="3" fill="#ff9500"/></symbol>
+</defs></svg>
 </head>
 <body>
-
-<!-- Header -->
-<div class="header">
-  <div class="header-logo">
-    <div class="logo-box">EPBOX</div>
-    <h1>自助回收資訊</h1>
-  </div>
-  <p>即時最高回收價 ／ 各通路比較 ／ 南台灣設置地點</p>
-</div>
-
-<!-- Tabs -->
-<div class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('compare', this)"><i data-lucide="bar-chart-2"></i>各通路比較</button>
-  <button class="tab-btn" onclick="switchTab('analytics', this)"><i data-lucide="message-circle"></i>回收建議</button>
-</div>
-
-<!-- ══════════ Tab 1: 各通路回收比較 ══════════ -->
-<div id="tab-compare" class="tab-content active">
-  <div class="updated" id="last-updated-1">更新時間：載入中…</div>
-
-  <div class="info-box">
-    <span class="info-icon"><i data-lucide="alert-triangle"></i></span><strong>注意：</strong>以下為各通路機況完美（電池 ≥ 80%、無明顯損傷）之最高參考報價，實際金額依現場評估而定。
-  </div>
-
-  <!-- Model / Storage picker -->
-  <div class="card picker-card">
-    <div class="picker-row">
-      <label>機型</label>
-      <select id="compare-model" onchange="onModelChange()">
-        <option value="">── 請選擇 ──</option>
-      </select>
-    </div>
-    <div id="storage-row" style="display:none;">
-      <div style="font-size:13px;color:var(--text-gray);font-weight:500;margin-bottom:8px;">容量</div>
-      <div class="storage-pills" id="storage-pills"></div>
-    </div>
-    <div id="battery-row" style="display:none;">
-      <div style="font-size:13px;color:var(--text-gray);font-weight:500;margin-bottom:8px;">電池健康度</div>
-      <div class="storage-pills" id="battery-pills">
-        <button class="pill active" onclick="setBattery(true)">🟢 電池 ≥ 80%</button>
-        <button class="pill" onclick="setBattery(false)">🔴 電池 &lt; 80%</button>
+<!-- 登入 Modal -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <div class="modal-logo">
+      <div class="modal-logo-icon"><svg width="20" height="20"><use href="#iz"/></svg></div>
+      <div>
+        <div style="font-size:17px;font-weight:700">蘋果銷售小工具</div>
+        <div style="font-size:12px;color:var(--mu)">請先選擇門市和姓名</div>
       </div>
     </div>
-  </div>
-
-  <div id="compare-result"></div>
-
-  <div class="card" style="padding:14px 16px;margin-top:8px;">
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
-      <div class="card-title" style="margin:0;"><i data-lucide="map-pin"></i> EPBOX 自助回收機設置地點</div>
-      <span class="count-badge" id="loc-count">共 0 台</span>
-    </div>
-    <div class="loc-filter">
-      <input type="text" id="loc-search" placeholder="🔍 搜尋店家或地址…" oninput="renderLocations()">
-      <select id="loc-city" onchange="renderLocations()">
-        <option value="">全部縣市</option>
-        <option value="高雄市">高雄市</option>
-        <option value="台南市">台南市</option>
-        <option value="雲林縣">雲林縣</option>
-      </select>
-    </div>
-    <div id="loc-grid" class="loc-grid"></div>
+    <div class="modal-label">門市</div>
+    <select class="modal-select" id="loginStore">
+      <option value="">選擇門市...</option>
+      <option>AppleShop 新岡山</option>
+      <option>AppleShop 右昌</option>
+      <option>AppleShop 華榮</option>
+      <option>AppleShop 自由</option>
+      <option>AppleShop 新光華</option>
+      <option>AppleShop 五甲</option>
+    </select>
+    <button class="modal-btn" id="loginBtn" onclick="doLogin()" disabled>開始使用</button>
   </div>
 </div>
 
-<!-- ══════════ Tab 2: 回收最划算 ══════════ -->
-<div id="tab-epbox" class="tab-content">
-  <div class="updated" id="last-updated-2">更新時間：載入中…</div>
-
-  <!-- Filter -->
-  <div class="bd-filter-bar">
-    <button class="bd-filter-btn active" onclick="setBestFilter('all',this)">全部機型</button>
-    <button class="bd-filter-btn" onclick="setBestFilter('iphone16',this)">iPhone 16</button>
-    <button class="bd-filter-btn" onclick="setBestFilter('iphone15',this)">iPhone 15</button>
-    <button class="bd-filter-btn" onclick="setBestFilter('iphone14',this)">iPhone 14</button>
-    <button class="bd-filter-btn" onclick="setBestFilter('iphone13',this)">iPhone 13</button>
-    <button class="bd-filter-btn" onclick="setBestFilter('iphone12',this)">iPhone 12</button>
-    <button class="bd-filter-btn" onclick="setBestFilter('older',this)">其他</button>
-  </div>
-
-  <!-- 推薦區 (wins + ties) -->
-  <div id="bd-good-section" style="display:none">
-    <div class="bd-sec-hdr green">
-      <span>✅ 推薦用 EPBOX</span>
-      <span class="bd-count" id="bd-good-count"></span>
+<div class="hd"><div class="hd-in">
+  <div class="logo"><div class="logo-dot"><svg width="14" height="14"><use href="#iz"/></svg></div>蘋果銷售小工具</div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="staff-info" id="staffInfo" style="display:none">
+      <div class="staff-dot"></div>
+      <span id="staffLabel" class="staff-name"></span>
+      <span class="staff-change" onclick="showLogin()">切換</span>
     </div>
-    <div class="bd-list" id="bd-good-list"></div>
-  </div>
-
-  <!-- 其他通路較高 (lower, 預設收起) -->
-  <div id="bd-low-section" style="display:none;margin-bottom:20px;">
-    <div class="bd-sec-hdr gray" onclick="toggleBdLower()">
-      <span>⚠️ 其他通路較高 <span class="bd-count" id="bd-low-count"></span></span>
-      <span class="bd-sec-arrow" id="bd-low-arrow">▼</span>
+    <div class="mt">
+      <button class="mb on" onclick="swMode('guide',this)"><i data-lucide="target" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"></i>引導推薦</button>
+      <button class="mb" onclick="swMode('product',this)"><i data-lucide="zap" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"></i>產品直查</button>
     </div>
-    <div class="bd-lower-body" id="bd-low-list-wrap">
-      <div class="bd-list" id="bd-low-list"></div>
+  </div>
+</div></div>
+
+<!-- AI 快速分析列 -->
+<div class="ai-bar">
+  <div class="ai-bar-in">
+    <div class="ai-label"><i data-lucide="sparkles" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"></i>AI 快速分析 <span>NEW</span></div>
+    <div class="ai-row">
+      <input class="ai-input" id="aiInput" type="text" placeholder="輸入或按麥克風收音，例如：「我媽媽想買平板，她不太會用3C，預算一萬多」" onkeydown="if(event.key==='Enter')analyzeCustomer()">
+      <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="收音">
+        <svg id="micIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+      </button>
+      <button class="ai-btn" id="aiBtn" onclick="analyzeCustomer()">
+        <span id="aiBtnText">分析客人</span>
+      </button>
+    </div>
+    <div class="mic-status" id="micStatus"></div>
+    <div class="ai-result" id="aiResult">
+      <div class="ai-tags-row" id="aiTags"></div>
+      <div class="ai-pitch-label"><i data-lucide="message-circle" style="width:12px;height:12px;vertical-align:-1px;margin-right:4px"></i>AI 個人化話術</div>
+      <div class="ai-pitch-text" id="aiPitch"></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ Tab 3: 換機試算 ══════════ -->
-<div id="tab-calc" class="tab-content">
-  <div class="updated" id="last-updated-calc"></div>
-
-  <div class="card picker-card">
-    <div class="card-title"><i data-lucide="calculator"></i> 換機試算</div>
-    <p style="font-size:13px;color:var(--text-gray);margin-bottom:14px;">選擇你的舊機，看看現在值多少、換到新 iPhone 每天只要多少錢。</p>
-    <div class="picker-row">
-      <label>舊機型號</label>
-      <select id="calc-model" onchange="onCalcModelChange()">
-        <option value="">── 請選擇 ──</option>
-      </select>
+<div class="main">
+<div id="gMode" class="ms on">
+  <div class="lp">
+    <div class="blk">
+      <div class="bh"><div class="bn n1"><i data-lucide="package" style="width:16px;height:16px"></i></div><div><div class="bl">顧客想看的商品</div><div class="bs">先選商品，再探索需求</div></div><span class="bg br">必選</span></div>
+      <div class="bb"><div class="g3">
+        <div class="cd" id="pt-mb" onclick="selPT('macbook',this)"><svg class="ci"><use href="#imb"/></svg><div class="ct">MacBook</div><div class="cs">Mac 系列</div></div>
+        <div class="cd" id="pt-ip" onclick="selPT('ipad',this)"><svg class="ci"><use href="#iip"/></svg><div class="ct">iPad</div><div class="cs">iPad 系列</div></div>
+        <div class="cd" id="pt-ph" onclick="selPT('iphone',this)"><svg class="ci"><use href="#iph"/></svg><div class="ct">iPhone</div><div class="cs">iPhone 系列</div></div>
+      </div></div>
     </div>
-    <div id="calc-storage-row" style="display:none;">
-      <div style="font-size:13px;color:var(--text-gray);font-weight:500;margin-bottom:8px;">容量</div>
-      <div class="storage-pills" id="calc-storage-pills"></div>
+    <div class="blk lk" id="bCust">
+      <div class="bh"><div class="bn n1"><i data-lucide="user" style="width:16px;height:16px"></i></div><div><div class="bl">顧客類型</div><div class="bs">選擇顧客身份</div></div><span class="bg bo">選填</span></div>
+      <div class="bb"><div class="g2">
+        <div class="cd" id="ct-st" onclick="selCT('student',this)"><svg class="ci"><use href="#ist"/></svg><div class="ct">學生族群</div><div class="cs">大學生・研究生</div></div>
+        <div class="cd" id="ct-of" onclick="selCT('office',this)"><svg class="ci"><use href="#iof"/></svg><div class="ct">上班族</div><div class="cs">商務人士</div></div>
+        <div class="cd" id="ct-cr" onclick="selCT('creator',this)"><svg class="ci"><use href="#icr"/></svg><div class="ct">創作者</div><div class="cs">設計・影音</div></div>
+        <div class="cd" id="ct-el" onclick="selCT('elder',this)"><svg class="ci"><use href="#iel"/></svg><div class="ct">長輩</div><div class="cs">50歲以上</div></div>
+      </div></div>
+    </div>
+    <div class="blk lk" id="bBudget">
+      <div class="bh"><div class="bn n3"><i data-lucide="wallet" style="width:16px;height:16px"></i></div><div><div class="bl">預算考量</div><div class="bs">會影響推薦機型</div></div><span class="bg bo">選填</span></div>
+      <div class="bb"><div class="g3b">
+        <div class="cd" id="bg-free" onclick="selBG('free',this)"><i data-lucide="infinity" style="width:28px;height:28px;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;color:var(--ac)"></i><div class="ct">不限預算</div><div class="cs">推薦最適合的</div></div>
+        <div class="cd" id="bg-mid" onclick="selBG('mid',this)"><i data-lucide="credit-card" style="width:28px;height:28px;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;color:var(--gr)"></i><div class="ct">中等預算</div><div class="cs">CP值優先</div></div>
+        <div class="cd" id="bg-low" onclick="selBG('low',this)"><i data-lucide="piggy-bank" style="width:28px;height:28px;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;color:var(--or)"></i><div class="ct">預算有限</div><div class="cs">越便宜越好</div></div>
+      </div></div>
+    </div>
+    <div class="blk lk" id="bL1">
+      <div class="bh"><div class="bn n1">1</div><div><div class="bl">使用需求</div><div class="bs">選擇主要需求後即可查看推薦</div></div><span class="bg br">必選</span></div>
+      <div class="bb" id="l1b"></div>
+    </div>
+    <div class="blk lk" id="bL2">
+      <div class="bh"><div class="bn n2">2</div><div><div class="bl">進階需求</div><div class="bs">更專業的使用需求</div></div><span class="bg bo">選填</span></div>
+      <div class="bb" id="l2b"></div>
     </div>
   </div>
-
-  <div id="calc-result">
-    <div class="no-result" style="padding:40px 0">請選擇舊機型號</div>
-  </div>
-</div>
-
-<!-- ══════════ Tab 4: 價格提醒 ══════════ -->
-<div id="tab-alerts" class="tab-content">
-  <div id="alert-triggered-wrap"></div>
-
-  <div class="card">
-    <div class="card-title"><i data-lucide="bell-plus"></i> 回收價提醒</div>
-    <p style="font-size:13px;color:var(--text-gray);margin-bottom:14px;">選擇機型後點按鈕，LINE 會自動引導你完成以下流程：</p>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
-      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dark);">
-        <span style="width:22px;height:22px;border-radius:50%;background:#00b900;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">1</span>
-        尚未加入官方帳號？LINE 會先引導你加入好友
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dark);">
-        <span style="width:22px;height:22px;border-radius:50%;background:#00b900;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">2</span>
-        加入後自動帶入訂閱訊息，傳送即完成訂閱
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dark);">
-        <span style="width:22px;height:22px;border-radius:50%;background:#00b900;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">3</span>
-        EPBOX 回收價下跌時，Bot 會主動推播通知你
-      </div>
-    </div>
-    <div class="alert-form">
-      <select id="alert-model-sel">
-        <option value="">── 選擇機型 ──</option>
-      </select>
-      <button class="submit-btn" onclick="addAlert()" style="display:flex;align-items:center;justify-content:center;gap:8px;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.630 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.630 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.070 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
-        訂閱價格通知
-      </button>
-    </div>
+  <div class="rp">
+    <div class="emp" id="emp"><svg><use href="#istar"/></svg><div style="font-size:15px;font-weight:600;margin-bottom:8px">選擇使用需求</div><div style="font-size:13px">選擇第一層需求後<br>智慧推薦將出現在這裡</div></div>
+    <div class="rc" id="rc"></div>
   </div>
 </div>
-
-<!-- ══════════ Tab 5: 話術生成 ══════════ -->
-<div id="tab-analytics" class="tab-content">
-
-  <!-- 外觀狀況選擇器 -->
-  <div style="padding:16px 16px 0;">
-    <div style="font-size:11px;font-weight:700;color:var(--text-gray);margin-bottom:8px;letter-spacing:0.5px;">顧客手機外觀</div>
-    <div style="display:flex;gap:8px;">
-      <button class="cond-btn" data-cond="perfect"
-        onclick="setCondition('perfect')"
-        style="flex:1;padding:11px 4px;border:2px solid var(--ep-green);background:#edfaf3;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ep-green);">
-        ✨ 外觀完美
-      </button>
-      <button class="cond-btn" data-cond="scratched"
-        onclick="setCondition('scratched')"
-        style="flex:1;padding:11px 4px;border:2px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-gray);">
-        🔸 有刮痕
-      </button>
-      <button class="cond-btn" data-cond="damaged"
-        onclick="setCondition('damaged')"
-        style="flex:1;padding:11px 4px;border:2px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-gray);">
-        🔴 螢幕損壞
-      </button>
-    </div>
+<div id="pMode" class="ms">
+  <div class="pp">
+    <div class="tabs" id="tabs"></div>
+    <div class="pg" id="pgrid"></div>
+    <div class="pd" id="pdet"></div>
   </div>
-
-  <!-- 電池健康度 -->
-  <div style="padding:10px 16px 0;">
-    <div style="font-size:11px;font-weight:700;color:var(--text-gray);margin-bottom:8px;letter-spacing:0.5px;">電池健康度</div>
-    <div style="display:flex;gap:8px;">
-      <button class="sp-batt-pill" data-good="1" onclick="setBattery(true)"
-        style="flex:1;padding:11px 4px;border:2px solid var(--ep-green);background:#edfaf3;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ep-green);">
-        🟢 電池 ≥ 80%
-      </button>
-      <button class="sp-batt-pill" data-good="0" onclick="setBattery(false)"
-        style="flex:1;padding:11px 4px;border:2px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-gray);">
-        🔴 電池 &lt; 80%
-      </button>
-    </div>
-  </div>
-
-  <!-- 舊機去向 -->
-  <div style="padding:10px 16px 0;">
-    <div style="font-size:11px;font-weight:700;color:var(--text-gray);margin-bottom:8px;letter-spacing:0.5px;">舊機去向</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="dest-btn" data-dest="none" onclick="setDestination('none')"
-        style="flex:1;min-width:90px;padding:11px 4px;border:2px solid var(--apple-blue);background:#e8f0ff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;color:var(--apple-blue);">
-        🗑️ 沒有人承接
-      </button>
-      <button class="dest-btn" data-dest="family" onclick="setDestination('family')"
-        style="flex:1;min-width:90px;padding:11px 4px;border:2px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-gray);">
-        👨‍👩‍👧 有家人承接
-      </button>
-      <button class="dest-btn" data-dest="backup" onclick="setDestination('backup')"
-        style="flex:1;min-width:90px;padding:11px 4px;border:2px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-gray);">
-        🔒 當備用機
-      </button>
-    </div>
-  </div>
-
-  <div id="sp-result" style="padding:14px 16px 20px;"></div>
+</div>
 </div>
 
 <script>
-/* ════════════════════════════════
-   CONFIG
-════════════════════════════════ */
-const FB_URL = "https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/tradein_prices.json";
+const PRODUCTS=[{"id": "iphone-17-pro-max", "name": "iPhone 17 Pro Max", "category": "iPhone", "chip": "A19 Pro", "badge": "頂級旗艦", "display": "6.9 吋 ProMotion OLED 120Hz 永遠顯示"}, {"id": "iphone-17-pro", "name": "iPhone 17 Pro", "category": "iPhone", "chip": "A19 Pro", "badge": "專業創作", "display": "6.3 吋 ProMotion OLED 120Hz 永遠顯示"}, {"id": "iphone-17", "name": "iPhone 17", "category": "iPhone", "chip": "A19", "badge": "全能升級", "display": "6.3 吋 ProMotion OLED 120Hz 永遠顯示"}, {"id": "iphone-air", "name": "iPhone Air", "category": "iPhone", "chip": "A19 Pro", "badge": "極致輕薄", "display": "6.5 吋 ProMotion OLED 120Hz 永遠顯示"}, {"id": "iphone-16e", "name": "iPhone 16e", "category": "iPhone", "chip": "A18", "badge": "超值入門", "display": "6.1 吋 OLED"}, {"id": "ipad-air-m3", "name": "iPad Air M3", "category": "iPad", "chip": "M3 (8核CPU+9核GPU)", "badge": "創作首選", "display": "11 吋 / 13 吋 Liquid Retina"}, {"id": "ipad-11-a16", "name": "iPad (第11代)", "category": "iPad", "chip": "A16", "badge": "平價入門", "display": "11 吋 Liquid Retina 2360x1640"}, {"id": "ipad-pro-m5", "name": "iPad Pro M5", "category": "iPad", "chip": "M5 (10核CPU+10核GPU)", "badge": "極致專業", "display": "11 吋 / 13 吋 Ultra Retina XDR"}, {"id": "macbook-air-m4", "name": "MacBook Air M4", "category": "Mac", "chip": "M4", "badge": "最超值筆電", "display": "13.6 吋 / 15.3 吋 Liquid Retina"}, {"id": "mac-studio-2025", "name": "Mac Studio 2025", "category": "Mac", "chip": "M4 Max / M3 Ultra", "badge": "桌面工作站", "display": ""}, {"id": "macbook-pro-14-m4pro", "name": "MacBook Pro 14 吋 M4 Pro", "category": "Mac", "chip": "M4 Pro (12核CPU+20核GPU)", "badge": "專業首選", "display": "14.2 吋 Liquid Retina XDR"}, {"id": "macbook-pro-14-m5", "name": "MacBook Pro 14 吋 M5", "category": "Mac", "chip": "M5 (10核CPU+10核GPU)", "badge": "AI效能飛躍", "display": "14.2 吋 Liquid Retina XDR"}];
+const SELLING_POINTS={"iphone-17-pro-max": ["三鏡頭全 4800 萬畫素（廣角/超廣角/望遠），望遠感光元件增大 56%", "4 倍光學變焦、8 倍光學品質無損變焦（等效 200mm），最高 40 倍數位變焦", "三顆全 4800 萬融合相機，等同八顆專業鏡頭組合", "8 倍光學變焦望遠鏡頭，等效焦距達 200mm，四重反射稜鏡設計", "37 小時影片播放，iPhone 歷來最佳電池續航", "支援 ProRes RAW、Log 2、Genlock 多機同步，業界首款", "全新 1800 萬像素圓形 Center Stage 前置相機，支援變焦旋轉取景", "髮絲紋鋁金屬機身，航太級 7000 系列鋁合金打造", "超瓷晶盾 2 正面抗刮提升 3 倍，背面抗裂提升 4 倍", "12GB RAM + 最高 2TB 儲存，專業創作無上限", "40W 快充 20 分鐘達 50%，MagSafe 25W 無線充電"], "iphone-17-pro": ["三鏡頭全 4800 萬畫素（廣角/超廣角/望遠），望遠感光元件增大 56%", "4 倍光學變焦、8 倍光學品質無損變焦（等效 200mm），最高 40 倍數位變焦", "A19 Pro 晶片 + VC 均溫板，長時間使用不降頻", "支援 ProRes RAW 錄製，首款支援此格式的智慧型手機", "8 倍光學變焦 + 最高 40 倍數位變焦", "Open Gate 全片幅錄影，方便後期裁切", "USB 3.0 傳輸速度，大幅縮短大容量檔案傳輸時間"], "iphone-17": ["全新 A19 晶片 + N1 無線晶片，CPU 效能比 iPhone 13 提升 50%", "雙 4800 萬像素相機系統（主相機+超廣角），解析度達前代 4 倍", "ProMotion 120Hz 可變更新率 + 永遠顯示，歷代 iPhone 最全面位升級", "全新 1800 萬像素 Center Stage 圓形前置相機", "螢幕亮度最高 3000 尼特，超瓷晶盾 2 抗刮提升 3 倍", "40W 快充 20 分鐘達 50%，MagSafe 25W 無線充電", "五款絢麗色彩：薰衣草紫、鼠尾草綠、霧藍、黑、白"], "iphone-air": ["5.6mm 超薄機身、165g 輕量化，等級 5 鈦合金邊框更堅固耐用", "A19 Pro 晶片搭配 12GB RAM，支援硬體加速光線追蹤，3A 遊戲流暢運行", "最高 27 小時影片播放續航，40W 快充 20 分鐘達 50% 電量", "4800 萬主相機 + 1800 萬前置鏡頭，支援 4K HDR 錄影與運動模式", "ProMotion 120Hz 螢幕最高 3000 尼特亮度，超瓷晶盾 2 抗刮性提升 3 倍", "C1X 數據機提供 2 倍資料傳輸速度，功耗比 iPhone 16 Pro 降低 30%"], "iphone-16e": ["A18 晶片完整支援 Apple Intelligence", "6.1 吋 OLED 螢幕，保留劉海設計", "4800 萬畫素主鏡頭，支援 2 倍光學變焦", "影片播放最長 26 小時，搭載自研 C1 數據機晶片功耗更優", "21,000 元起，入門級智慧手機最具吸引力選擇", "支援 Qi 7.5W 無線充電（不支援 MagSafe）"], "ipad-air-m3": ["M3 晶片 3 奈米製程，250 億電晶體，8 核 CPU + 9 核 GPU", "圖形性能比 M1 提升最高 40%，比 M2 提升約 20%", "神經引擎比 M1 快 60%，特別適合 AI 相關任務", "全新 Magic Keyboard 配 14 鍵功能列和更大觸控板", "支援 Apple Pencil Pro，適合插畫設計攝影等創作", "8GB RAM，128GB/256GB/512GB/1TB 儲存選項"], "ipad-11-a16": ["A16 晶片，效能與圖形處理大幅提升", "6GB RAM，128GB/256GB/512GB 三種容量", "11 吋 Liquid Retina 螢幕 2360x1640 解析度", "USB-C 連接埠，相容 Apple Pencil (USB-C)", "入門價格提供不廉價的使用體驗，適合全家使用"], "macbook-air-m4": ["M4 晶片 CPU 效能比 M3 提升 50%，GPU 提升 4 倍，無風扇設計保持靜音", "Premiere Pro 跑分 4774，比 M3 快 23%；Photoshop 跑分 10275，比 M3 快 17%", "16GB RAM 起跳，最高可選配 32GB；容量選配至 2TB，支援雙外接螢幕", "1200 萬畫素 Center Stage 前置鏡頭，視訊自動追蹤、桌上視角、人物居中", "Thunderbolt 4 × 2，最長 24 小時電池續航", "天空藍新配色取代太空灰，價格降低一千元"], "mac-studio-2025": ["M3 Ultra 28/32 核心 CPU，Cinebench 2024 多核領先 M4 Max 約 40%", "60/80 核心 GPU，Blender 渲染領先 M4 Max 約 10%，支援硬體光線追蹤", "統一記憶體最高 512GB（記憶體頻寬雙倍於 M3 Max），適合運行 70B AI 模型", "Final Cut Pro 導出速度最快，Motion 渲染領先 M4 Max 約 24 秒", "多軌 4K 影片播放可達 14 條（M4 Max 僅 8 條），專業創作零瓶頸", "Thunderbolt 5 連接埠，提供更快資料傳輸和外接設備支援"], "macbook-pro-14-m5": ["M5 晶片 AI 效能達前代 3.5 倍，每核心內建神經網路加速器", "GPU 圖形處理比 M4 提升 45%，Geekbench GPU 量化分數比 M4 Pro 高 53%", "統一記憶體頻寬 153GB/s（比 M4 提升 30%），最高可選配 32GB", "支援第三代光線追蹤，適合 AI 開發、影像處理、大語言模型推論", "最長 24 小時電池續航，SSD 最高可選配 4TB，讀寫速度比 M4 快 2 倍", "Liquid Retina XDR 顯示器，六揚聲器音響系統"], "ipad-pro-m5": ["M5 晶片 AI 效能比 M4 快 3.5 倍，比 M1 快 5.6 倍", "新一代 GPU 每核心內建神經網路加速器，支援第三代光線追蹤", "統一記憶體頻寬 153GB/s，處理大型 AI 模型、多軌影片剪輯流暢不卡", "11 吋 / 13 吋 Tandem OLED 極致顯示技術，最高 1600 尼特亮度", "ProMotion 120Hz 自適應刷新率，Apple Pencil Pro 完美支援", "超薄 5.1mm 機身，全天候電池續航"], "apple-watch-ultra-3": ["49mm 鈦金屬錶殼，藍寶石玻璃顯示器", "電池續航 42 小時，低耗電模式 72 小時", "更窄邊框廣視角 OLED 螢幕，最高 3000 尼特", "S10 晶片，5G 連線，衛星通訊求救功能", "血壓偵測功能（趨勢提醒），睡眠分數功能", "快速充電 15 分鐘可用 12 小時"], "apple-watch-s11": ["歷來最纖薄 Apple Watch，抗刮能力是 S10 雙倍", "電池續航 24 小時，低耗電模式 38 小時", "S10 晶片 + 5G 連線 + 血壓偵測 + 睡眠分數", "心電圖 + 血氧濃度 + 體溫感測 + 跌倒偵測", "鋁金屬與鈦金屬兩種材質可選，四/三色選擇"], "apple-watch-se3": ["搭載 S10 晶片，與 Ultra 3 和 S11 相同", "首次支援隨顯螢幕，不抬手腕也能看時間", "首次支援腕溫度感測，生命徵象 App 更多健康資訊", "首次支援手指操控（雙指互點、翻轉手腕）", "首次支援睡眠偵測/分數，包含睡眠呼吸中止症提醒", "內建喇叭可直接播放音樂 + 5G 連線", "玻璃強度比 SE 2 提升 4 倍"], "airpods-pro-3": ["主動式降噪效果比 AirPods Pro 2 提升最高達 2 倍", "全新多孔聲學架構，更寬廣音場和更清晰人聲", "五種尺寸泡棉耳塞套，矽膠外殼加纖薄泡棉更舒適", "心率感測器（每秒 256 次紅外線），支援 50 種體能訓練追蹤", "Apple Intelligence 即時翻譯功能，雙方佩戴可對話翻譯", "U2 晶片充電盒，精確尋找距離擴大 1.5 倍", "防護等級升級 IP54 → IP57，防塵抗汗抗水更強", "支援臨床級助聽器功能，適用輕度至中度聽力受損"], "macbook-pro-14-m4pro": ["M4 Pro 12核CPU + 20核GPU，多執行緒效能比 M3 Pro 提升 20%", "Cinebench R23 多核跑分比 M3 Pro 快 25%，Blender GPU 渲染領先約 30%", "20核GPU 圖形效能比 M3 Pro 提升 30%，支援硬體光線追蹤", "標配 24GB 統一記憶體（記憶體頻寬 120GB/s），最高可選配 64GB", "最長 24 小時電池續航，主動散熱可長時間高負載運作不降頻", "Liquid Retina XDR 顯示器，ProMotion 自適應 120Hz 刷新率"]};
+const TARGET_CUSTOMERS={"iphone-17-pro-max": [{"customer": "專業攝影/影片創作者", "pitch": "三顆全 4800 萬鏡頭加上 8 倍光學望遠，等效 200mm，從超廣角到長焦一機搞定。支援 ProRes RAW 和 Genlock，發表會的影片全都是用 17 Pro 拍的。"}, {"customer": "重度手遊玩家", "pitch": "VC 均溫板散熱是 iPhone 首次導入，長時間玩遊戲不會降頻，加上 A19 Pro 晶片 GPU 提升 2 倍，3A 遊戲都能流暢運行。"}, {"customer": "商務人士", "pitch": "37 小時電池續航是 iPhone 歷來最長，40W 快充 20 分鐘就回到 50%。12GB RAM 多工處理更順暢，2TB 儲存不用擔心空間不夠。"}], "iphone-17-pro": [{"customer": "想要 Pro 相機但偏好較小尺寸", "pitch": "跟 Pro Max 完全相同的三鏡頭系統，8 倍望遠也有，但 6.3 吋更好單手操作。ProRes RAW 錄影功能也完全相同。"}], "iphone-17": [{"customer": "年輕族群/一般消費者", "pitch": "今年標準版升級超有感，120Hz 螢幕、永遠顯示、雙 4800 萬鏡頭全到位，五款顏色很搶眼。A19 晶片 Apple Intelligence 全功能支援。"}, {"customer": "從 iPhone 13/14 升級的用戶", "pitch": "CPU 效能比 iPhone 13 提升 50%，GPU 速度提升 2.1 倍，螢幕從 60Hz 直接跳到 120Hz，差距非常明顯，是非常值得升級的時間點。"}], "iphone-air": [{"customer": "時尚輕量派", "pitch": "5.6mm 超薄 165g 輕量設計，等級 5 鈦合金邊框堅固又有質感。ProMotion 120Hz 螢幕搭配 3000 尼特峰值亮度，陽光下依然清晰。這是 iPhone 史上最輕、最薄、最有個性的機型。"}, {"customer": "效能玩家", "pitch": "A19 Pro 晶片 + 12GB RAM，支援硬體加速光線追蹤，3A 遊戲流暢運行。27 小時續航 + 40W 快充半小時滿一半，C1X 數據機傳輸速度快 2 倍、功耗降 30%。"}, {"customer": "攝影愛好者", "pitch": "4800 萬主相機 + 1800 萬前置鏡頭，支援 4K HDR 錄影、運動模式穩定防震。超薄機身不妥協相機品質，隨手拍出專業級作品。"}], "iphone-16e": [{"customer": "預算有限的學生/年輕族群", "pitch": "兩萬一就能擁有 A18 晶片和完整 Apple Intelligence，4800 萬鏡頭拍照品質不輸中階機。進入 Apple 生態系最划算的方式。"}, {"customer": "從舊 iPhone SE/8/X 升級的用戶", "pitch": "從 SE 升級你會感受到巨大差異，6.1 吋 OLED 螢幕、4800 萬鏡頭、26 小時續航。C1 數據機功耗更優，省電效果明顯。"}], "ipad-air-m3": [{"customer": "設計師/創作者", "pitch": "M3 晶片配 Apple Pencil Pro，Procreate、Affinity Designer 都跑得飛快。圖形性能比 M1 提升 40%，幾乎是接近 iPad Pro 的體驗。"}, {"customer": "大學生", "pitch": "Apple Pencil 記筆記、標注 PDF，搭配新 Magic Keyboard 寫報告，一台抵筆電。M3 晶片至少可以用四五年不過時。"}, {"customer": "商務辦公人士", "pitch": "新版 Magic Keyboard 配觸控板和 14 鍵功能列，操作體驗接近筆電。處理郵件、編輯文件、製作簡報都很順手。"}], "ipad-11-a16": [{"customer": "家庭使用者", "pitch": "客廳看影片、小孩玩教育 App、長輩上網看新聞，一台搞定全家需求。價格一萬出頭，CP 值遠超同級 Android 平板。"}, {"customer": "首次購買平板的新用戶", "pitch": "A16 晶片確保不廉價的使用體驗，128GB 起跳容量夠用，USB-C 連接方便。進入 iPad 生態系最好的起點。"}], "macbook-air-m4": [{"customer": "學生/輕度工作者", "pitch": "16GB RAM 起跳，M4 效能約 M1 的兩倍，寫報告、簡報、輕度剪輯都沒問題。無風扇設計圖書館用完全安靜。降價後是目前最值得買的筆電。"}, {"customer": "需要雙螢幕的辦公族", "pitch": "M4 版首次支援不蓋螢幕就能接兩台外接顯示器，對需要多視窗工作的人是重大升級。"}], "mac-studio-2025": [{"customer": "影片製作/3D 渲染專業人士", "pitch": "M3 Ultra 最高 512GB 統一記憶體，在 AI 訓練、影片編輯、3D 渲染領域無對手。投資 Mac Studio 就是投資你的時間與創造力。"}, {"customer": "AI/ML 開發者", "pitch": "處理大型數據集和計算密集型任務，M3 Ultra 的記憶體和算力是目前 Mac 生態最強選擇。"}], "macbook-pro-14-m5": [{"customer": "AI 應用開發者", "pitch": "AI 效能達前代 3.5 倍，統一記憶體頻寬 153GB/s 可以本地端跑大型 AI 模型。"}, {"customer": "專業內容創作者", "pitch": "10 核 GPU 每核心內建神經網路加速器，圖形處理提升 45%。24 小時續航外出工作一整天。"}], "airpods-pro-3": [{"customer": "健身運動愛好者", "pitch": "心率感測器支援 50 種體能訓練追蹤，IP57 防水防汗更強。泡棉耳塞運動中更穩定不掉落。"}, {"customer": "經常出國/國際溝通的人", "pitch": "Apple Intelligence 即時翻譯功能，雙方佩戴 AirPods Pro 3 就能直接對話翻譯，出國溝通超方便。"}, {"customer": "聽力保護需求者", "pitch": "支援臨床級助聽器功能，適用輕度至中度聽力受損。還有聽力測試和聽力年齡追蹤。"}], "apple-watch-ultra-3": [{"customer": "戶外運動/潛水愛好者", "pitch": "49mm 鈦金屬 + 藍寶石玻璃，42 小時續航、衛星通訊求救，從深潛到登山都能應對。"}], "apple-watch-s11": [{"customer": "注重健康管理的人", "pitch": "心電圖 + 血氧 + 血壓趨勢 + 體溫感測 + 睡眠分數 + 跌倒偵測，最全面的健康監測手錶。"}], "apple-watch-se3": [{"customer": "Apple 生態系入門者", "pitch": "S10 晶片性能不打折，首次有隨顯螢幕和手指操控，價格最親民但功能滿載，進入 Apple Watch 最超值的選擇。"}], "macbook-pro-14-m4pro": [{"customer": "影像/影片創作者", "pitch": "20核GPU 比 M3 Pro 快 30%，Final Cut Pro 剪輯 4K 流暢不掉幀。24GB 記憶體讓 Photoshop + Premiere 同時開著不卡頓，主動散熱長時間渲染也不降速。"}, {"customer": "設計師/3D 創作者", "pitch": "M4 Pro 20核GPU 支援硬體光線追蹤，Blender、Cinema 4D 渲染速度大幅提升。24GB 記憶體處理高解析度素材和複雜場景都不是問題。"}, {"customer": "程式開發者", "pitch": "12核CPU 編譯速度極快，24GB 統一記憶體同時跑多個虛擬機、Docker 容器不卡頓。比 Air 多了主動散熱，跑長時間 build 不會降頻。"}, {"customer": "商務專業人士", "pitch": "效能比 Air 高出一個級距，同時處理大型試算表、視訊會議、多應用切換完全沒壓力。24小時續航出差一整天免帶充電器。"}]};
+const OBJECTIONS={"iphone-17-pro-max": [{"objection": "太貴了", "response": "Pro Max 的相機系統等於帶了八顆專業鏡頭出門，加上 VC 均溫板散熱和 37 小時續航，用舊機折抵的話實際價差比想像小很多。要不要我幫你算一下折抵後的價格？"}, {"objection": "跟 16 Pro Max 差不多，不值得換", "response": "最大差異是望遠從 5 倍升到 8 倍，感光元件增大 56%，低光拍攝差距非常明顯。另外 VC 均溫板散熱徹底解決長時間使用降頻問題，還新增 ProRes RAW 錄影功能。"}, {"objection": "鋁合金不如鈦金屬高級", "response": "這次用的是航太級 7000 系列鋁合金加上髮絲紋處理，不僅散熱效能更好，外觀質感也非常出色。而且 VC 均溫板需要搭配金屬機殼才能發揮最佳散熱效果。"}], "iphone-17-pro": [{"objection": "Pro 跟 Pro Max 差在哪？", "response": "相機系統完全一樣，三顆全 4800 萬 + 8 倍望遠都有。主要差在螢幕大小、電池續航和最高儲存。如果不需要 2TB 和 37 小時續航，Pro 省下的預算可以搭配其他配件。"}], "iphone-17": [{"objection": "標準版值得買嗎？跟 Pro 差很多？", "response": "今年 iPhone 17 升級幅度非常大，首次有 120Hz ProMotion 和永遠顯示，超廣角也升到 4800 萬，日常體驗已經非常接近 Pro。主要差在望遠鏡頭和 ProRes 錄影。"}], "iphone-air": [{"objection": "這麼薄會不會很容易壞？續航會不會不好？", "response": "等級 5 鈦合金邊框比一般鋁合金更堅固，超瓷晶盾 2 抗刮性提升 3 倍、背面抗裂提升 4 倍。雖然超薄但續航達 27 小時影片播放，比 iPhone 17 還長，40W 快充 20 分鐘就能充到 50%。"}, {"objection": "iPhone Air 效能會不會比較差？", "response": "完全不會！iPhone Air 搭載 A19 Pro 晶片（跟 17 Pro 同級），12GB RAM 比 17 Pro 還多，支援硬體加速光線追蹤。唯一差異是相機系統：Air 是單主鏡頭 4800 萬，Pro 是三鏡頭全 4800 萬。效能、螢幕、續航都在同一水準。"}, {"objection": "iPhone Air 跟 iPhone 17 Pro 怎麼選？", "response": "如果追求極致輕薄、時尚質感，選 Air（5.6mm / 165g）。如果需要三鏡頭系統、ProRAW 拍攝、更專業的攝影功能，選 17 Pro。兩者晶片、螢幕、續航都在同一水準，主要差在厚度、重量和相機系統。"}], "iphone-16e": [{"objection": "21000 但沒有動態島和 MagSafe", "response": "iPhone 16e 的定位就是用最親民的價格體驗 A18 晶片和 Apple Intelligence。如果預算有限，這些功能的缺少不影響日常使用，4800 萬鏡頭和 26 小時續航才是重點。"}], "ipad-air-m3": [{"objection": "為什麼不直接買 iPad Pro？", "response": "iPad Air M3 的性能已經覆蓋 99% 的日常需求。Pro 多出的 OLED 螢幕和 M 系列高階晶片，只有專業影像工作者才真正用得到差異。省下的預算拿來買 Apple Pencil Pro 和鍵盤更實用。"}], "macbook-air-m4": [{"objection": "需要買 Pro 嗎？Air 夠用嗎？", "response": "M4 Air 的 Premiere Pro 跑分 4774，已經非常接近 M4 Pro（4839），只差 1.4%。Photoshop 跑分 10275 也只比 Pro 低 2.7%。除非需要長時間剪輯 4K/8K、3D 渲染這種持續高負載，否則 Air 的無風扇設計更輕薄安靜，價格還便宜一萬多。"}, {"objection": "M4 Air 跟 M3 Air 差多少？值得升級嗎？", "response": "CPU 效能提升 50%，GPU 提升 4 倍。Premiere Pro 快 23%、Photoshop 快 17%、Blender GPU 渲染快 28%。記憶體從 8GB 起跳升級到 16GB 起跳，還多了雙外接螢幕支援。如果你常用專業軟體，升級很有感。"}], "airpods-pro-3": [{"objection": "已經有 Pro 2 了需要換嗎？", "response": "降噪效果直接翻倍，泡棉耳塞更舒適，新增心率感測和即時翻譯。如果你經常運動或有國際溝通需求，升級感會非常明顯。"}], "apple-watch-ultra-3": [{"objection": "Ultra 太貴了，S11 不夠嗎？", "response": "Ultra 3 的 42 小時續航是 S11 的將近 2 倍，鈦金屬+藍寶石玻璃也更耐用。如果你有戶外運動、潛水需求或單純希望少充電，Ultra 的價差是值得的。"}], "apple-watch-se3": [{"objection": "SE 3 跟 S11 差在哪？", "response": "SE 3 這次升級很大，首次有隨顯螢幕、腕溫度感測、手指操控、睡眠偵測。但沒有心電圖和血氧濃度。如果不需要這兩個醫療級功能，SE 3 的性價比非常高。"}], "macbook-pro-14-m4pro": [{"objection": "M4 Pro 和 M4 Air 差多少？買 Air 就夠了嗎？", "response": "專業軟體差異不大（Premiere Pro 只快 1.4%），但 M4 Pro 有主動散熱，長時間高負載不會降頻。20核GPU 比 Air 的 10核快約 60%，適合 3D 渲染、影片剪輯這種 GPU 密集工作。24GB 記憶體起跳，多工處理更流暢。"}, {"objection": "M4 Pro 還是買 M5 比較划算？", "response": "看用途。M5 的 AI 效能大幅提升（3.5 倍），適合 AI 開發、重度影像處理、跑大語言模型。但影片剪輯、程式開發、3D 建模，M4 Pro 的 20核GPU 已非常充裕，價格還低一個檔次，CP值更高。"}], "macbook-pro-14-m5": [{"objection": "M5 比 M4 Pro 強在哪？值得多花錢嗎？", "response": "M5 的 Neural Engine 和 GPU AI 加速器讓 AI 工作負載快 3.5 倍，Geekbench GPU AI 跑分比 M4 Pro 高 53%。記憶體頻寬 153GB/s 比 M4 Pro 快 27%。但傳統 GPU 運算 M4 Pro 的 20核仍勝出。如果主要做 AI 開發、跑本地 LLM，選 M5；如果是影片剪輯、3D 渲染，M4 Pro 更划算。"}, {"objection": "為什麼 M5 GPU 只有 10 核，M4 Pro 有 20 核？", "response": "M5 的每個 GPU 核心都內建神經網路加速器，架構更新、單核效能更強，專注在 AI 運算。M4 Pro 的 20 核是傳統 GPU 設計，適合圖形渲染。兩者定位不同：M5 強在 AI，M4 Pro 強在傳統創作。"}], "mac-studio-2025": [{"objection": "Mac Studio 跟 MacBook Pro M4 Pro 怎麼選？", "response": "Studio 的 M3 Ultra CPU 多核跑分領先 M4 Pro 約 40%，GPU 更是 60/80 核（M4 Pro 只有 20 核）。最高 512GB 記憶體可以跑 70B 參數的 AI 模型。但是桌機不能攜帶，價格也貴很多。如果需要極致效能、處理超大型專案，選 Studio；如果需要移動工作，選 MacBook Pro。"}]};
 
-const VENDORS = ["APPLE BAR", "台哥大", "遠傳", "台北101", "STUDIO", "地標", "米可", "神腦", "trade in價"];
-const AVG_VENDORS = new Set(["APPLE BAR", "台哥大", "遠傳", "台北101", "STUDIO", "神腦"]);
-
-/* ── Inline SVG helper (Lucide-style, stroke-only) ── */
-function ic(path, color = "currentColor", size = 18) {
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
-}
-const P = {
-  store:    '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
-  signal:   '<line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>',
-  globe:    '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
-  building: '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',
-  palette:  '<circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>',
-  mapPin:   '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
-  heart:    '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
-  cpu:      '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>',
-  bot:      '<rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/>',
-  barChart: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
-  crown:    '<path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>',
-  upDown:   '<path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/>',
-  info:     '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
-  map:      '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
-  nav:      '<polygon points="3 11 22 2 13 21 11 13 3 11"/>',
-  phone:    '<rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
-  bag:      '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>',
-  clock:     '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
-  arrowRight:'<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
-  lineChart: '<line x1="3" y1="3" x2="3" y2="21"/><line x1="3" y1="21" x2="21" y2="21"/><polyline points="7 16 11 10 15 14 19 8"/>',
-  trash:     '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
-  bell:      '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
-  checkCircle:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
-  alertTri:  '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
-};
-
-const VENDOR_ICONS = {
-  "APPLE BAR":  P.store,
-  "台哥大":     P.store,
-  "遠傳":       P.store,
-  "台北101":    P.store,
-  "STUDIO":     P.store,
-  "地標":       P.store,
-  "米可":       P.store,
-  "神腦":       P.store,
-  "trade in價": P.bot,
-};
-const VENDOR_COLORS = {
-  "APPLE BAR": "#1d1d1f", "台哥大": "#e60012", "遠傳": "#00a0e9",
-  "台北101": "#8B4513", "STUDIO": "#9b59b6", "地標": "#e67e22",
-  "米可": "#8e44ad", "神腦": "#2c3e50", "trade in價": "#ff6b00"
-};
-const VENDOR_DISPLAY_NAMES = {
-  "trade in價": "EPBOX 自助回收",
-};
-
-const VENDOR_NOTES = {
-  "APPLE BAR": "Apple 授權經銷商", "台哥大": "台灣大哥大門市",
-  "遠傳": "遠傳電信門市", "台北101": "台北101門市",
-  "STUDIO": "Studio A 門市", "地標": "地標數位門市",
-  "米可": "米可數位門市", "神腦": "神腦國際門市",
-  "trade in價": "EPBOX 自助回收機參考價"
-};
-
-/* ════════════════════════════════
-   STATE
-════════════════════════════════ */
-let allModels = [];      // [{name, prices:{vendor:price}}]
-let selectedBase = "";
-let selectedStorage = 0;
-let batteryGood = true;
-let appCondition    = 'perfect'; // 'perfect' | 'scratched' | 'damaged'
-let phoneDestination = 'none';   // 'none' | 'family'
-
-const COND_MULT  = { perfect: 1.0, scratched: 0.9, damaged: 0.6 };
-const COND_LABEL = { perfect: '外觀完美', scratched: '有刮痕', damaged: '螢幕損壞' };
-const COND_EMOJI = { perfect: '✨', scratched: '🔸', damaged: '🔴' };
-let lastUpdated = "";
-let lastKnownPrices = {}; // { modelName: price } from Firebase
-
-/* ════════════════════════════════
-   HELPERS
-════════════════════════════════ */
-function baseName(name) {
-  return name.replace(/\s+\d+(GB|TB)/gi, "").trim();
-}
-function storageGB(name) {
-  const u = name.toUpperCase();
-  if (u.includes("1TB")) return 1024;
-  const m = u.match(/(\d+)GB/);
-  return m ? parseInt(m[1]) : 0;
-}
-function storageLabel(gb) { return gb >= 1024 ? "1TB" : `${gb}GB`; }
-function fmt(n) { return n.toLocaleString(); }
-
-function generationNumber(name) {
-  const u = name.toUpperCase();
-  if (u.includes("XS MAX")) return 109;
-  if (u.includes("XS"))     return 108;
-  if (u.includes("XR"))     return 107;
-  if (u.includes("SE") && (u.includes("2022") || u.includes("第3") || u.includes("3RD"))) return 106;
-  if (u.includes("SE"))     return 105;
-  const nums = [...u.matchAll(/(\d+)/g)].map(m => parseInt(m[1])).filter(n => n >= 11 && n <= 99);
-  return (nums[0] ?? 0) * 10;
-}
-function modelSubRank(name) {
-  const u = name.toUpperCase();
-  if (u.includes("PRO MAX")) return 6;
-  if (u.includes("PRO"))     return 5;
-  if (u.includes("PLUS"))    return 4;
-  if (u.includes("MINI"))    return 2;
-  if (u.endsWith(" E") || u.includes(" E ")) return 1;
-  return 3;
-}
-
-function averagePrice(prices) {
-  const vals = Object.entries(prices)
-    .filter(([v, p]) => AVG_VENDORS.has(v) && p > 0)
-    .map(([, p]) => p);
-  if (!vals.length) return null;
-  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
-}
-
-function getSeriesNum(name) {
-  const u = name.toUpperCase();
-  const m = u.match(/IPHONE\s+(\d+)/);
-  return m ? parseInt(m[1]) : 0;
-}
-
-/* ════════════════════════════════
-   FETCH from Firebase
-════════════════════════════════ */
-async function fetchData() {
-  try {
-    const [r, lkpRes] = await Promise.all([
-      fetch(FB_URL),
-      fetch("https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/epbox_last_known_prices.json"),
-    ]);
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const json = await r.json();
-    if (lkpRes.ok) { const lkp = await lkpRes.json(); if (lkp) lastKnownPrices = lkp; }
-
-    // Parse last updated
-    if (json?.meta?.lastUpdated) {
-      const d = new Date(json.meta.lastUpdated);
-      const tw = new Intl.DateTimeFormat("zh-TW", {
-        timeZone: "Asia/Taipei",
-        year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit"
-      }).format(d);
-      lastUpdated = tw;
-      document.getElementById("last-updated-1").textContent = "更新時間：" + tw;
-      document.getElementById("last-updated-2").textContent = "更新時間：" + tw;
-      document.getElementById("last-updated-calc").textContent = "更新時間：" + tw;
-    }
-
-    // Parse prices
-    const pricesData = json?.prices ?? {};
-    const parsed = [];
-    for (const entry of Object.values(pricesData)) {
-      if (!entry?.model) continue;
-      const name = entry.model;
-      if (!name.toUpperCase().includes("IPHONE")) continue;
-      const prices = {};
-      for (const v of VENDORS) {
-        const val = entry[v];
-        if (val != null && val > 0) prices[v] = Number(val);
-      }
-      parsed.push({ name, prices });
-    }
-
-    // Sort
-    allModels = parsed.sort((a, b) => {
-      const gA = generationNumber(a.name), gB = generationNumber(b.name);
-      if (gA !== gB) return gB - gA;
-      const rA = modelSubRank(a.name), rB = modelSubRank(b.name);
-      if (rA !== rB) return rB - rA;
-      return storageGB(a.name) - storageGB(b.name);
-    });
-
-    saveHistorySnapshot(allModels);
-    initCompare();
-    computeBestData();
-    renderBestAll();
-    checkAlerts(allModels);
-  } catch (e) {
-    console.error(e);
-    document.getElementById("compare-result").innerHTML =
-      '<div class="no-result">⚠️ 無法載入資料，請確認網路連線後重新整理</div>';
-  }
-}
-
-/* ════════════════════════════════
-   Tab 1: Compare
-════════════════════════════════ */
-function uniqueBaseNames() {
-  const seen = new Set();
-  return allModels.filter(m => {
-    const b = baseName(m.name);
-    if (seen.has(b)) return false;
-    seen.add(b); return true;
-  }).map(m => baseName(m.name));
-}
-
-function availableStorages(base) {
-  return [...new Set(
-    allModels.filter(m => baseName(m.name) === base).map(m => storageGB(m.name)).filter(g => g > 0)
-  )].sort((a, b) => a - b);
-}
-
-function getModel(base, gb) {
-  if (!gb) return allModels.find(m => baseName(m.name) === base);
-  return allModels.find(m => baseName(m.name) === base && storageGB(m.name) === gb);
-}
-
-function initCompare() {
-  const sel = document.getElementById("compare-model");
-  sel.innerHTML = '<option value="">── 請選擇機型 ──</option>';
-  uniqueBaseNames().forEach(b => {
-    const o = document.createElement("option");
-    o.value = b; o.textContent = b; sel.appendChild(o);
-  });
-  // Auto-select first
-  if (allModels.length) {
-    const first = baseName(allModels[0].name);
-    sel.value = first;
-    onModelChange();
-  }
-  initCalc();
-  initAlerts();
-}
-
-function setBattery(good) {
-  batteryGood = good;
-
-  // 同步 Tab 1 電池 pills
-  document.querySelectorAll('#battery-pills .pill').forEach(p => {
-    const isGoodPill = p.textContent.includes('≥');
-    p.classList.toggle('active', isGoodPill === good);
-  });
-
-  // 同步 Tab 5 電池 pills
-  document.querySelectorAll('.sp-batt-pill').forEach(b => {
-    const isGoodBtn = b.dataset.good === '1';
-    const isActive  = isGoodBtn === good;
-    b.style.border     = isActive ? '2px solid var(--ep-green)' : '2px solid var(--border)';
-    b.style.background = isActive ? '#edfaf3' : '#fff';
-    b.style.color      = isActive ? 'var(--ep-green)' : 'var(--text-gray)';
-    b.style.fontWeight = isActive ? '700' : '500';
-  });
-
-  renderCompare();
-  generateSalesScript();
-}
-
-function getBatteryDeduction(modelName) {
-  if (batteryGood) return 0;
-  // iPhone 14+：原廠 NT$2,290 / 副廠 ~NT$1,000 → 中位數 NT$1,600
-  // iPhone 13-：原廠 NT$1,590 / 副廠 ~NT$1,000 → 中位數 NT$1,300
-  return getSeriesNum(modelName) >= 14 ? 1600 : 1300;
-}
-
-function onModelChange() {
-  selectedBase = document.getElementById("compare-model").value;
-  const batteryRow = document.getElementById("battery-row");
-  if (!selectedBase) {
-    document.getElementById("storage-row").style.display = "none";
-    batteryRow.style.display = "none";
-    renderCompare();
-    return;
-  }
-  const storages = availableStorages(selectedBase);
-  const row = document.getElementById("storage-row");
-  if (storages.length > 1) {
-    row.style.display = "block";
-    const pills = document.getElementById("storage-pills");
-    pills.innerHTML = "";
-    selectedStorage = storages[0];
-    storages.forEach(gb => {
-      const btn = document.createElement("button");
-      btn.className = "pill" + (gb === selectedStorage ? " active" : "");
-      btn.textContent = storageLabel(gb);
-      btn.onclick = () => { selectedStorage = gb; document.querySelectorAll("#storage-pills .pill").forEach(p => p.classList.remove("active")); btn.classList.add("active"); renderCompare(); };
-      pills.appendChild(btn);
-    });
-  } else {
-    row.style.display = "none";
-    selectedStorage = storages[0] ?? 0;
-  }
-  batteryRow.style.display = "block";
-  renderCompare();
-}
-
-function renderCompare() {
-  const container = document.getElementById("compare-result");
-  if (!selectedBase) { container.innerHTML = '<div class="no-result" style="padding:40px 0">請選擇機型</div>'; return; }
-  const model = getModel(selectedBase, selectedStorage);
-  if (!model) { container.innerHTML = '<div class="no-result">找不到此機型資料</div>'; return; }
-
-  const prices = model.prices;
-  const deduction = getBatteryDeduction(model.name);
-
-  // 建立扣款後的價格（EPBOX 不扣，其他通路扣）
-  const adjustedPrices = {};
-  for (const [v, p] of Object.entries(prices)) {
-    adjustedPrices[v] = v === "trade in價" ? p : Math.max(0, p - deduction);
-  }
-
-  const avg = averagePrice(adjustedPrices);
-  const epboxPrice = adjustedPrices["trade in價"];
-  const vendorPrices = Object.entries(adjustedPrices)
-    .filter(([v]) => v !== "trade in價")
-    .map(([v, p]) => ({ vendor: v, price: p }))
-    .sort((a, b) => b.price - a.price);
-  const maxP = vendorPrices.length ? vendorPrices[0].price : 1;
-  const diff = (epboxPrice && avg) ? epboxPrice - avg : null;
-
-  let html = "";
-
-  // 電池 < 80% 優勢橫幅
-  if (!batteryGood) {
-    html += `
-    <div style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d);border-radius:16px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
-      <div style="font-size:24px;flex-shrink:0;">🔋</div>
-      <div>
-        <div style="font-size:13px;font-weight:800;color:#30d158;">EPBOX 不扣換電池費用！</div>
-        <div style="font-size:11px;color:#aaa;margin-top:2px;">其他通路已扣除換電池估算費用 NT$${fmt(deduction)}，EPBOX 不受影響</div>
-      </div>
-    </div>`;
-  }
-
-  // Average banner
-  if (avg) {
-    html += `
-    <div class="avg-banner">
-      <div style="display:flex;align-items:center;justify-content:center;width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:14px;flex-shrink:0">${ic(P.barChart,'#fff',24)}</div>
-      <div>
-        <div class="label">6家通路平均回收價</div>
-        <div class="price">NT$${fmt(avg)}</div>
-      </div>
-      <div class="tag">Apple Bar · 台哥大<br>遠傳 · 101 · STUDIO · 神腦</div>
-    </div>`;
-  }
-
-  // EPBOX trade-in ref
-  if (epboxPrice) {
-    const epDelta = deltaBadge(getPriceDelta(model.name, 'trade in價'));
-    html += `
-    <div class="epbox-ref-card">
-      <div class="epbox-ref-icon">${ic(P.bot,'#ff6b00',22)}</div>
-      <div>
-        <div class="epbox-ref-name">EPBOX 自助回收機 ${epDelta}</div>
-        <div class="epbox-ref-sub">24小時自助 · 即時入帳${!batteryGood ? ' · <span style="color:#30d158;font-weight:700">電池不扣款</span>' : ''}</div>
-      </div>
-      <div class="epbox-ref-price">
-        <div class="p">$${fmt(epboxPrice)}</div>
-        <div class="unit">NT$</div>
-      </div>
-    </div>`;
-  }
-
-  // Vendor prices
-  if (vendorPrices.length) {
-    const best = vendorPrices[0];
-    html += `<div class="vendor-header"><span class="title">各通路回收報價</span><span style="font-size:12px;color:var(--gold);font-weight:600;display:flex;align-items:center;gap:4px">${ic(P.crown,'#ff9500',13)} ${best.vendor}</span></div>`;
-    vendorPrices.forEach(({ vendor, price }) => {
-      const isBest = vendor === best.vendor;
-      const barW = Math.round((price / maxP) * 100);
-      const color = VENDOR_COLORS[vendor] ?? "#86868b";
-      const barColor = isBest ? "linear-gradient(to right, #ff9500, #ffcc00)" : `linear-gradient(to right, ${color}99, ${color}55)`;
-      const vDelta = deltaBadge(getPriceDelta(model.name, vendor));
-      const deductNote = !batteryGood ? `<span style="font-size:10px;color:#e74c3c;">已扣換電池費 $${fmt(deduction)}</span>` : '';
-      html += `
-      <div class="vendor-row${isBest ? " best" : ""}">
-        <div class="vendor-icon" style="background:${color}18">${ic(VENDOR_ICONS[vendor] ?? P.store, color, 20)}</div>
-        <div>
-          <div class="vendor-name">${vendor}${isBest ? '<span class="best-chip">最高</span>' : ""}</div>
-          <div class="vendor-note">${VENDOR_NOTES[vendor] ?? ""} ${deductNote}</div>
-        </div>
-        <div class="vendor-right">
-          <div class="vendor-price${isBest ? " best-price" : ""}">$${fmt(price)} ${vDelta}</div>
-          <div class="price-bar-wrap"><div class="price-bar" style="width:${barW}%;background:${barColor}"></div></div>
-        </div>
-      </div>`;
-    });
-  }
-
-  // Diff
-  if (diff !== null) {
-    const sign = diff >= 0 ? "+" : "";
-    html += `
-    <div class="diff-card">
-      <div class="diff-icon">${ic(P.upDown,'#5e5ce6',20)}</div>
-      <div>
-        <div class="diff-label">EPBOX 與均價差異</div>
-        <div class="diff-sub">EPBOX $${fmt(epboxPrice)} vs 均價 $${fmt(avg)}</div>
-      </div>
-      <div class="diff-val">${sign}$${fmt(diff)}</div>
-    </div>`;
-  }
-
-  // Disclaimer
-  const batteryNote = !batteryGood ? `換電池費用以原廠 / 副廠中位數估算（NT$${fmt(deduction)}），實際扣款依各通路現場而定。` : '';
-  html += `<div class="disclaimer" style="gap:8px">${ic(P.info,'#86868b',14)} 以上為參考估算，實際回收價依各通路現場評估、機況及活動優惠而不同。${batteryNote}</div>`;
-  container.innerHTML = html;
-}
-
-/* ════════════════════════════════
-   Tab 2: EPBOX Table
-════════════════════════════════ */
-/* ════════════════════════════════
-   Tab 2: Best Deals
-════════════════════════════════ */
-const BD_OTHER_KEYS = ['APPLE BAR','STUDIO','台北101','台哥大','地標'];
-let bdAllData = [];
-let bdCurrentFilter = 'all';
-let bdReady = false;
-
-function computeBestData() {
-  bdAllData = allModels.map(m => {
-    const epbox = Math.round(Number(m.prices['trade in價']) || 0);
-    const others = BD_OTHER_KEYS.map(k => Number(m.prices[k]) || 0).filter(v => v > 0);
-    const maxOther = others.length ? Math.max(...others) : 0;
-    const diff = epbox - maxOther;
-    return { model: m.name, epbox, maxOther, diff };
-  }).filter(d => d.epbox > 0 && d.maxOther > 0);
-  bdAllData.sort((a,b) => b.diff - a.diff || b.epbox - a.epbox);
-  bdReady = true;
-}
-
-function getBdModelSeries(model) {
-  const m = model.toUpperCase();
-  if (m.includes('IPHONE 16')) return 'iphone16';
-  if (m.includes('IPHONE 15')) return 'iphone15';
-  if (m.includes('IPHONE 14')) return 'iphone14';
-  if (m.includes('IPHONE 13')) return 'iphone13';
-  if (m.includes('IPHONE 12')) return 'iphone12';
-  return 'older';
-}
-
-function setBestFilter(filter, btn) {
-  bdCurrentFilter = filter;
-  document.querySelectorAll('.bd-filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderBestAll();
-}
-
-function bdFiltered(arr) {
-  if (bdCurrentFilter === 'all') return arr;
-  return arr.filter(d => getBdModelSeries(d.model) === bdCurrentFilter);
-}
-
-function renderBestAll() {
-  if (!bdReady) return;
-  const good  = bdFiltered(bdAllData.filter(d => d.diff >= 0)); // wins + ties
-  const lower = bdFiltered(bdAllData.filter(d => d.diff < 0));
-
-  const goodEl = document.getElementById('bd-good-section');
-  if (good.length) {
-    goodEl.style.display = 'block';
-    document.getElementById('bd-good-count').textContent = `${good.length} 款`;
-    document.getElementById('bd-good-list').innerHTML = good.map(d => bdRow(d)).join('');
-  } else { goodEl.style.display = 'none'; }
-
-  const lowEl = document.getElementById('bd-low-section');
-  if (lower.length) {
-    lowEl.style.display = 'block';
-    document.getElementById('bd-low-count').textContent = `${lower.length} 款`;
-    document.getElementById('bd-low-list').innerHTML = lower.map(d => bdRow(d)).join('');
-  } else { lowEl.style.display = 'none'; }
-}
-
-function bdRow(d) {
-  const modelDisplay = d.model.replace('IPHONE ', 'iPhone ');
-  const parts = modelDisplay.match(/^(iPhone \d+(?:\s+Pro(?:\s+Max)?)?(?:\s+Plus)?(?:\s+mini)?)\s+(.+)$/i);
-  const name = parts ? parts[1] : modelDisplay;
-  const cap  = parts ? parts[2] : '';
-
-  let rowClass, subClass, subText;
-  if (d.diff > 0) {
-    rowClass = 'win';  subClass = 'win';
-    subText = `比其他通路多 NT$${Math.round(d.diff).toLocaleString()}`;
-  } else if (d.diff === 0) {
-    rowClass = 'tie';  subClass = 'tie';
-    subText = '各通路同價，EPBOX 更方便';
-  } else {
-    rowClass = 'low';  subClass = 'low';
-    subText = `其他通路多 NT$${Math.round(Math.abs(d.diff)).toLocaleString()}`;
-  }
-
-  return `
-    <div class="bd-row ${rowClass}">
-      <div class="bd-row-left">
-        <div class="bd-row-model">${name}<span class="bd-row-cap">${cap}</span></div>
-        <div class="bd-row-sub ${subClass}">${subText}</div>
-      </div>
-      <div class="bd-row-right">
-        <div class="bd-row-price">NT$${d.epbox.toLocaleString()}<small> /台</small></div>
-      </div>
-    </div>`;
-}
-
-function toggleBdLower() {
-  const wrap  = document.getElementById('bd-low-list-wrap');
-  const arrow = document.getElementById('bd-low-arrow');
-  wrap.classList.toggle('open');
-  arrow.classList.toggle('open');
-}
-
-/* ════════════════════════════════
-   Tab 3: Locations
-════════════════════════════════ */
-const LOCATIONS = [
-  // AppleShop 3.0
-  { store: "燦坤 新岡山門市", city: "高雄市", district: "岡山區", addr: "高雄市岡山區溪東路68號2樓", appleShopLevel: "3.0", hours: "11:00–21:30" },
-  { store: "燦坤 新光華門市", city: "高雄市", district: "苓雅區", addr: "高雄市苓雅區光華一路160號1樓", appleShopLevel: "3.0", hours: "11:00–21:30" },
-  { store: "燦坤 斗六門市", city: "雲林縣", district: "斗六市", addr: "雲林縣斗六市中建西路64號", appleShopLevel: "3.0", hours: "11:00–21:30" },
-  // AppleShop 2.0
-  { store: "燦坤 自由門市", city: "高雄市", district: "左營區", addr: "高雄市左營區自由二路329號", appleShopLevel: "2.0", hours: "11:00–21:30" },
-  { store: "燦坤 華榮門市", city: "高雄市", district: "鼓山區", addr: "高雄市鼓山區華榮路345號", appleShopLevel: "2.0", hours: "11:00–21:30" },
-  { store: "燦坤 永華門市", city: "台南市", district: "安平區", addr: "台南市安平區永華路二段35號", appleShopLevel: "2.0", hours: "11:00–21:30" },
-  { store: "燦坤 中華門市", city: "台南市", district: "永康區", addr: "台南市永康區中華路149號", appleShopLevel: "2.0", hours: "11:00–21:30" },
-  { store: "燦坤 五甲門市", city: "高雄市", district: "鳳山區", addr: "高雄市鳳山區五甲二路219號", appleShopLevel: "2.0", hours: "11:00–21:30" },
-  // AppleShop White+
-  { store: "燦坤 右昌門市", city: "高雄市", district: "楠梓區", addr: "高雄市楠梓區德民路836號", appleShopLevel: "White+", hours: "11:00–21:30" },
+const L1=[
+  {id:'l1-ge',icon:'ige',title:'一般使用 / 上網瀏覽',desc:'日常使用、社群媒體、瀏覽器',hide:[]},
+  {id:'l1-vi',icon:'ivid',title:'看影片追劇',desc:'YouTube、Netflix、串流平台',hide:[]},
+  {id:'l1-do',icon:'idoc',title:'文書處理',desc:'Word、Excel、PowerPoint',hide:['iphone']},
+  {id:'l1-co',icon:'ics',title:'線上課程學習',desc:'遠距學習、視訊會議、筆記',hide:['iphone']}
+];
+const L2=[
+  {id:'l2-dr',icon:'idr',title:'繪圖 2D',desc:'Procreate、Illustrator',hide:['iphone']},
+  {id:'l2-ph',icon:'ipho',title:'影像編輯',desc:'Photoshop、Lightroom',hide:['iphone']},
+  {id:'l2-ve',icon:'ive',title:'影片編輯',desc:'Final Cut Pro、Premiere',hide:['iphone']},
+  {id:'l2-mu',icon:'imu',title:'音樂製作',desc:'Logic Pro、GarageBand',hide:['iphone']},
+  {id:'l2-3d',icon:'i3d',title:'3D 建模構圖',desc:'Cinema 4D、Blender',hide:['iphone']},
+  {id:'l2-cd',icon:'icd',title:'程式開發',desc:'Xcode、VSCode',hide:['iphone']},
+  {id:'l2-ai',icon:'iai',title:'大語言模型開發',desc:'AI 訓練、本地 LLM',hide:['iphone']},
+  {id:'l2-cam',icon:'icam',title:'專業攝影',desc:'三鏡頭系統、ProRAW、微距',hide:['macbook','ipad']},
+  {id:'l2-vid',icon:'ive',title:'專業錄影',desc:'ProRes 錄影、電影模式',hide:['macbook','ipad']},
+  {id:'l2-scr',icon:'iscr',title:'大螢幕需求',desc:'6.9 吋、長時間閱讀',hide:['macbook','ipad']},
+  {id:'l2-bat',icon:'ibat',title:'超長續航',desc:'重度使用、出差旅行',hide:['macbook','ipad']},
+  {id:'l2-spd',icon:'ispd',title:'極致效能',desc:'重度遊戲、多工處理',hide:['macbook','ipad']}
 ];
 
-function renderLocations() {
-  const q = document.getElementById("loc-search").value.trim().toLowerCase();
-  const city = document.getElementById("loc-city").value;
-  let data = LOCATIONS;
-  if (city) data = data.filter(l => l.city === city);
-  if (q) data = data.filter(l =>
-    l.store.toLowerCase().includes(q) ||
-    l.addr.toLowerCase().includes(q) ||
-    l.district.toLowerCase().includes(q)
-  );
-  document.getElementById("loc-count").textContent = "共 " + data.length + " 間";
-  const grid = document.getElementById("loc-grid");
-  const LEVEL_TAG = {
-    "3.0":    `<span class="loc-tag tag-blue">AppleShop 3.0</span>`,
-    "2.0":    `<span class="loc-tag tag-green">AppleShop 2.0</span>`,
-    "White+": `<span class="loc-tag tag-purple">AppleShop White+</span>`,
-  };
-  if (!data.length) { grid.innerHTML = '<div class="no-result">找不到符合條件的地點</div>'; return; }
-  grid.innerHTML = data.map(l => {
-    const q = encodeURIComponent(l.addr);
-    const googleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.store + ' ' + l.addr)}`;
-    const appleUrl  = `maps://maps.apple.com/?q=${encodeURIComponent(l.store)}&near=${q}`;
-    const levelTag = LEVEL_TAG[l.appleShopLevel] ?? '';
-    return `
-    <div class="loc-card">
-      <div class="loc-icon">${ic(P.store,'#00b96b',20)}</div>
-      <div style="flex:1">
-        <div class="loc-store">${l.store}</div>
-        <div class="loc-addr">${l.addr.startsWith(l.city + l.district) ? l.addr.slice((l.city + l.district).length) : l.addr}</div>
-        <div class="loc-tags">
-          ${levelTag}
-          <span class="loc-tag tag-gray">${ic(P.clock,'#555',11)} ${l.hours}</span>
-        </div>
-        <div>
-          <a class="nav-btn" href="${googleUrl}" target="_blank" rel="noopener">${ic(P.map,'#fff',13)} Google Maps</a>
-          <a class="nav-btn nav-btn-apple" href="${appleUrl}">${ic(P.nav,'#fff',13)} Apple Maps</a>
-        </div>
-      </div>
-    </div>`;
-  }).join("");
-}
-
-/* ════════════════════════════════
-   NEW IPHONES
-════════════════════════════════ */
-const NEW_IPHONES = [
-  { name: "iPhone 17",         price: 29900, best: false },
-  { name: "iPhone Air",        price: 36900, best: false },
-  { name: "iPhone 17 Pro",     price: 39900, best: true  },
-  { name: "iPhone 17 Pro Max", price: 44900, best: true  },
-];
-
-/* ════════════════════════════════
-   PRICE HISTORY  (localStorage)
-════════════════════════════════ */
-function todayKey() { return new Date().toISOString().slice(0, 10); }
-
-function getHistory() {
-  try { return JSON.parse(localStorage.getItem('epbox_ph') || '{}'); } catch { return {}; }
-}
-function saveHistorySnapshot(models) {
-  const h = getHistory();
-  const today = todayKey();
-  if (h[today]) return; // already saved today
-  h[today] = {};
-  models.forEach(m => { h[today][m.name] = { ...m.prices }; });
-  // keep last 60 days
-  const keys = Object.keys(h).sort();
-  if (keys.length > 60) keys.slice(0, keys.length - 60).forEach(k => delete h[k]);
-  localStorage.setItem('epbox_ph', JSON.stringify(h));
-}
-
-function getPriceDelta(modelName, vendor) {
-  if (vendor !== "trade in價") return null;
-  const m = allModels.find(x => x.name === modelName);
-  const cur = m?.prices?.["trade in價"];
-  const old = lastKnownPrices[modelName];
-  if (!cur || !old) return null;
-  return cur - old;
-}
-
-function deltaBadge(delta) {
-  if (delta === null || delta === 0) return '';
-  if (delta > 0) return `<span class="delta-up">▲ +$${fmt(Math.abs(delta))}</span>`;
-  return `<span class="delta-down">▼ −$${fmt(Math.abs(delta))}</span>`;
-}
-
-/* ════════════════════════════════
-   CALCULATOR  (Tab 3)
-════════════════════════════════ */
-let calcBase = '', calcStorage = 0;
-let trendChartInstance = null;
-
-function initCalc() {
-  const sel = document.getElementById('calc-model');
-  sel.innerHTML = '<option value="">── 請選擇 ──</option>';
-  uniqueBaseNames().forEach(b => {
-    const o = document.createElement('option');
-    o.value = b; o.textContent = b; sel.appendChild(o);
-  });
-}
-
-function onCalcModelChange() {
-  calcBase = document.getElementById('calc-model').value;
-  const row = document.getElementById('calc-storage-row');
-  if (!calcBase) { row.style.display = 'none'; renderCalculator(); return; }
-  const storages = availableStorages(calcBase);
-  if (storages.length > 1) {
-    row.style.display = 'block';
-    const pills = document.getElementById('calc-storage-pills');
-    pills.innerHTML = '';
-    calcStorage = storages[0];
-    storages.forEach(gb => {
-      const btn = document.createElement('button');
-      btn.className = 'pill' + (gb === calcStorage ? ' active' : '');
-      btn.textContent = storageLabel(gb);
-      btn.onclick = () => {
-        calcStorage = gb;
-        document.querySelectorAll('#calc-storage-pills .pill').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        renderCalculator();
-      };
-      pills.appendChild(btn);
-    });
-  } else {
-    row.style.display = 'none';
-    calcStorage = storages[0] ?? 0;
+const RULES={
+  macbook:{
+    'l1-ge':'macbook-air-m4','l1-vi':'macbook-air-m4','l1-do':'macbook-air-m4','l1-co':'macbook-air-m4',
+    'l2-dr':'macbook-pro-14-m4pro','l2-ph':'macbook-pro-14-m4pro','l2-ve':'macbook-pro-14-m4pro',
+    'l2-mu':'macbook-pro-14-m4pro','l2-3d':'macbook-pro-14-m4pro','l2-cd':'macbook-pro-14-m4pro',
+    'l2-ai':'macbook-pro-14-m5'
+  },
+  ipad:{
+    'l1-ge':'ipad-air-m3','l1-vi':'ipad-air-m3','l1-do':'ipad-air-m3','l1-co':'ipad-air-m3',
+    'l2-dr':'ipad-air-m3','l2-ph':'ipad-air-m3','l2-ve':'ipad-pro-m5',
+    'l2-mu':'ipad-pro-m5','l2-3d':'ipad-pro-m5','l2-cd':'ipad-pro-m5','l2-ai':'ipad-pro-m5'
+  },
+  iphone:{
+    'l1-ge':'iphone-17','l1-vi':'iphone-17',
+    'l2-cam':'iphone-17-pro','l2-vid':'iphone-17-pro',
+    'l2-scr':'iphone-17-pro-max','l2-bat':'iphone-17-pro-max','l2-spd':'iphone-17-pro'
   }
-  renderCalculator();
-}
+};
 
-function renderCalculator() {
-  const container = document.getElementById('calc-result');
-  if (!calcBase) { container.innerHTML = '<div class="no-result" style="padding:40px 0">請選擇舊機型號</div>'; return; }
-  const model = getModel(calcBase, calcStorage);
-  if (!model) { container.innerHTML = '<div class="no-result">找不到此機型資料</div>'; return; }
-
-  const tradeIn = model.prices['trade in價'] ?? 0;
-  const avg = averagePrice(model.prices) ?? 0;
-  const bestEntry = Object.entries(model.prices).filter(([v]) => v !== 'trade in價').sort((a,b)=>b[1]-a[1])[0];
-  const epDelta = deltaBadge(getPriceDelta(model.name, 'trade in價'));
-
-  let html = '';
-
-  // ── Value banner ──
-  html += `
-  <div class="avg-banner" style="margin-bottom:14px;">
-    <div style="width:52px;height:52px;background:rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-      ${ic(P.phone,'#fff',26)}
-    </div>
-    <div style="flex:1">
-      <div class="label" style="margin-bottom:2px">${model.name}</div>
-      <div class="price">NT$${fmt(tradeIn)}</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:2px;">EPBOX 自助回收參考價 ${epDelta}</div>
-    </div>
-    ${avg ? `<div class="tag" style="text-align:center">6家均價<br><strong>$${fmt(avg)}</strong></div>` : ''}
-  </div>`;
-
-  // ── Gap cards ──
-  html += `<div style="font-size:14px;font-weight:700;margin-bottom:10px;padding:0 2px;display:flex;align-items:center;gap:6px">
-    ${ic(P.arrowRight,'var(--text-dark)',15)} 換到新 iPhone 需補差價
-  </div>
-  <div class="calc-result-grid">`;
-
-  NEW_IPHONES.forEach(({ name, price, best }) => {
-    const gap     = price - tradeIn;
-    const monthly = Math.round(gap / 12);
-    const daily   = Math.round(gap / 365);
-    html += `
-    <div class="calc-card${best ? ' best' : ''}">
-      <div class="calc-model">${name}</div>
-      <div style="font-size:11px;margin-bottom:4px;opacity:.7">定價 NT$${fmt(price)}</div>
-      <div class="calc-gap">補 $${fmt(gap)}</div>
-      <div class="calc-meta">
-        月付 <strong>$${fmt(monthly)}</strong>・日付 <strong class="calc-daily">$${daily}</strong>
-      </div>
-    </div>`;
-  });
-  html += `</div>`;
-
-  // ── Trend chart ──
-  const history  = getHistory();
-  const histKeys = Object.keys(history).sort();
-  html += `
-  <div class="card" style="margin-top:4px;">
-    <div class="card-title" style="margin-bottom:12px">${ic(P.lineChart,'var(--apple-blue)',16)} 回收價走勢（EPBOX vs 6家均價）</div>`;
-
-  if (histKeys.length < 2) {
-    html += `<div class="chart-empty">
-      ${ic(P.lineChart,'#d2d2d7',44)}
-      <div style="font-size:13px;font-weight:600;margin-top:10px;">資料累積中</div>
-      <div style="font-size:11px;margin-top:6px;">每次造訪都會自動記錄一筆，歷史走勢將隨時間建立</div>
-    </div>`;
-  } else {
-    html += `<div class="chart-wrap"><canvas id="trend-chart"></canvas></div>`;
+const CUST={
+  macbook:{
+    student:{'l1-ge':'macbook-air-m4','l1-do':'macbook-air-m4'},
+    creator:{'l2-3d':'macbook-pro-14-m4pro','l2-ai':'macbook-pro-14-m5'}
+  },
+  ipad:{
+    student:{'l1-ge':'ipad-11-a16','l1-vi':'ipad-11-a16','l1-do':'ipad-air-m3','l1-co':'ipad-air-m3'},
+    elder:{'l1-ge':'ipad-11-a16','l1-vi':'ipad-11-a16'},
+    creator:{'l2-dr':'ipad-pro-m5','l2-ve':'ipad-pro-m5'}
+  },
+  iphone:{
+    student:{'l1-ge':'iphone-16e'},
+    creator:{'l1-vi':'iphone-17-pro-max','l2-cam':'iphone-17-pro-max','l2-vid':'iphone-17-pro-max'},
+    elder:{'l1-ge':'iphone-17'}
   }
-  html += `</div>`;
+};
 
-  container.innerHTML = html;
+let S={pt:null,ct:null,bg:null,l1:null,l2:null};
 
-  if (histKeys.length >= 2) {
-    if (trendChartInstance) { trendChartInstance.destroy(); trendChartInstance = null; }
-    drawTrendChart(model.name, history, histKeys);
+// 預算推薦規則（優先於 CUST/RULES）
+const BUDGET_RULES={
+  ipad:{
+    low:{'l1-ge':'ipad-11-a16','l1-vi':'ipad-11-a16','l1-do':'ipad-11-a16','l1-co':'ipad-11-a16'},
+    mid:{'l1-ge':'ipad-air-m3','l1-vi':'ipad-air-m3','l1-do':'ipad-air-m3','l1-co':'ipad-air-m3'}
+  },
+  iphone:{
+    low:{'l1-ge':'iphone-16e','l1-vi':'iphone-16e'},
+    mid:{'l1-ge':'iphone-17','l1-vi':'iphone-17'}
+  },
+  macbook:{
+    low:{'l1-ge':'macbook-air-m4','l1-vi':'macbook-air-m4','l1-do':'macbook-air-m4','l1-co':'macbook-air-m4'},
+    mid:{'l1-ge':'macbook-air-m4','l1-vi':'macbook-air-m4','l1-do':'macbook-air-m4','l1-co':'macbook-air-m4'}
+  }
+};
+
+// === Google Analytics + Firebase 事件追蹤 ===
+function trackEvent(category, action, label, value) {
+  if (typeof gtag === 'function') {
+    gtag('event', action, { 'event_category': category, 'event_label': label, 'value': value });
+  }
+  // 同步記錄到 Firebase
+  if (window.logToFirestore) {
+    window.logToFirestore(action, { category, label: label || '', value: value || 0 });
   }
 }
 
-function drawTrendChart(modelName, history, keys) {
-  const canvas = document.getElementById('trend-chart');
-  if (!canvas) return;
-  const labels   = keys.map(k => k.slice(5));
-  const epData   = keys.map(k => history[k]?.[modelName]?.['trade in價'] ?? null);
-  const avgData  = keys.map(k => {
-    const prices = history[k]?.[modelName];
-    if (!prices) return null;
-    const vals = Object.entries(prices).filter(([v,p]) => AVG_VENDORS.has(v) && p > 0).map(([,p]) => p);
-    return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : null;
-  });
-
-  trendChartInstance = new Chart(canvas.getContext('2d'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'EPBOX 自助機', data: epData,  borderColor: '#ff6b00', backgroundColor: 'rgba(255,107,0,0.08)', tension: 0.35, fill: true,  pointRadius: 4, pointBackgroundColor: '#ff6b00' },
-        { label: '6家均價',      data: avgData, borderColor: '#0071e3', backgroundColor: 'rgba(0,113,227,0.05)', tension: 0.35, fill: false, pointRadius: 4, pointBackgroundColor: '#0071e3', borderDash: [5,4] },
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 18, padding: 14 } },
-        tooltip: { callbacks: { label: c => `${c.dataset.label}: NT$${c.raw?.toLocaleString() ?? '─'}` } }
-      },
-      scales: {
-        y: { ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'k', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
-        x: { ticks: { font: { size: 10 } }, grid: { display: false } }
-      }
-    }
-  });
-}
-
-/* ════════════════════════════════
-   ALERTS  (Tab 4)
-════════════════════════════════ */
-function getAlerts() { try { return JSON.parse(localStorage.getItem('epbox_alerts') || '[]'); } catch { return []; } }
-function saveAlerts(a) { localStorage.setItem('epbox_alerts', JSON.stringify(a)); }
-function getLastPrices() { try { return JSON.parse(localStorage.getItem('epbox_last_prices') || '{}'); } catch { return {}; } }
-function saveLastPrices(p) { localStorage.setItem('epbox_last_prices', JSON.stringify(p)); }
-
-function initAlerts() {
-  const sel = document.getElementById('alert-model-sel');
-  sel.innerHTML = '<option value="">── 選擇機型 ──</option>';
-  allModels.forEach(m => {
-    const o = document.createElement('option');
-    o.value = m.name; o.textContent = m.name; sel.appendChild(o);
-  });
-  renderAlertList();
-  updateNotifyTip();
-}
-
-function addAlert() {
-  const model = document.getElementById('alert-model-sel').value;
-  if (!model) { alert('請先選擇機型'); return; }
-  const msg = encodeURIComponent('訂閱 ' + model);
-  const lineUrl = 'https://line.me/R/oaMessage/@wea3313n/?' + msg;
-  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-  if (isMobile) {
-    window.open(lineUrl, '_blank');
-  } else {
-    showLineQRModal(model, lineUrl);
+// ===== 登入 / 身份管理 =====
+function initLogin() {
+  const staff = JSON.parse(localStorage.getItem('salesStaff') || 'null');
+  if (staff) {
+    showStaffInfo(staff);
+    document.getElementById('loginModal').classList.add('hide');
   }
+  document.getElementById('loginStore').addEventListener('change', function() {
+    document.getElementById('loginBtn').disabled = !this.value;
+  });
 }
 
-function showLineQRModal(model, lineUrl) {
-  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(lineUrl);
-  document.getElementById('line-qr-model-name').textContent = model;
-  document.getElementById('line-qr-img').src = qrUrl;
-  document.getElementById('line-qr-modal').style.display = 'flex';
+function doLogin() {
+  const store = document.getElementById('loginStore').value;
+  if (!store) return;
+  const staff = { store, name: 'anonymous' };
+  localStorage.setItem('salesStaff', JSON.stringify(staff));
+  showStaffInfo(staff);
+  document.getElementById('loginModal').classList.add('hide');
+  if (window.logToFirestore) window.logToFirestore('login', { store });
 }
 
-function closeLineQRModal() {
-  document.getElementById('line-qr-modal').style.display = 'none';
+function showStaffInfo(staff) {
+  document.getElementById('staffLabel').textContent = staff.store;
+  document.getElementById('staffInfo').style.display = 'flex';
 }
 
-function removeAlert(i) {
-  const alerts = getAlerts();
-  alerts.splice(i, 1);
-  saveAlerts(alerts);
-  renderAlertList();
+function showLogin() {
+  document.getElementById('loginModal').classList.remove('hide');
 }
 
-function renderAlertList() {
-  const alerts  = getAlerts();
-  const container = document.getElementById('alert-list');
-  if (!container) return;
-  if (!alerts.length) {
-    container.innerHTML = '<div class="no-result" style="padding:24px">尚未訂閱任何機型</div>';
-    return;
-  }
-  container.innerHTML = alerts.map((model, i) => `
-    <div class="alert-item">
-      <div style="width:36px;height:36px;border-radius:10px;background:var(--ep-light);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        ${ic(P.bell,'#00b96b',16)}
-      </div>
-      <div class="alert-item-info">
-        <div class="alert-model-name">${model}</div>
-        <div class="alert-thresh">EPBOX 回收價下跌時通知</div>
-      </div>
-      <button class="alert-del" onclick="removeAlert(${i})">${ic(P.trash,'#86868b',14)}</button>
+document.addEventListener('DOMContentLoaded', () => {
+  initLogin();
+  renderLayer('l1b',L1,1);
+  renderLayer('l2b',L2,2);
+  initProd();
+  trackEvent('Page', 'page_view', 'Guide Mode', 1);
+});
+
+function renderLayer(id,items,layer){
+  document.getElementById(id).innerHTML=items.map(o=>`
+    <div class="no" data-id="${o.id}" data-hide="${o.hide.join(',')}" onclick="selNeed(${layer},'${o.id}',this)">
+      <svg class="ni"><use href="#${o.icon}"/></svg>
+      <div class="ntx"><div class="nt">${o.title}</div><div class="nd">${o.desc}</div></div>
+      <div class="ck"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
     </div>`).join('');
 }
 
-function checkAlerts(models) {
-  const subs = getAlerts();
-  if (!subs.length) return;
-  const lastPrices = getLastPrices();
-  const triggered = [];
-  const newPrices = { ...lastPrices };
+function swMode(m,btn){
+  document.querySelectorAll('.mb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  document.querySelectorAll('.ms').forEach(s=>s.classList.remove('on'));
+  document.getElementById(m==='guide'?'gMode':'pMode').classList.add('on');
+  // 追蹤模式切換
+  trackEvent('Navigation', 'mode_switch', m === 'guide' ? 'Guide Mode' : 'Product Mode', 1);
+}
+function unlock(id){document.getElementById(id).classList.remove('lk');}
+function lock(id){document.getElementById(id).classList.add('lk');}
 
-  models.forEach(m => {
-    const epboxPrice = m.prices['trade in價'];
-    if (!epboxPrice) return;
-    const prev = lastPrices[m.name];
-    if (subs.includes(m.name) && prev && epboxPrice < prev) {
-      triggered.push({ model: m.name, prev, curr: epboxPrice });
-      if (Notification.permission === 'granted') {
-        new Notification('📉 EPBOX 回收價下跌', {
-          body: `${m.name} EPBOX 價格：NT$${prev.toLocaleString()} → NT$${epboxPrice.toLocaleString()}`,
-        });
-      }
-    }
-    newPrices[m.name] = epboxPrice;
+function selPT(pt,el){
+  if(S.pt===pt){S={pt:null,ct:null,bg:null,l1:null,l2:null};el.classList.remove('on');lock('bCust');lock('bBudget');lock('bL1');lock('bL2');hideRes();return;}
+  S={pt:pt,ct:null,bg:null,l1:null,l2:null};
+  document.querySelectorAll('#pt-mb,#pt-ip,#pt-ph').forEach(c=>c.classList.remove('on'));el.classList.add('on');
+  document.querySelectorAll('#ct-st,#ct-of,#ct-cr,#ct-el').forEach(c=>c.classList.remove('on'));
+  document.querySelectorAll('#bg-free,#bg-mid,#bg-low').forEach(c=>c.classList.remove('on','bg-on-low','bg-on-mid'));
+  document.querySelectorAll('#l1b .no,#l2b .no').forEach(o=>o.classList.remove('s1','s2'));
+  filterNeeds(pt);
+  unlock('bCust');unlock('bBudget');unlock('bL1');lock('bL2');
+  hideRes();
+  trackEvent('Selection', 'product_type', pt, 1);
+}
+
+function selCT(ct,el){
+  if(S.ct===ct){S.ct=null;el.classList.remove('on');}
+  else{S.ct=ct;document.querySelectorAll('#ct-st,#ct-of,#ct-cr,#ct-el').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+  updRes();
+  if(S.ct) trackEvent('Selection', 'customer_type', ct, 1);
+}
+
+function selBG(bg,el){
+  document.querySelectorAll('#bg-free,#bg-mid,#bg-low').forEach(c=>c.classList.remove('on','bg-on-low','bg-on-mid'));
+  if(S.bg===bg){S.bg=null;}
+  else{
+    S.bg=bg;
+    el.classList.add('on');
+    if(bg==='low') el.classList.add('bg-on-low');
+    if(bg==='mid') el.classList.add('bg-on-mid');
+  }
+  updRes();
+}
+
+function selNeed(layer,id,el){
+  const key=layer===1?'l1':'l2';
+  const cls=layer===1?'s1':'s2';
+  const cont=el.closest('.bb');
+  if(S[key]===id){
+    S[key]=null;el.classList.remove(cls);
+    if(layer===1){S.l2=null;document.querySelectorAll('#l2b .no').forEach(o=>o.classList.remove('s2'));lock('bL2');}
+  }else{
+    S[key]=id;
+    cont.querySelectorAll('.no').forEach(o=>o.classList.remove(cls));el.classList.add(cls);
+    if(layer===1)unlock('bL2');
+    // 追蹤需求選擇
+    const needName = layer===1 ? L1.find(n=>n.id===id)?.title : L2.find(n=>n.id===id)?.title;
+    trackEvent('Selection', layer===1 ? 'need_l1' : 'need_l2', needName || id, 1);
+  }
+  updRes();
+}
+
+function filterNeeds(pt){
+  document.querySelectorAll('#l1b .no,#l2b .no').forEach(el=>{
+    const h=el.dataset.hide?el.dataset.hide.split(','):[];
+    el.classList.toggle('hd2',h.includes(pt));
   });
+}
 
-  saveLastPrices(newPrices);
+function updRes(){
+  if(!S.pt||!S.l1){hideRes();return;}
+  const need=S.l2||S.l1;
+  const ptR=RULES[S.pt]||{};
+  let pid=ptR[need]||ptR[S.l1];
+  if(!pid){hideRes();return;}
 
-  const wrap = document.getElementById('alert-triggered-wrap');
-  if (wrap) {
-    wrap.innerHTML = triggered.map(t => `
-      <div class="alert-triggered">
-        ${ic(P.alertTri,'#d48806',14)}
-        <div><strong>${t.model}</strong> EPBOX 回收價下跌：NT$${t.prev.toLocaleString()} → NT$${t.curr.toLocaleString()}</div>
-      </div>`).join('');
+  // 預算邏輯優先（若有設定預算且沒有選進階需求）
+  if(S.bg && S.bg!=='free' && !S.l2){
+    const br=BUDGET_RULES[S.pt]?.[S.bg]||{};
+    if(br[S.l1]) pid=br[S.l1];
+  } else if(S.ct && !S.l2){
+    // 客群邏輯（沒設預算才套用）
+    const cr=CUST[S.pt]?.[S.ct]||{};
+    if(cr[S.l1])pid=cr[S.l1];
   }
-}
 
-function requestNotifyPermission() {
-  if (!('Notification' in window)) return;
-  if (Notification.permission === 'default') {
-    Notification.requestPermission().then(() => updateNotifyTip());
-  }
-}
-
-function updateNotifyTip() {
-  const el = document.getElementById('notify-tip');
-  if (!el) return;
-  if (!('Notification' in window)) { el.textContent = '此瀏覽器不支援通知功能'; return; }
-  if (Notification.permission === 'granted') {
-    el.innerHTML = `${ic(P.checkCircle,'#00915a',13)} 通知已啟用，價格觸發時會自動提醒你`;
-  } else if (Notification.permission === 'denied') {
-    el.innerHTML = `${ic(P.alertTri,'#d48806',13)} 通知已被封鎖，請至瀏覽器設定中允許本頁通知`;
-  } else {
-    el.innerHTML = `<button class="perm-btn" onclick="requestNotifyPermission()">啟用瀏覽器通知</button>`;
-  }
-}
-
-/* ════════════════════════════════
-   Tab 5: EPBOX AI 分析
-════════════════════════════════ */
-/* ── Battery replacement fee ── */
-function batteryReplacementFee(model) {
-  const n = (model || '').toUpperCase();
-  if (n.includes('16') && n.includes('PRO')) return 4150;
-  if (n.includes('15') && n.includes('PRO')) return 4150;
-  if (n.includes('16')) return 3350;
-  if (n.includes('15')) return 3350;
-  if (n.includes('14')) return 3350;
-  if (n.includes('13')) return 2990;
-  if (n.includes('12')) return 2990;
-  if (n.includes('11')) return 2990;
-  return 2990;
-}
-
-/* ════════════════════════════════
-   Tab 5: Condition Selector
-════════════════════════════════ */
-function setCondition(lvl) {
-  appCondition = lvl;
-  document.querySelectorAll('.cond-btn').forEach(btn => {
-    const isActive = btn.dataset.cond === lvl;
-    if (btn.dataset.cond === 'perfect') {
-      btn.style.border      = isActive ? '2px solid var(--ep-green)' : '2px solid var(--border)';
-      btn.style.background  = isActive ? '#edfaf3' : '#fff';
-      btn.style.color       = isActive ? 'var(--ep-green)' : 'var(--text-gray)';
-      btn.style.fontWeight  = isActive ? '700' : '500';
-    } else if (btn.dataset.cond === 'scratched') {
-      btn.style.border      = isActive ? '2px solid var(--gold)' : '2px solid var(--border)';
-      btn.style.background  = isActive ? '#fff8e6' : '#fff';
-      btn.style.color       = isActive ? '#b07000' : 'var(--text-gray)';
-      btn.style.fontWeight  = isActive ? '700' : '500';
-    } else {
-      btn.style.border      = isActive ? '2px solid var(--red)' : '2px solid var(--border)';
-      btn.style.background  = isActive ? '#fff0f0' : '#fff';
-      btn.style.color       = isActive ? 'var(--red)' : 'var(--text-gray)';
-      btn.style.fontWeight  = isActive ? '700' : '500';
-    }
+  const prod=PRODUCTS.find(p=>p.id===pid);
+  if(!prod){hideRes();return;}
+  const pts=(SELLING_POINTS[prod.id]||[]).slice(0,4);
+  const custs=TARGET_CUSTOMERS[prod.id]||[];
+  const cust=S.ct?custs.find(c=>c.customer.includes(S.ct==='student'?'學生':S.ct==='office'?'商務':S.ct==='creator'?'創作':'長輩'))||custs[0]:custs[0];
+  const objs=OBJECTIONS[prod.id]||[];
+  document.getElementById('emp').style.display='none';
+  const rc=document.getElementById('rc');
+  const budgeTag=S.bg==='low'?'<span style="background:rgba(255,149,0,.2);color:var(--or);padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600;margin-left:8px">預算優先</span>':S.bg==='mid'?'<span style="background:rgba(48,209,88,.15);color:var(--gr);padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600;margin-left:8px">中等預算</span>':'';
+  rc.innerHTML=`
+    <div class="rh">
+      <div class="stag"><svg width="12" height="12"><use href="#istar"/></svg> 智慧推薦</div>
+      <div class="rn">${prod.name}${budgeTag}</div>
+      <span class="ct2">${prod.chip}</span><span style="font-size:12px;color:var(--mu)">${prod.display}</span>
+    </div>
+    <div class="rb">
+      <div class="sc-label"><i data-lucide="message-circle" style="width:13px;height:13px;vertical-align:-1px;margin-right:5px"></i>場景話術 <span class="sc-label-badge">AI 生成</span></div>
+      <div id="sceneArea"><div class="sc-loading"><span class="ai-spinner"></span> AI 正在根據這位客人生成話術...</div></div>
+      ${pts.length?`<div class="st">完整賣點參考</div>${pts.map(p=>`<div class="pt">${p}</div>`).join('')}`:''}`+
+      `${cust?`<div class="st">推薦話術</div><div class="pi"><div class="pn">${cust.customer}</div><div class="ptx">${cust.pitch}</div></div>`:''}
+      ${objs.length?`<div class="st">異議處理</div>${objs.map(o=>`<div class="ob"><div class="oq"><div class="obg">Q</div>${o.objection}</div><div class="oa">${o.response}</div></div>`).join('')}`:''}
+    </div>`;
+  rc.classList.remove('on');void rc.offsetWidth;rc.classList.add('on');
+  trackEvent('Recommendation', 'product_recommended', prod.name, 1);
+  trackEvent('Recommendation', 'recommendation_flow', `${S.pt}_${S.ct||'none'}_${S.bg||'none'}_${need}_${prod.id}`, 1);
+  // 詳細推薦記錄
+  if (window.logToFirestore) window.logToFirestore('recommendation', {
+    product: prod.name,
+    product_id: prod.id,
+    product_type: S.pt,
+    customer_type: S.ct || 'none',
+    budget: S.bg || 'free',
+    need_l1: S.l1,
+    need_l2: S.l2 || 'none'
   });
-  generateSalesScript();
+  // AI 生成場景話術
+  genSceneTalks(prod, {...S});
 }
 
-function setDestination(dest) {
-  phoneDestination = dest;
-  const DEST_STYLE = {
-    none:   { border: 'var(--apple-blue)', bg: '#e8f0ff', color: 'var(--apple-blue)' },
-    family: { border: 'var(--apple-blue)', bg: '#e8f0ff', color: 'var(--apple-blue)' },
-    backup: { border: 'var(--purple)',     bg: '#f0eeff', color: 'var(--purple)' },
+function hideRes(){
+  document.getElementById('emp').style.display='block';
+  document.getElementById('rc').classList.remove('on');
+}
+
+function initProd(){
+  const cats=[{id:'all',name:'全部'},{id:'iPhone',name:'iPhone'},{id:'iPad',name:'iPad'},{id:'Mac',name:'Mac'}];
+  document.getElementById('tabs').innerHTML=cats.map(c=>`<div class="tab ${c.id==='all'?'on':''}" onclick="filCat('${c.id}',this)">${c.name}</div>`).join('');
+  renderGrid('all');
+}
+
+function filCat(cat,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');
+  renderGrid(cat);document.getElementById('pdet').classList.remove('on');
+  // 追蹤產品直查分類
+  trackEvent('Product Direct', 'category_filter', cat, 1);
+}
+
+function renderGrid(cat){
+  const list=cat==='all'?PRODUCTS:PRODUCTS.filter(p=>p.category===cat);
+  document.getElementById('pgrid').innerHTML=list.map(p=>`
+    <div class="pc" onclick="selProd('${p.id}',this)">
+      <div class="pbg">${p.badge}</div><div class="pn2">${p.name}</div><div class="pch">${p.chip}</div>
+    </div>`).join('');
+}
+
+function selProd(id,el){
+  const p=PRODUCTS.find(x=>x.id===id);if(!p)return;
+  document.querySelectorAll('.pc').forEach(c=>c.classList.remove('on'));el.classList.add('on');
+  const pts=SELLING_POINTS[p.id]||[],custs=TARGET_CUSTOMERS[p.id]||[],objs=OBJECTIONS[p.id]||[];
+  const det=document.getElementById('pdet');
+  det.innerHTML=`
+    <div class="dh"><div class="dn">${p.name}</div><span class="ct2">${p.chip}</span><span style="font-size:12px;color:var(--mu)">${p.display}</span></div>
+    ${pts.length?`<div class="ds"><div class="dst">核心賣點 (${pts.length}個)</div>${pts.map(x=>`<div class="pt">${x}</div>`).join('')}</div>`:''}
+    ${custs.length?`<div class="ds"><div class="dst">目標客群 (${custs.length}組)</div>${custs.map(c=>`<div class="ci2"><div class="cn">${c.customer}</div><div class="ctx">${c.pitch}</div></div>`).join('')}</div>`:''}
+    ${objs.length?`<div class="ds"><div class="dst">異議處理 (${objs.length}個)</div>${objs.map(o=>`<div class="ob"><div class="oq"><div class="obg">Q</div>${o.objection}</div><div class="oa">${o.response}</div></div>`).join('')}</div>`:''}`;
+  det.classList.remove('on');void det.offsetWidth;det.classList.add('on');
+  setTimeout(()=>det.scrollIntoView({behavior:'smooth',block:'start'}),100);
+  // 追蹤產品直查
+  trackEvent('Product Direct', 'product_viewed', p.name, 1);
+}
+</script>
+<script>
+// ===== 場景話術 AI 生成 =====
+const SCENE_SYSTEM = `你是 Apple 門市的資深銷售顧問。根據客人的輪廓和產品賣點，從中挑出最相關的 2-3 個，包裝成自然的銷售對話。
+
+輸出格式（JSON，不要加任何其他文字）：
+{
+  "scenes": [
+    {
+      "hook": "自然切入句，像真人說話，15字以內，要能引起客人共鳴，例如：「你剛說常拍小孩對不對？」",
+      "point": "這個賣點翻譯成客人聽得懂的好處，20字以內，不要用規格語言",
+      "scene": "用一個生活場景說明為什麼這個對他重要，30-40字，讓客人說「對對對就是這樣」"
+    }
+  ]
+}
+
+重要原則：
+- hook 要針對這位客人的身份和需求，不是通用的
+- point 不要說規格數字，要說「你可以...」「這樣你就能...」
+- scene 要描述客人的真實生活情境
+- 只挑最相關的 2-3 個，寧缺勿濫`;
+
+let sceneReqId = 0;
+
+async function genSceneTalks(prod, state) {
+  const reqId = ++sceneReqId;
+  const pts = (SELLING_POINTS[prod.id] || []).join('\n');
+  const ctLabel = state.ct === 'student' ? '學生' : state.ct === 'office' ? '上班族/商務人士' : state.ct === 'creator' ? '創作者/設計師' : state.ct === 'elder' ? '長輩(50歲以上)' : '一般消費者';
+  const bgLabel = state.bg === 'low' ? '，預算有限' : state.bg === 'mid' ? '，中等預算' : '';
+  const needMap = {
+    'l1-ge':'一般使用/上網','l1-vi':'看影片追劇','l1-do':'文書處理','l1-co':'線上課程',
+    'l2-cam':'專業攝影','l2-vid':'專業錄影','l2-ve':'影片剪輯','l2-ph':'影像編輯',
+    'l2-dr':'繪圖設計','l2-cd':'程式開發','l2-ai':'AI開發','l2-3d':'3D建模',
+    'l2-mu':'音樂製作','l2-scr':'大螢幕需求','l2-bat':'超長續航','l2-spd':'極致效能'
   };
-  document.querySelectorAll('.dest-btn').forEach(btn => {
-    const isActive = btn.dataset.dest === dest;
-    const s = DEST_STYLE[btn.dataset.dest] || DEST_STYLE.none;
-    btn.style.border     = isActive ? `2px solid ${s.border}` : '2px solid var(--border)';
-    btn.style.background = isActive ? s.bg : '#fff';
-    btn.style.color      = isActive ? s.color : 'var(--text-gray)';
-    btn.style.fontWeight = isActive ? '700' : '500';
-  });
-  generateSalesScript();
+  const needLabel = needMap[state.l2 || state.l1] || '一般使用';
+
+  const userMsg = `客人背景：${ctLabel}${bgLabel}，主要需求：${needLabel}
+推薦產品：${prod.name}（${prod.chip}）
+產品賣點清單：
+${pts}
+
+請針對這位客人，挑出最有共鳴的 2-3 個賣點，包裝成自然的銷售對話。`;
+
+  try {
+    const resp = await fetch('https://anthropic-proxy.z0910861851.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 600,
+        system: SCENE_SYSTEM,
+        messages: [{ role: 'user', content: userMsg }]
+      })
+    });
+    const data = await resp.json();
+    // 確保這個 request 還是最新的（避免舊的覆蓋新的）
+    if (reqId !== sceneReqId) return;
+    let text = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
+    const result = JSON.parse(text);
+    renderSceneTalks(result.scenes || []);
+  } catch(e) {
+    if (reqId !== sceneReqId) return;
+    const area = document.getElementById('sceneArea');
+    if (area) area.innerHTML = '<div style="font-size:12px;color:var(--mu);padding:8px">話術生成失敗，請重新選擇</div>';
+  }
 }
 
-/* ════════════════════════════════
-   Tab 5: Sales Script Generator
-════════════════════════════════ */
-function generateSalesScript() {
-  const resultEl = document.getElementById('sp-result');
+function renderSceneTalks(scenes) {
+  const area = document.getElementById('sceneArea');
+  if (!area || !scenes.length) return;
+  area.innerHTML = scenes.map((s, i) => `
+    <div class="sc-block">
+      <div class="sc-hook"><span class="sc-num">${i+1}</span><span class="sc-hook-text">「${s.hook}」</span></div>
+      <hr class="sc-divider">
+      <div class="sc-point"><i data-lucide="check-circle" style="width:12px;height:12px;vertical-align:-1px;margin-right:4px"></i>${s.point}</div>
+      <div class="sc-scene">${s.scene}</div>
+    </div>
+  `).join('');
+  if (window.refreshIcons) window.refreshIcons();
+}
 
-  // 讀 Tab 1 已選的狀態
-  const model = getModel(selectedBase, selectedStorage);
-  if (!model) {
-    resultEl.innerHTML = `
-      <div style="text-align:center;padding:48px 20px;color:var(--text-gray);">
-        <div style="font-size:36px;margin-bottom:12px;">👈</div>
-        <div style="font-size:15px;font-weight:700;color:var(--text-dark);margin-bottom:6px;">請先選好機型</div>
-        <div style="font-size:13px;line-height:1.6;">到「各通路比較」選好顧客的手機型號和容量，<br>回到這裡話術就會自動出現。</div>
-      </div>`;
+
+// ===== 語音收音功能 =====
+let recognition = null;
+let isRecording = false;
+
+function initSpeech() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return null;
+  const r = new SpeechRecognition();
+  r.lang = 'zh-TW';
+  r.continuous = true;
+  r.interimResults = true;
+  return r;
+}
+
+function toggleMic() {
+  const btn = document.getElementById('micBtn');
+  const status = document.getElementById('micStatus');
+  const input = document.getElementById('aiInput');
+
+  if (isRecording) {
+    // 停止收音，等 onend 後再分析
+    isRecording = false;
+    btn.classList.remove('recording');
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>';
+    status.textContent = '⏳ 處理中...';
+    if (recognition) recognition.stop();
     return;
   }
 
-  const modelDisplay = model.name.replace('IPHONE ', 'iPhone ');
-  const basePrice    = Math.round(Number(model.prices['trade in價']) || 0);
-  const mult         = COND_MULT[appCondition];
-  const adjBase      = Math.round(basePrice * mult);
-  const adjBonus     = Math.round(adjBase * 0.1);
-  const adjTotal     = adjBase + adjBonus;
-
-  const otherPrices  = BD_OTHER_KEYS.map(k => Number(model.prices[k]) || 0).filter(v => v > 0);
-  const maxOther     = otherPrices.length ? Math.max(...otherPrices) : 0;
-  const diff         = adjTotal - maxOther;
-  const fee          = batteryReplacementFee(model.name);
-  const deduction    = getBatteryDeduction(model.name);
-
-  const sections = [];
-
-  // 開場（依外觀狀況調整說法）
-  if (appCondition === 'perfect') {
-    sections.push({ icon: '👋', label: '開場白', color: '#e8f4ff', border: '#b0d4f0', text:
-      `我幫您查了一下，您的 ${modelDisplay} 外觀這麼好，EPBOX 自助回收報價大約是 NT$${adjTotal.toLocaleString()}（回收 ${adjBase.toLocaleString()} + 10% 補貼 ${adjBonus.toLocaleString()}）。`
-    });
-  } else if (appCondition === 'scratched') {
-    sections.push({ icon: '👋', label: '開場白', color: '#e8f4ff', border: '#b0d4f0', text:
-      `我幫您查了一下，即使外觀有些刮痕，EPBOX 自助回收報價大約還是 NT$${adjTotal.toLocaleString()}（回收 ${adjBase.toLocaleString()} + 10% 補貼 ${adjBonus.toLocaleString()}）。`
-    });
-  } else {
-    sections.push({ icon: '👋', label: '開場白', color: '#e8f4ff', border: '#b0d4f0', text:
-      `我幫您查了一下，螢幕有損傷的話，EPBOX 自助回收報價大約是 NT$${adjTotal.toLocaleString()}（回收 ${adjBase.toLocaleString()} + 10% 補貼 ${adjBonus.toLocaleString()}）。`
-    });
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    status.textContent = '⚠️ 此瀏覽器不支援語音收音，請改用 Chrome';
+    return;
   }
 
-  // 價格優勢 / 外觀加分說明
-  if (appCondition === 'scratched') {
-    sections.push({ icon: '💡', label: '外觀刮痕說明', color: '#fff8e6', border: '#ffd880', text:
-      `其他通路遇到有刮痕的手機也會扣錢，而且通常沒有明確標準、講不清楚。EPBOX 固定只扣一成，非常透明，不會被殺價。`
-    });
-  } else if (appCondition === 'damaged') {
-    sections.push({ icon: '💡', label: '螢幕損壞說明', color: '#fff0f0', border: '#f0b0b0', text:
-      `其他通路遇到螢幕損壞大多是直接大砍或不收。EPBOX 還是給六成的回收價，加上 10% 補貼，這個條件下算是相當好的選擇了。`
-    });
-  } else if (diff > 0) {
-    sections.push({ icon: '💰', label: '價格優勢', color: '#edfaf3', border: '#a8e0c4', text:
-      `這個價格比 Apple Bar、台哥大、遠傳等其他通路都還要高，比最高的通路還多 NT$${diff.toLocaleString()}，是目前市場上最好的回收價！`
-    });
-  } else if (diff >= -1000) {
-    sections.push({ icon: '💰', label: '價格說明', color: '#edf4ff', border: '#b0c8f0', text:
-      `這個價格跟其他通路差不多，但 EPBOX 不用預約、不用等、不用議價，現在就能馬上完成，比去其他地方方便很多。`
-    });
-  } else {
-    sections.push({ icon: '💰', label: '價格說明', color: '#f5f5f7', border: '#d0d0d5', text:
-      `雖然其他通路報價稍高一些，但 EPBOX 全程自助、即時入帳，不用跑去別家，就在這裡幾分鐘搞定。`
-    });
-  }
+  recognition = initSpeech();
+  let finalText = input.value.trim();
 
-  // 電池 × 去向 — 四種組合
-  if (!batteryGood && phoneDestination === 'family') {
-    // 有家人承接 + 電池差 → 最強勸回收論點
-    sections.push({ icon: '👨‍👩‍👧🔋', label: '傳家人 × 電池考量', color: '#fff4e6', border: '#ffc078', text:
-      `想傳給家人用，但電池低於 80%，直接拿去用會很快沒電、體驗很差，傳之前通常要先換電池。官方換電池要 NT$${fee.toLocaleString()}，加上手機本身年紀，花這筆錢維修其實不太划算。\n\n不如現在用 EPBOX 回收拿到 NT$${adjTotal.toLocaleString()}，再用這筆錢幫家人貼一支新機，從頭到尾都是新的，用起來也更安心！`
-    });
-  } else if (!batteryGood && phoneDestination === 'none') {
-    // 沒有人承接 + 電池差 → 雙重理由立即回收
-    sections.push({ icon: '🔋', label: '電池建議', color: '#fff8e6', border: '#ffd880', text:
-      `電池低於 80%，換電池官方要 NT$${fee.toLocaleString()}，維修成本偏高。加上手機沒有人要承接，放著只會越來越不值錢。現在回收能拿 NT$${adjTotal.toLocaleString()}，是目前最划算的選擇！`
-    });
-  } else if (!batteryGood) {
-    // 電池差（去向未選）
-    const notWorth = deduction >= adjTotal * 0.8;
-    sections.push({ icon: '🔋', label: '電池建議', color: '#fff8e6', border: '#ffd880', text:
-      notWorth
-        ? `您的電池健康度低，換電池官方要收 NT$${fee.toLocaleString()}，換了也沒多少錢，直接回收換現金反而比較划算！`
-        : `您的電池健康度偏低，換電池大概要 NT$${fee.toLocaleString()}。直接回收省掉這筆開銷，把現金拿去貼換新機更實在。`
-    });
-  }
+  recognition.onstart = () => {
+    isRecording = true;
+    btn.classList.add('recording');
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>';
+    status.textContent = '🔴 收音中⋯ 再按一次停止並分析';
+    status.classList.add('active');
+    if (window.refreshIcons) window.refreshIcons();
+  };
 
-  // 舊機去向建議
-  if (phoneDestination === 'none') {
-    sections.push({ icon: '📅', label: '舊機去向', color: '#f0f0ff', border: '#c0b8f0', text:
-      `如果沒有家人要承接這支手機，放著只會越來越不值錢——手機殘值每年都在下滑，現在能拿 NT$${adjTotal.toLocaleString()}，放個一兩年可能就剩一半。趁現在殘值還在，早回收早划算！`
-    });
-  } else if (phoneDestination === 'family' && batteryGood) {
-    // 有家人承接 + 電池健康 → 溫和建議，不強推
-    sections.push({ icon: '👨‍👩‍👧', label: '傳家人建議', color: '#f0f4ff', border: '#b0c4f0', text:
-      `如果家人確定要用，電池狀況還不錯，傳下去完全沒問題。不過這支手機現在還有 NT$${adjTotal.toLocaleString()} 的回收殘值，也可以評估看看：用這筆錢幫家人貼一支更新的機型，使用體驗會更好，之後換機也更有彈性。`
-    });
-  } else if (phoneDestination === 'backup') {
-    // 備用機 — 兩段：修機空窗 + 資料安全
-    const batteryNote = !batteryGood
-      ? `而且電池低於 80%，備用機本身撐不了多久，緊急時刻根本不夠用。` : '';
-    sections.push({ icon: '🔒', label: '備用機：修機空窗？', color: '#f3eeff', border: '#c8b0f0', text:
-      `如果留備用機是為了修機期間有機可用——現在 Apple 授權維修站都可以線上預約，在預約時間內送到就好，當天就能取機，完全不需要備用機來填空窗期。${batteryNote}`
-    });
-    sections.push({ icon: '☁️', label: '備用機：資料安全？', color: '#e8f4ff', border: '#b0d4f0', text:
-      `如果是擔心手機突然壞掉、資料不見才留備用機——這個邏輯其實有個盲點：手機如果嚴重到無法開機，根本沒辦法手動把資料轉移到備用機，備用機這時候完全幫不上忙。\n\n真正的解法是開啟 iCloud 備份，只要有在充電、連 Wi-Fi，資料就自動上雲端。手機壞了換新機直接還原，完全不依賴備用機。iCloud 50GB 方案一個月才幾十塊，比讓舊機閒置折舊划算太多了。\n\n現在回收拿 NT$${adjTotal.toLocaleString()}，再訂個 iCloud，兩個問題一次解決！`
-    });
-  }
+  recognition.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        finalText += e.results[i][0].transcript;
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    input.value = finalText + interim;
+  };
 
-  // EPBOX 優點
-  sections.push({ icon: '⚡', label: 'EPBOX 優點', color: '#f3eeff', border: '#c8b0f0', text:
-    `EPBOX 全程自助，大概 5 到 10 分鐘就完成，錢馬上就到帳。不用預約、不用跑去別的地方，就在我們店裡現在就可以做。`
-  });
+  recognition.onerror = (e) => {
+    status.textContent = '收音失敗：' + e.error;
+    isRecording = false;
+    btn.classList.remove('recording');
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>';
+    status.classList.remove('active');
+    if (window.refreshIcons) window.refreshIcons();
+  };
 
-  // 邀請
-  sections.push({ icon: '😊', label: '邀請試算', color: '#edfaf3', border: '#a8e0c4', text:
-    `要不要讓我帶您去試試看？放進去完全免費估價，不滿意可以不用賣，完全沒有任何壓力！`
-  });
+  recognition.onend = () => {
+    if (isRecording) {
+      recognition.start(); // 持續收音
+    } else {
+      // 收音結束，自動分析
+      status.textContent = '';
+      status.classList.remove('active');
+      if (window.refreshIcons) window.refreshIcons();
+      setTimeout(() => {
+        if (input.value.trim()) analyzeCustomer();
+      }, 300);
+    }
+  };
 
-  const fullText = sections.map(s => `【${s.label}】\n${s.text}`).join('\n\n');
-  const safeText = fullText.replace(/\\/g,'\\\\').replace(/`/g,'\\`');
-
-  // 標題列：機型 + 外觀 + 電池 badge
-  const condBadgeColor = appCondition === 'perfect' ? '#00b96b' : appCondition === 'scratched' ? '#b07000' : 'var(--red)';
-  let html = `
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-      <div style="font-size:15px;font-weight:800;">${modelDisplay}</div>
-      <div style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:${condBadgeColor};color:#fff;">
-        ${COND_EMOJI[appCondition]} ${COND_LABEL[appCondition]}
-      </div>
-      <div style="font-size:11px;color:var(--text-gray);font-weight:500;">${batteryGood ? '🟢 電池健康' : '🔴 電池偏低'}</div>
-    </div>
-    <div style="background:#f0faf5;border:1px solid #a8e0c4;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div style="font-size:11px;color:var(--text-gray);font-weight:600;margin-bottom:2px;">EPBOX 預估報價</div>
-        <div style="font-size:22px;font-weight:900;color:var(--ep-green);">NT$${adjTotal.toLocaleString()}</div>
-        <div style="font-size:11px;color:var(--text-gray);margin-top:2px;">回收 ${adjBase.toLocaleString()} + 補貼 ${adjBonus.toLocaleString()}</div>
-      </div>
-      <div style="text-align:right;font-size:11px;color:var(--text-gray);line-height:1.8;">
-        <div>× ${(mult * 100).toFixed(0)}% 機況</div>
-        <div>× 110% 含補貼</div>
-      </div>
-    </div>`;
-
-  sections.forEach(s => {
-    html += `<div style="background:${s.color};border:1px solid ${s.border};border-radius:14px;padding:14px 16px;margin-bottom:10px;">
-      <div style="font-size:11px;font-weight:700;color:#555;margin-bottom:6px;">${s.icon} ${s.label}</div>
-      <div style="font-size:15px;line-height:1.75;color:var(--text-dark);font-weight:500;">${s.text}</div>
-    </div>`;
-  });
-
-  html += `<button style="width:100%;padding:14px;background:var(--ep-dark);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:2px;"
-    onclick="(function(btn){ navigator.clipboard.writeText(\`${safeText}\`).then(()=>{ btn.textContent='✅ 已複製！'; setTimeout(()=>{ btn.textContent='📋 複製完整話術'; },1500); }); })(this)">
-    📋 複製完整話術
-  </button>`;
-
-  resultEl.innerHTML = html;
+  recognition.start();
 }
 
-/* ════════════════════════════════
-   Tab Switch
-════════════════════════════════ */
-function switchTab(id, btn) {
-  document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
-  document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
-  document.getElementById("tab-" + id).classList.add("active");
-  btn.classList.add("active");
-  if (id === 'analytics') generateSalesScript();
+// ===== AI 快速分析功能 =====
+const AI_SYSTEM = `你是 Apple 授權經銷商的資深銷售 AI 助手。根據客人說的話，用你的理解力和語意判斷來分析客人輪廓。
+
+可選的產品類型(pt)：macbook, ipad, iphone
+可選的客群(ct)：student（學生）, office（上班族）, creator（創作者）, elder（長輩），不確定就填 null
+可選的預算(bg)：free（不限預算）, mid（中等預算、CP值優先）, low（預算有限、越便宜越好）
+可選的第一層需求(l1)：l1-ge（一般/上網）, l1-vi（看影片）, l1-do（文書，限macbook/ipad）, l1-co（課程，限macbook/ipad）
+可選的第二層需求(l2)：l2-dr（繪圖2D）, l2-ph（影像編輯）, l2-ve（影片編輯）, l2-mu（音樂）, l2-3d（3D建模）, l2-cd（程式開發）, l2-ai（AI開發）, l2-cam（專業攝影，限iphone）, l2-vid（專業錄影，限iphone）, l2-scr（大螢幕，限iphone）, l2-bat（超長續航，限iphone）, l2-spd（極致效能，限iphone），不確定就填 null
+
+預算判斷方式（用語意理解，不是死背關鍵字）：
+- bg=low：客人整體語意表達「想買最便宜的」「錢不夠多」「能省則省」「夠用就好」「買個基本的」等傾向，不管用什麼說法
+- bg=mid：客人表達「不需要最貴但也不要太差」「CP值」「中等」「普通」等傾向
+- bg=free：客人沒提到預算限制，或表達「要最好的」「不差錢」等傾向
+- 如果客人說了具體金額，根據該金額判斷（iphone<25000、ipad<20000、mac<40000 → low）
+
+判斷原則：理解客人說話的整體意圖和情境，不要只看單一詞彙。輸入內容可能來自語音辨識，沒有標點符號、句子不完整、中英文夾雜都很正常，要盡力理解語意做出判斷。
+
+【重要】你只能輸出一個 JSON 物件，絕對不能有任何其他文字或說明。直接輸出 JSON，不要用\`\`\`包起來：
+{"pt":"產品類型","ct":"客群或null","bg":"預算","l1":"第一層需求","l2":"第二層需求或null","pitch":"針對這位客人量身打造的推薦話術，自然有溫度，50-80字，根據身份和需求個人化，不要提產品名稱"}`;
+
+async function analyzeCustomer() {
+  const input = document.getElementById('aiInput').value.trim();
+  if (!input) return;
+  const btn = document.getElementById('aiBtn');
+  const btnText = document.getElementById('aiBtnText');
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="ai-spinner"></span> 分析中';
+  try {
+    const resp = await fetch('https://anthropic-proxy.z0910861851.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 400,
+        system: AI_SYSTEM,
+        messages: [{ role: 'user', content: input }]
+      })
+    });
+    const data = await resp.json();
+    console.log('AI response:', JSON.stringify(data));
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    let text = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
+    applyAIResult(JSON.parse(text), input);
+  } catch(e) {
+    console.error('AI error:', e);
+    document.getElementById('aiBtnText').textContent = '失敗:' + e.message.slice(0,20);
+  }
+  btn.disabled = false;
+  btnText.textContent = '分析客人';
 }
 
-/* ════════════════════════════════
-   INIT
-════════════════════════════════ */
-document.getElementById("compare-result").innerHTML = '<div class="loading-state"><div class="spinner"></div>載入最新回收價格中…</div>';
-
-renderLocations();
-fetchData();
-
-// Init Lucide static icons after DOM ready
-document.addEventListener("DOMContentLoaded", () => lucide.createIcons());
-if (document.readyState !== "loading") lucide.createIcons();
+function applyAIResult(r, input = '') {
+  S = { pt: null, ct: null, bg: null, l1: null, l2: null };
+  document.querySelectorAll('.cd,.no').forEach(el => el.classList.remove('on','s1','s2','bg-on-low','bg-on-mid'));
+  lock('bCust'); lock('bBudget'); lock('bL1'); lock('bL2'); hideRes();
+  // 切換到引導模式
+  document.querySelectorAll('.mb').forEach(b => b.classList.remove('on'));
+  document.querySelector('.mb').classList.add('on');
+  document.querySelectorAll('.ms').forEach(s => s.classList.remove('on'));
+  document.getElementById('gMode').classList.add('on');
+  // 選產品
+  if (r.pt) {
+    const ptMap = { macbook:'pt-mb', ipad:'pt-ip', iphone:'pt-ph' };
+    const ptEl = document.getElementById(ptMap[r.pt]);
+    if (ptEl) selPT(r.pt, ptEl);
+  }
+  // 選客群
+  if (r.ct) {
+    const ctMap = { student:'ct-st', office:'ct-of', creator:'ct-cr', elder:'ct-el' };
+    const ctEl = document.getElementById(ctMap[r.ct]);
+    if (ctEl) selCT(r.ct, ctEl);
+  }
+  // 選預算
+  if (r.bg && r.bg !== 'free') {
+    const bgEl = document.getElementById('bg-' + r.bg);
+    if (bgEl) selBG(r.bg, bgEl);
+  }
+  // 選需求 L1
+  if (r.l1) {
+    const l1El = document.querySelector(`#l1b [data-id="${r.l1}"]`);
+    if (l1El) selNeed(1, r.l1, l1El);
+  }
+  // 選需求 L2
+  if (r.l2) {
+    const l2El = document.querySelector(`#l2b [data-id="${r.l2}"]`);
+    if (l2El) selNeed(2, r.l2, l2El);
+  }
+  // 顯示分析 tags 和話術
+  const tagMap = {
+    macbook:'MacBook', ipad:'iPad', iphone:'iPhone',
+    student:'學生', office:'上班族', creator:'創作者', elder:'長輩',
+    free:'不限預算', mid:'中等預算', low:'預算有限',
+    'l1-ge':'一般使用','l1-vi':'看影片','l1-do':'文書','l1-co':'課程',
+    'l2-cam':'專業攝影','l2-vid':'專業錄影','l2-ve':'影片剪輯','l2-ph':'影像編輯',
+    'l2-dr':'繪圖','l2-cd':'程式開發','l2-ai':'AI開發','l2-3d':'3D建模',
+    'l2-mu':'音樂','l2-scr':'大螢幕','l2-bat':'超長續航','l2-spd':'極致效能'
+  };
+  const tags = [];
+  if (r.pt) tags.push(`<span class="ai-tag ai-tag-pt"><i data-lucide="smartphone" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i>${tagMap[r.pt]||r.pt}</span>`);
+  if (r.ct) tags.push(`<span class="ai-tag ai-tag-ct"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i>${tagMap[r.ct]||r.ct}</span>`);
+  if (r.bg && r.bg!=='free') tags.push(`<span class="ai-tag ai-tag-nd"><i data-lucide="wallet" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i>${tagMap[r.bg]||r.bg}</span>`);
+  if (r.l1) tags.push(`<span class="ai-tag ai-tag-nd"><i data-lucide="target" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i>${tagMap[r.l1]||r.l1}</span>`);
+  if (r.l2) tags.push(`<span class="ai-tag ai-tag-nd"><i data-lucide="zap" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i>${tagMap[r.l2]||r.l2}</span>`);
+  document.getElementById('aiTags').innerHTML = tags.join('');
+  document.getElementById('aiPitch').textContent = r.pitch || '';
+  const resultEl = document.getElementById('aiResult');
+  resultEl.classList.remove('on'); void resultEl.offsetWidth; resultEl.classList.add('on');
+  if (window.refreshIcons) window.refreshIcons();
+  setTimeout(() => document.querySelector('.rp')?.scrollIntoView({ behavior:'smooth', block:'start' }), 500);
+}
 </script>
 
-<!-- QR Code Modal -->
-<div id="line-qr-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);z-index:9999;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:#fff;border-radius:24px;padding:32px 24px;max-width:300px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-    <div style="font-size:20px;font-weight:800;margin-bottom:6px;">📱 掃描加入訂閱</div>
-    <div id="line-qr-model-name" style="font-size:13px;color:#555;margin-bottom:20px;font-weight:500;"></div>
-    <div style="background:#f5f5f7;border-radius:16px;padding:16px;display:inline-block;margin-bottom:16px;">
-      <img id="line-qr-img" src="" width="168" height="168" style="display:block;"/>
-    </div>
-    <div style="font-size:12px;color:#888;margin-bottom:20px;line-height:1.6;">
-      用手機 LINE 掃描 QR Code<br>即可加入官方帳號並完成訂閱
-    </div>
-    <button onclick="closeLineQRModal()" style="background:#00b900;color:#fff;border:none;padding:12px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;">關閉</button>
-  </div>
-</div>
-</body>
-</html>
+<script>
+// 初始化 Lucide 圖示（用 window.onload 確保 CDN 已載入）
+window.addEventListener('load', () => {
+  if (window.lucide) lucide.createIcons();
+});
+window.refreshIcons = () => { if (window.lucide) lucide.createIcons(); };
+</script>
+</body></html>
