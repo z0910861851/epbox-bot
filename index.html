@@ -482,6 +482,7 @@ body {
   </div>
 
   <div id="compare-result"></div>
+  <div id="compare-estimate"></div>
 
   <div class="card" style="padding:14px 16px;margin-top:8px;">
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
@@ -1554,6 +1555,7 @@ function setCondition(lvl) {
       btn.style.fontWeight  = isActive ? '700' : '500';
     }
   });
+  renderCompare();
   generateSalesScript();
 }
 
@@ -1761,6 +1763,46 @@ fetchData();
 // Init Lucide static icons after DOM ready
 document.addEventListener("DOMContentLoaded", () => lucide.createIcons());
 if (document.readyState !== "loading") lucide.createIcons();
+
+/* ════════════════════════════════
+   EPBOX Estimate Card
+════════════════════════════════ */
+function renderEpboxEstimate() {
+  const el = document.getElementById('compare-estimate');
+  if (!el) return;
+  const model = getModel(selectedBase, selectedStorage);
+  if (!model) { el.innerHTML = ''; return; }
+  const basePrice = Math.round(Number(model.prices['trade in價']) || 0);
+  if (!basePrice) { el.innerHTML = ''; return; }
+  const mult     = COND_MULT[appCondition] ?? 1;
+  const adjBase  = Math.round(basePrice * mult);
+  const adjBonus = Math.round(adjBase * 0.1);
+  const adjTotal = adjBase + adjBonus;
+  const modelDisplay = model.name.replace('IPHONE ', 'iPhone ');
+  const condBg    = { perfect: '#edfaf3', scratched: '#fff8e6', damaged: '#fff0f0' };
+  const condColor = { perfect: '#00b96b', scratched: '#b07000', damaged: '#d70015' };
+  const battLabel = batteryGood ? '電池健康' : '電池偏低';
+  const battColor = batteryGood ? '#00b96b' : '#d70015';
+  el.innerHTML = \`
+  <div class="card" style="margin-top:8px;padding:16px;">
+    <div style="font-size:12px;font-weight:700;color:var(--text-gray);margin-bottom:10px;letter-spacing:0.5px;">EPBOX 預估報價</div>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+      <span style="font-size:13px;font-weight:700;color:var(--text-dark);">\${modelDisplay} \${selectedStorage ? selectedStorage + 'GB' : ''}</span>
+      <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:\${condBg[appCondition]};color:\${condColor[appCondition]};">\${COND_EMOJI[appCondition]} \${COND_LABEL[appCondition]}</span>
+      <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:\${batteryGood ? '#edfaf3' : '#fff0f0'};color:\${battColor};">● \${battLabel}</span>
+    </div>
+    <div style="background:linear-gradient(135deg,#edfaf3,#f5fff9);border:1.5px solid #b0e8cc;border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:24px;font-weight:900;color:#00b96b;">NT$\${adjTotal.toLocaleString()}</div>
+        <div style="font-size:12px;color:var(--text-gray);margin-top:3px;">回收 \${adjBase.toLocaleString()} + 補貼 \${adjBonus.toLocaleString()}</div>
+      </div>
+      <div style="text-align:right;font-size:12px;color:var(--text-gray);line-height:1.8;">
+        <div>× \${Math.round(mult * 100)}% 機況</div>
+        <div>× 110% 含補貼</div>
+      </div>
+    </div>
+  </div>\`;
+}
 </script>
 
 <!-- QR Code Modal -->
