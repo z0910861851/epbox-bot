@@ -942,21 +942,35 @@ function renderCompare() {
     </div>`;
   }
 
-  // EPBOX trade-in ref
+  // EPBOX 合併卡片
   if (epboxPrice) {
     const epDelta = deltaBadge(getPriceDelta(model.name, 'trade in價'));
-    html += `
-    <div class="epbox-ref-card">
-      <div class="epbox-ref-icon">${ic(P.bot,'#ff6b00',22)}</div>
-      <div>
-        <div class="epbox-ref-name">EPBOX 自助回收機 ${epDelta}</div>
-        <div class="epbox-ref-sub">24小時自助 · 即時入帳${!batteryGood ? ' · <span style="color:#30d158;font-weight:700">電池不扣款</span>' : ''}</div>
-      </div>
-      <div class="epbox-ref-price">
-        <div class="p">$${fmt(epboxPrice)}</div>
-        <div class="unit">NT$</div>
-      </div>
-    </div>`;
+    const mult = COND_MULT[appCondition] || 1;
+    const adjBonus = Math.round(epboxPrice * 0.1);
+    const adjTotal = epboxPrice + adjBonus;
+    const condBg    = { perfect: '#edfaf3', scratched: '#fff8e6', damaged: '#fff0f0' };
+    const condColor = { perfect: '#00b96b', scratched: '#b07000', damaged: '#d70015' };
+    let cardHtml = '<div class="epbox-ref-card" style="flex-direction:column;gap:10px;padding:14px 16px;">';
+    cardHtml += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+    cardHtml += '<div style="display:flex;align-items:center;gap:10px;">';
+    cardHtml += '<div class="epbox-ref-icon">' + ic(P.bot,'#ff6b00',22) + '</div>';
+    cardHtml += '<div>';
+    cardHtml += '<div class="epbox-ref-name">EPBOX 自助回收機 ' + epDelta + '</div>';
+    cardHtml += '<div class="epbox-ref-sub">24小時自助 · 即時入帳' + (!batteryGood ? ' · <span style="color:#30d158;font-weight:700">電池不扣款</span>' : '') + '</div>';
+    cardHtml += '</div></div>';
+    cardHtml += '<div style="display:flex;align-items:center;gap:6px;">';
+    cardHtml += '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:' + condBg[appCondition] + ';color:' + condColor[appCondition] + ';">' + COND_EMOJI[appCondition] + ' ' + COND_LABEL[appCondition] + '</span>';
+    cardHtml += '</div></div>';
+    cardHtml += '<div style="background:linear-gradient(135deg,#fff8f0,#fff3e8);border:1.5px solid #ffcc99;border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">';
+    cardHtml += '<div>';
+    cardHtml += '<div style="font-size:22px;font-weight:900;color:#ff6b00;">NT$' + fmt(adjTotal) + '</div>';
+    cardHtml += '<div style="font-size:11px;color:var(--text-gray);margin-top:2px;">回收 ' + fmt(epboxPrice) + ' + 補貼 ' + fmt(adjBonus) + '</div>';
+    cardHtml += '</div>';
+    cardHtml += '<div style="text-align:right;font-size:11px;color:var(--text-gray);line-height:1.8;">';
+    cardHtml += '<div>× ' + Math.round(mult*100) + '% 機況</div>';
+    cardHtml += '<div>× 110% 含補貼</div>';
+    cardHtml += '</div></div></div>';
+    html += cardHtml;
   }
 
   // Average banner
@@ -1768,42 +1782,7 @@ if (document.readyState !== "loading") lucide.createIcons();
 /* ════════════════════════════════
    EPBOX Estimate Card
 ════════════════════════════════ */
-function renderEpboxEstimate() {
-  var el = document.getElementById('compare-estimate');
-  if (!el) return;
-  var model = getModel(selectedBase, selectedStorage);
-  if (!model) { el.innerHTML = ''; return; }
-  var basePrice = Math.round(Number(model.prices['trade in價']) || 0);
-  if (!basePrice) { el.innerHTML = ''; return; }
-  var mult     = COND_MULT[appCondition] || 1;
-  var adjBase  = Math.round(basePrice * mult);
-  var adjBonus = Math.round(adjBase * 0.1);
-  var adjTotal = adjBase + adjBonus;
-  var modelDisplay = model.name.replace('IPHONE ', 'iPhone ');
-  var condBg    = { perfect: '#edfaf3', scratched: '#fff8e6', damaged: '#fff0f0' };
-  var condColor = { perfect: '#00b96b', scratched: '#b07000', damaged: '#d70015' };
-  var battLabel = batteryGood ? '電池健康' : '電池偏低';
-  var battColor = batteryGood ? '#00b96b' : '#d70015';
-  var storageLabel = selectedStorage ? selectedStorage + 'GB' : '';
-  var html = '';
-  html += '<div class="card" style="margin-top:8px;padding:16px;">';
-  html += '<div style="font-size:12px;font-weight:700;color:var(--text-gray);margin-bottom:10px;">EPBOX 預估報價</div>';
-  html += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;">';
-  html += '<span style="font-size:13px;font-weight:700;color:var(--text-dark);">' + modelDisplay + ' ' + storageLabel + '</span>';
-  html += '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:' + condBg[appCondition] + ';color:' + condColor[appCondition] + ';">' + COND_EMOJI[appCondition] + ' ' + COND_LABEL[appCondition] + '</span>';
-  html += '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:' + (batteryGood ? '#edfaf3' : '#fff0f0') + ';color:' + battColor + ';">● ' + battLabel + '</span>';
-  html += '</div>';
-  html += '<div style="background:linear-gradient(135deg,#edfaf3,#f5fff9);border:1.5px solid #b0e8cc;border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">';
-  html += '<div>';
-  html += '<div style="font-size:24px;font-weight:900;color:#00b96b;">NT$' + adjTotal.toLocaleString() + '</div>';
-  html += '<div style="font-size:12px;color:var(--text-gray);margin-top:3px;">回收 ' + adjBase.toLocaleString() + ' + 補貼 ' + adjBonus.toLocaleString() + '</div>';
-  html += '</div>';
-  html += '<div style="text-align:right;font-size:12px;color:var(--text-gray);line-height:1.8;">';
-  html += '<div>× ' + Math.round(mult * 100) + '% 機況</div>';
-  html += '<div>× 110% 含補貼</div>';
-  html += '</div></div></div>';
-  el.innerHTML = html;
-}
+function renderEpboxEstimate() { /* merged into renderCompare */ }
 </script>
 
 <!-- QR Code Modal -->
