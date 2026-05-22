@@ -472,7 +472,7 @@ body {
       </div>
     </div>
     <div id="destination-row" style="display:none;">
-      <div style="font-size:13px;color:var(--text-gray);font-weight:500;margin-bottom:8px;">舊機去向</div>
+      <div style="font-size:13px;color:var(--text-gray);font-weight:500;margin-bottom:8px;">舊機用途</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="dest-btn pill active" data-dest="none" onclick="setDestination('none')" style="flex:1;min-width:90px;">🗑️ 沒有人承接</button>
         <button class="dest-btn pill" data-dest="family" onclick="setDestination('family')" style="flex:1;min-width:90px;">👨‍👩‍👧 有家人承接</button>
@@ -531,46 +531,9 @@ body {
 <!-- ══════════ Tab 5: 話術生成 ══════════ -->
 <div id="tab-analytics" class="tab-content">
 
-  <!-- 外觀狀況選擇器 -->
+  <!-- 舊機用途 -->
   <div style="padding:16px 16px 0;">
-    <div style="font-size:11px;font-weight:700;color:var(--text-gray);margin-bottom:8px;letter-spacing:0.5px;">顧客手機外觀</div>
-    <div style="display:flex;gap:8px;">
-      <button class="cond-btn" data-cond="perfect"
-        onclick="setCondition('perfect')"
-        style="flex:1;padding:11px 4px;border:2px solid var(--ep-green);background:#edfaf3;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ep-green);">
-        ✨ 外觀完美
-      </button>
-      <button class="cond-btn" data-cond="scratched"
-        onclick="setCondition('scratched')"
-        style="flex:1;padding:11px 4px;border:2px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-gray);">
-        🔸 有刮痕
-      </button>
-      <button class="cond-btn" data-cond="damaged"
-        onclick="setCondition('damaged')"
-        style="flex:1;padding:11px 4px;border:2px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-gray);">
-        🔴 螢幕損壞
-      </button>
-    </div>
-  </div>
-
-  <!-- 電池健康度 -->
-  <div style="padding:10px 16px 0;">
-    <div style="font-size:11px;font-weight:700;color:var(--text-gray);margin-bottom:8px;letter-spacing:0.5px;">電池健康度</div>
-    <div style="display:flex;gap:8px;">
-      <button class="sp-batt-pill" data-good="1" onclick="setBattery(true)"
-        style="flex:1;padding:11px 4px;border:2px solid var(--ep-green);background:#edfaf3;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ep-green);">
-        🟢 電池 ≥ 80%
-      </button>
-      <button class="sp-batt-pill" data-good="0" onclick="setBattery(false)"
-        style="flex:1;padding:11px 4px;border:2px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-gray);">
-        🔴 電池 &lt; 80%
-      </button>
-    </div>
-  </div>
-
-  <!-- 舊機去向 -->
-  <div style="padding:10px 16px 0;">
-    <div style="font-size:11px;font-weight:700;color:var(--text-gray);margin-bottom:8px;letter-spacing:0.5px;">舊機去向</div>
+    <div style="font-size:11px;font-weight:700;color:var(--text-gray);margin-bottom:8px;letter-spacing:0.5px;">舊機用途</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button class="dest-btn" data-dest="none" onclick="setDestination('none')"
         style="flex:1;min-width:90px;padding:11px 4px;border:2px solid var(--apple-blue);background:#e8f0ff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;color:var(--apple-blue);">
@@ -1677,9 +1640,9 @@ function generateSalesScript() {
     });
   }
 
-  // 舊機去向建議
+  // 舊機用途建議
   if (phoneDestination === 'none') {
-    sections.push({ icon: '📅', label: '舊機去向', color: '#f0f0ff', border: '#c0b8f0', text:
+    sections.push({ icon: '📅', label: '舊機用途', color: '#f0f0ff', border: '#c0b8f0', text:
       `如果沒有家人要承接這支手機，放著只會越來越不值錢——手機殘值每年都在下滑，現在能拿 NT$${adjTotal.toLocaleString()}，放個一兩年可能就剩一半。趁現在殘值還在，早回收早划算！`
     });
   } else if (phoneDestination === 'family' && batteryGood) {
