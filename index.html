@@ -1116,7 +1116,6 @@ const LOCATIONS = [
   { store: "燦坤 新光華門市", city: "高雄市", district: "苓雅區", addr: "高雄市苓雅區光華一路160號1樓", appleShopLevel: "3.0", hours: "11:00–21:30" },
   { store: "燦坤 斗六門市", city: "雲林縣", district: "斗六市", addr: "雲林縣斗六市中建西路64號", appleShopLevel: "3.0", hours: "11:00–21:30" },
   // AppleShop 2.0
-  { store: "燦坤 自由門市", city: "高雄市", district: "左營區", addr: "高雄市左營區自由二路329號", appleShopLevel: "2.0", hours: "11:00–21:30" },
   { store: "燦坤 華榮門市", city: "高雄市", district: "鼓山區", addr: "高雄市鼓山區華榮路345號", appleShopLevel: "2.0", hours: "11:00–21:30" },
   { store: "燦坤 永華門市", city: "台南市", district: "安平區", addr: "台南市安平區永華路二段35號", appleShopLevel: "2.0", hours: "11:00–21:30" },
   { store: "燦坤 中華門市", city: "台南市", district: "永康區", addr: "台南市永康區中華路149號", appleShopLevel: "2.0", hours: "11:00–21:30" },
@@ -1133,7 +1132,7 @@ function renderLocations() {
     LOCATIONS.forEach((l, i) => {
       const opt = document.createElement("option");
       opt.value = i;
-      opt.textContent = l.store + "　" + l.district;
+      opt.textContent = l.store;
       sel.appendChild(opt);
     });
   }
