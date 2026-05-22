@@ -471,14 +471,6 @@ body {
         <button class="cond-btn pill" data-cond="damaged" onclick="setCondition('damaged')" style="flex:1;">🔴 螢幕損壞</button>
       </div>
     </div>
-    <div id="destination-row" style="display:none;">
-      <div style="font-size:13px;color:var(--text-gray);font-weight:500;margin-bottom:8px;">舊機用途</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="dest-btn pill active" data-dest="none" onclick="setDestination('none')" style="flex:1;min-width:90px;">🗑️ 沒有人承接</button>
-        <button class="dest-btn pill" data-dest="family" onclick="setDestination('family')" style="flex:1;min-width:90px;">👨‍👩‍👧 有家人承接</button>
-        <button class="dest-btn pill" data-dest="backup" onclick="setDestination('backup')" style="flex:1;min-width:90px;">🔒 當備用機</button>
-      </div>
-    </div>
   </div>
 
   <div id="compare-result"></div>
@@ -859,9 +851,7 @@ function onModelChange() {
   }
   batteryRow.style.display = "block";
   const conditionRow = document.getElementById("condition-row");
-  const destinationRow = document.getElementById("destination-row");
   if (conditionRow) conditionRow.style.display = "block";
-  if (destinationRow) destinationRow.style.display = "block";
   renderCompare();
 }
 
