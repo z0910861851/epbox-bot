@@ -744,13 +744,23 @@ async function fetchData() {
     // Parse prices
     const pricesData = json?.prices ?? {};
     const parsed = [];
+    const KEY_MAP = {
+      "Trade in價": "trade in價",
+      "STUDIO A": "STUDIO",
+      "神腦_門市回收價": "神腦"
+    };
     for (const entry of Object.values(pricesData)) {
       if (!entry?.model) continue;
       const name = entry.model;
       if (!name.toUpperCase().includes("IPHONE")) continue;
       const prices = {};
+      // 先把 entry 的 key 正規化
+      const normalizedEntry = {};
+      for (const [k, v] of Object.entries(entry)) {
+        normalizedEntry[KEY_MAP[k] ?? k] = v;
+      }
       for (const v of VENDORS) {
-        const val = entry[v];
+        const val = normalizedEntry[v];
         if (val != null && val > 0) prices[v] = Number(val);
       }
       parsed.push({ name, prices });
