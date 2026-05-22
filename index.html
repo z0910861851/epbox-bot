@@ -917,7 +917,9 @@ function renderCompare() {
   }
 
   const avg = averagePrice(adjustedPrices);
-  const epboxPrice = adjustedPrices["trade in價"];
+  const epboxPrice = adjustedPrices["trade in價"]
+    ? Math.round(adjustedPrices["trade in價"] * (COND_MULT[appCondition] ?? 1))
+    : null;
   const vendorPrices = Object.entries(adjustedPrices)
     .filter(([v]) => v !== "trade in價")
     .map(([v, p]) => ({ vendor: v, price: p }))
