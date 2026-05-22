@@ -668,7 +668,8 @@ let batteryGood = true;
 let appCondition    = 'perfect'; // 'perfect' | 'scratched' | 'damaged'
 let phoneDestination = 'none';   // 'none' | 'family'
 
-const COND_MULT  = { perfect: 1.0, scratched: 0.9, damaged: 0.6 };
+const COND_MULT        = { perfect: 1.0, scratched: 0.9,  damaged: 0.6  }; // EPBOX 倍率
+const VENDOR_COND_MULT = { perfect: 1.0, scratched: 0.75, damaged: 0.35 }; // 外部通路（轉賣商）倍率
 const COND_LABEL = { perfect: '外觀完美', scratched: '有刮痕', damaged: '螢幕損壞' };
 const COND_EMOJI = { perfect: '✨', scratched: '🔸', damaged: '🔴' };
 let lastUpdated = "";
@@ -910,12 +911,16 @@ function renderCompare() {
   const prices = model.prices;
   const deduction = getBatteryDeduction(model.name);
 
-  // 建立扣款後的價格（電池扣款 + 外觀倍率，全通路一致）
-  const condMult = COND_MULT[appCondition] ?? 1;
+  // EPBOX 套 COND_MULT，外部通路套 VENDOR_COND_MULT（轉賣商對外觀扣更多）
+  const condMult       = COND_MULT[appCondition] ?? 1;
+  const vendorCondMult = VENDOR_COND_MULT[appCondition] ?? 1;
   const adjustedPrices = {};
   for (const [v, p] of Object.entries(prices)) {
-    const base = v === "trade in價" ? p : Math.max(0, p - deduction);
-    adjustedPrices[v] = Math.round(base * condMult);
+    if (v === "trade in價") {
+      adjustedPrices[v] = Math.round(p * condMult);
+    } else {
+      adjustedPrices[v] = Math.round(Math.max(0, p - deduction) * vendorCondMult);
+    }
   }
 
   const avg = averagePrice(adjustedPrices);
