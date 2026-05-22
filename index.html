@@ -1060,7 +1060,6 @@ function renderBestAll() {
     document.getElementById('bd-good-list').innerHTML = good.map(d => bdRow(d)).join('');
   } else { goodEl.style.display = 'none'; }
 
-  const lowEl = document.getElementById('bd-low-section');
   if (lower.length) {
     lowEl.style.display = 'block';
     document.getElementById('bd-low-count').textContent = `${lower.length} 款`;
