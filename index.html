@@ -1025,6 +1025,7 @@ function renderCompare() {
   const batteryNote = !batteryGood ? `換電池費用以原廠 / 副廠中位數估算（NT$${fmt(deduction)}），實際扣款依各通路現場而定。` : '';
   html += `<div class="disclaimer" style="gap:8px">${ic(P.info,'#86868b',14)} 以上為參考估算，實際回收價依各通路現場評估、機況及活動優惠而不同。${batteryNote}</div>`;
   container.innerHTML = html;
+  renderEpboxEstimate();
 }
 
 /* ════════════════════════════════
