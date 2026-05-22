@@ -463,6 +463,22 @@ body {
         <button class="pill" onclick="setBattery(false)">🔴 電池 &lt; 80%</button>
       </div>
     </div>
+    <div id="condition-row" style="display:none;">
+      <div style="font-size:13px;color:var(--text-gray);font-weight:500;margin-bottom:8px;">顧客手機外觀</div>
+      <div style="display:flex;gap:8px;">
+        <button class="cond-btn pill active" data-cond="perfect" onclick="setCondition('perfect')" style="flex:1;">✨ 外觀完美</button>
+        <button class="cond-btn pill" data-cond="scratched" onclick="setCondition('scratched')" style="flex:1;">🔸 有刮痕</button>
+        <button class="cond-btn pill" data-cond="damaged" onclick="setCondition('damaged')" style="flex:1;">🔴 螢幕損壞</button>
+      </div>
+    </div>
+    <div id="destination-row" style="display:none;">
+      <div style="font-size:13px;color:var(--text-gray);font-weight:500;margin-bottom:8px;">舊機去向</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="dest-btn pill active" data-dest="none" onclick="setDestination('none')" style="flex:1;min-width:90px;">🗑️ 沒有人承接</button>
+        <button class="dest-btn pill" data-dest="family" onclick="setDestination('family')" style="flex:1;min-width:90px;">👨‍👩‍👧 有家人承接</button>
+        <button class="dest-btn pill" data-dest="backup" onclick="setDestination('backup')" style="flex:1;min-width:90px;">🔒 當備用機</button>
+      </div>
+    </div>
   </div>
 
   <div id="compare-result"></div>
@@ -878,6 +894,10 @@ function onModelChange() {
     selectedStorage = storages[0] ?? 0;
   }
   batteryRow.style.display = "block";
+  const conditionRow = document.getElementById("condition-row");
+  const destinationRow = document.getElementById("destination-row");
+  if (conditionRow) conditionRow.style.display = "block";
+  if (destinationRow) destinationRow.style.display = "block";
   renderCompare();
 }
 
