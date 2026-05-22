@@ -925,19 +925,6 @@ function renderCompare() {
     </div>`;
   }
 
-  // Average banner
-  if (avg) {
-    html += `
-    <div class="avg-banner">
-      <div style="display:flex;align-items:center;justify-content:center;width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:14px;flex-shrink:0">${ic(P.barChart,'#fff',24)}</div>
-      <div>
-        <div class="label">6家通路平均回收價</div>
-        <div class="price">NT$${fmt(avg)}</div>
-      </div>
-      <div class="tag">Apple Bar · 台哥大<br>遠傳 · 101 · STUDIO · 神腦</div>
-    </div>`;
-  }
-
   // EPBOX trade-in ref
   if (epboxPrice) {
     const epDelta = deltaBadge(getPriceDelta(model.name, 'trade in價'));
@@ -952,6 +939,19 @@ function renderCompare() {
         <div class="p">$${fmt(epboxPrice)}</div>
         <div class="unit">NT$</div>
       </div>
+    </div>`;
+  }
+
+  // Average banner
+  if (avg) {
+    html += `
+    <div class="avg-banner">
+      <div style="display:flex;align-items:center;justify-content:center;width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:14px;flex-shrink:0">${ic(P.barChart,'#fff',24)}</div>
+      <div>
+        <div class="label">6家通路平均回收價</div>
+        <div class="price">NT$${fmt(avg)}</div>
+      </div>
+      <div class="tag">Apple Bar · 台哥大<br>遠傳 · 101 · STUDIO · 神腦</div>
     </div>`;
   }
 
