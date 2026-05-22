@@ -910,16 +910,16 @@ function renderCompare() {
   const prices = model.prices;
   const deduction = getBatteryDeduction(model.name);
 
-  // 建立扣款後的價格（EPBOX 不扣，其他通路扣）
+  // 建立扣款後的價格（電池扣款 + 外觀倍率，全通路一致）
+  const condMult = COND_MULT[appCondition] ?? 1;
   const adjustedPrices = {};
   for (const [v, p] of Object.entries(prices)) {
-    adjustedPrices[v] = v === "trade in價" ? p : Math.max(0, p - deduction);
+    const base = v === "trade in價" ? p : Math.max(0, p - deduction);
+    adjustedPrices[v] = Math.round(base * condMult);
   }
 
   const avg = averagePrice(adjustedPrices);
-  const epboxPrice = adjustedPrices["trade in價"]
-    ? Math.round(adjustedPrices["trade in價"] * (COND_MULT[appCondition] ?? 1))
-    : null;
+  const epboxPrice = adjustedPrices["trade in價"] || null;
   const vendorPrices = Object.entries(adjustedPrices)
     .filter(([v]) => v !== "trade in價")
     .map(([v, p]) => ({ vendor: v, price: p }))
@@ -944,7 +944,6 @@ function renderCompare() {
   // EPBOX 合併卡片
   if (epboxPrice) {
     const epDelta = deltaBadge(getPriceDelta(model.name, 'trade in價'));
-    const mult = COND_MULT[appCondition] || 1;
     const adjBonus = Math.round(epboxPrice * 0.1);
     const adjTotal = epboxPrice + adjBonus;
     let cardHtml = '<div style="background:linear-gradient(135deg,#ff6b00,#ff9a3c);border-radius:18px;padding:18px 20px;display:flex;align-items:center;gap:16px;margin-bottom:12px;box-shadow:0 6px 20px rgba(255,107,0,0.3);">';
@@ -956,7 +955,7 @@ function renderCompare() {
     cardHtml += '</div>';
     cardHtml += '<div style="background:rgba(255,255,255,0.2);color:#fff;border-radius:10px;padding:8px 14px;text-align:center;font-size:12px;font-weight:700;flex-shrink:0;line-height:1.8;">';
     cardHtml += COND_EMOJI[appCondition] + ' ' + COND_LABEL[appCondition] + '<br>';
-    cardHtml += '× ' + Math.round(mult * 100) + '% 機況<br>';
+    cardHtml += '× ' + Math.round(condMult * 100) + '% 機況<br>';
     cardHtml += '× 110% 含補貼';
     cardHtml += '</div>';
     cardHtml += '</div>';
