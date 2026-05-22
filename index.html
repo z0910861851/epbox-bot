@@ -470,18 +470,12 @@ body {
   <div class="card" style="padding:14px 16px;margin-top:8px;">
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
       <div class="card-title" style="margin:0;"><i data-lucide="map-pin"></i> EPBOX 自助回收機設置地點</div>
-      <span class="count-badge" id="loc-count">共 0 台</span>
+      <span class="count-badge" id="loc-count">共 9 間</span>
     </div>
-    <div class="loc-filter">
-      <input type="text" id="loc-search" placeholder="🔍 搜尋店家或地址…" oninput="renderLocations()">
-      <select id="loc-city" onchange="renderLocations()">
-        <option value="">全部縣市</option>
-        <option value="高雄市">高雄市</option>
-        <option value="台南市">台南市</option>
-        <option value="雲林縣">雲林縣</option>
-      </select>
-    </div>
-    <div id="loc-grid" class="loc-grid"></div>
+    <select id="loc-select" onchange="renderLocations()" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:var(--card-white);color:var(--text-dark);appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22><path fill=%22%2386868b%22 d=%22M1 1l5 5 5-5%22 stroke=%22%2386868b%22 stroke-width=%221.5%22 fill=%22none%22/></svg>');background-repeat:no-repeat;background-position:right 12px center;cursor:pointer;">
+      <option value="">── 選擇門市 ──</option>
+    </select>
+    <div id="loc-detail" style="margin-top:12px;"></div>
   </div>
 </div>
 
@@ -1132,45 +1126,44 @@ const LOCATIONS = [
 ];
 
 function renderLocations() {
-  const q = document.getElementById("loc-search").value.trim().toLowerCase();
-  const city = document.getElementById("loc-city").value;
-  let data = LOCATIONS;
-  if (city) data = data.filter(l => l.city === city);
-  if (q) data = data.filter(l =>
-    l.store.toLowerCase().includes(q) ||
-    l.addr.toLowerCase().includes(q) ||
-    l.district.toLowerCase().includes(q)
-  );
-  document.getElementById("loc-count").textContent = "共 " + data.length + " 間";
-  const grid = document.getElementById("loc-grid");
+  const sel = document.getElementById("loc-select");
+  const detail = document.getElementById("loc-detail");
+  // 初始化選單（只執行一次）
+  if (sel.options.length <= 1) {
+    LOCATIONS.forEach((l, i) => {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = l.store + "　" + l.district;
+      sel.appendChild(opt);
+    });
+  }
+  const idx = sel.value;
+  if (idx === "") { detail.innerHTML = ""; return; }
+  const l = LOCATIONS[parseInt(idx)];
+  const googleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.store + " " + l.addr)}`;
+  const appleUrl  = `maps://maps.apple.com/?q=${encodeURIComponent(l.store)}&near=${encodeURIComponent(l.addr)}`;
   const LEVEL_TAG = {
     "3.0":    `<span class="loc-tag tag-blue">AppleShop 3.0</span>`,
     "2.0":    `<span class="loc-tag tag-green">AppleShop 2.0</span>`,
     "White+": `<span class="loc-tag tag-purple">AppleShop White+</span>`,
   };
-  if (!data.length) { grid.innerHTML = '<div class="no-result">找不到符合條件的地點</div>'; return; }
-  grid.innerHTML = data.map(l => {
-    const q = encodeURIComponent(l.addr);
-    const googleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.store + ' ' + l.addr)}`;
-    const appleUrl  = `maps://maps.apple.com/?q=${encodeURIComponent(l.store)}&near=${q}`;
-    const levelTag = LEVEL_TAG[l.appleShopLevel] ?? '';
-    return `
+  const levelTag = LEVEL_TAG[l.appleShopLevel] ?? "";
+  detail.innerHTML = `
     <div class="loc-card">
-      <div class="loc-icon">${ic(P.store,'#00b96b',20)}</div>
+      <div class="loc-icon">${ic(P.store,"#00b96b",20)}</div>
       <div style="flex:1">
         <div class="loc-store">${l.store}</div>
-        <div class="loc-addr">${l.addr.startsWith(l.city + l.district) ? l.addr.slice((l.city + l.district).length) : l.addr}</div>
+        <div class="loc-addr">${l.addr}</div>
         <div class="loc-tags">
           ${levelTag}
-          <span class="loc-tag tag-gray">${ic(P.clock,'#555',11)} ${l.hours}</span>
+          <span class="loc-tag tag-gray">${ic(P.clock,"#555",11)} ${l.hours}</span>
         </div>
         <div>
-          <a class="nav-btn" href="${googleUrl}" target="_blank" rel="noopener">${ic(P.map,'#fff',13)} Google Maps</a>
-          <a class="nav-btn nav-btn-apple" href="${appleUrl}">${ic(P.nav,'#fff',13)} Apple Maps</a>
+          <a class="nav-btn" href="${googleUrl}" target="_blank" rel="noopener">${ic(P.map,"#fff",13)} Google Maps</a>
+          <a class="nav-btn nav-btn-apple" href="${appleUrl}">${ic(P.nav,"#fff",13)} Apple Maps</a>
         </div>
       </div>
     </div>`;
-  }).join("");
 }
 
 /* ════════════════════════════════
