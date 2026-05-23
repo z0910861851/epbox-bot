@@ -434,6 +434,7 @@ body {
 <div class="tab-nav">
   <button class="tab-btn active" onclick="switchTab('compare', this)"><i data-lucide="bar-chart-2"></i>各通路比較</button>
   <button class="tab-btn" onclick="switchTab('analytics', this)"><i data-lucide="message-circle"></i>回收建議</button>
+  <button class="tab-btn" onclick="switchTab('tradein', this)"><i data-lucide="smartphone"></i>燦坤 Trade-in 週報</button>
 </div>
 
 <!-- ══════════ Tab 1: 各通路回收比較 ══════════ -->
@@ -543,6 +544,18 @@ body {
   </div>
 
   <div id="sp-result" style="padding:14px 16px 20px;"></div>
+</div>
+
+<!-- ══════════ Tab: 燦坤 Trade-in 週報（iframe 嵌入 Elay 維護的報告） ══════════ -->
+<div id="tab-tradein" class="tab-content" style="padding:0;max-width:none;">
+  <iframe
+    src="https://elaycool-create.github.io/cankun-tradein-fy26q3/"
+    title="燦坤 Trade-in 舊換新分析報告"
+    loading="lazy"
+    referrerpolicy="no-referrer-when-downgrade"
+    allow="clipboard-write"
+    style="width:100%;height:calc(100vh - 90px);border:0;display:block;">
+  </iframe>
 </div>
 
 <script>
