@@ -439,7 +439,10 @@ body {
 
 <!-- ══════════ Tab 1: 各通路回收比較 ══════════ -->
 <div id="tab-compare" class="tab-content active">
-  <div class="updated" id="last-updated-1">更新時間：載入中…</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div class="updated" id="last-updated-1" style="margin:0;">更新時間：載入中…</div>
+    <div id="page-views" style="font-size:11px;color:var(--text-gray);">👀 累計瀏覽 <span id="page-views-num">…</span></div>
+  </div>
 
   <div class="info-box">
     <span class="info-icon"><i data-lucide="alert-triangle"></i></span><strong>注意：</strong>以下為各通路機況完美（電池 ≥ 80%、無明顯損傷）之最高參考報價，實際金額依現場評估而定。
@@ -1748,6 +1751,29 @@ document.getElementById("compare-result").innerHTML = '<div class="loading-state
 
 renderLocations();
 fetchData();
+trackPageView();
+
+/* ════════════════════════════════
+   Page View Counter (Firebase)
+════════════════════════════════ */
+async function trackPageView() {
+  const VIEWS_URL = "https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/page_views.json";
+  const el = document.getElementById("page-views-num");
+  try {
+    const cur = await fetch(VIEWS_URL).then(r => r.json()) || 0;
+    const alreadyCounted = sessionStorage.getItem("pv_counted");
+    let next = cur;
+    if (!alreadyCounted) {
+      next = cur + 1;
+      // 嘗試寫回（若 Firebase 規則不允許寫入，會 silently fail）
+      await fetch(VIEWS_URL, { method: "PUT", body: JSON.stringify(next) });
+      sessionStorage.setItem("pv_counted", "1");
+    }
+    if (el) el.textContent = next.toLocaleString();
+  } catch (e) {
+    if (el) el.parentElement.style.display = "none";
+  }
+}
 
 // Init Lucide static icons after DOM ready
 document.addEventListener("DOMContentLoaded", () => lucide.createIcons());
