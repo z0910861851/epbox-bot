@@ -441,7 +441,7 @@ body {
 <div id="tab-compare" class="tab-content active">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
     <div class="updated" id="last-updated-1" style="margin:0;">更新時間：載入中…</div>
-    <div id="page-views" style="font-size:11px;color:var(--text-gray);">總瀏覽數 <span id="page-views-num">…</span></div>
+    <div id="page-views" style="font-size:11px;color:var(--text-gray);">總瀏覽數 <span class="page-views-num">…</span></div>
   </div>
 
   <div class="info-box">
@@ -526,6 +526,10 @@ body {
 
 <!-- ══════════ Tab 5: 話術生成 ══════════ -->
 <div id="tab-analytics" class="tab-content">
+
+  <div style="display:flex;justify-content:flex-end;padding:12px 16px 0;">
+    <div style="font-size:11px;color:var(--text-gray);">總瀏覽數 <span class="page-views-num">…</span></div>
+  </div>
 
   <!-- 舊機用途 -->
   <div style="padding:16px 16px 0;">
@@ -1758,7 +1762,7 @@ trackPageView();
 ════════════════════════════════ */
 async function trackPageView() {
   const VIEWS_URL = "https://trade-in-5135c-default-rtdb.asia-southeast1.firebasedatabase.app/page_views.json";
-  const el = document.getElementById("page-views-num");
+  const els = document.querySelectorAll(".page-views-num");
   try {
     const cur = await fetch(VIEWS_URL).then(r => r.json()) || 0;
     const alreadyCounted = sessionStorage.getItem("pv_counted");
@@ -1769,9 +1773,9 @@ async function trackPageView() {
       await fetch(VIEWS_URL, { method: "PUT", body: JSON.stringify(next) });
       sessionStorage.setItem("pv_counted", "1");
     }
-    if (el) el.textContent = next.toLocaleString();
+    els.forEach(el => el.textContent = next.toLocaleString());
   } catch (e) {
-    if (el) el.parentElement.style.display = "none";
+    els.forEach(el => { if (el.parentElement) el.parentElement.style.display = "none"; });
   }
 }
 
