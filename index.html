@@ -1144,7 +1144,7 @@ function renderLocations() {
     LOCATIONS.forEach((l, i) => {
       const opt = document.createElement("option");
       opt.value = i;
-      opt.textContent = l.store;
+      opt.textContent = "🏪 " + l.store;
       sel.appendChild(opt);
     });
   }
