@@ -479,7 +479,7 @@ body {
   <div class="card" style="padding:14px 16px;margin-top:8px;">
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
       <div class="card-title" style="margin:0;"><i data-lucide="map-pin"></i> EPBOX 自助回收機設置地點</div>
-      <span class="count-badge" id="loc-count">共 9 間</span>
+      <span class="count-badge" id="loc-count">載入中…</span>
     </div>
     <select id="loc-select" onchange="renderLocations()" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:var(--card-white);color:var(--text-dark);appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22><path fill=%22%2386868b%22 d=%22M1 1l5 5 5-5%22 stroke=%22%2386868b%22 stroke-width=%221.5%22 fill=%22none%22/></svg>');background-repeat:no-repeat;background-position:right 12px center;cursor:pointer;">
       <option value="">── 選擇門市 ──</option>
@@ -1119,11 +1119,26 @@ const LOCATIONS = [
   { store: "燦坤 五甲門市", city: "高雄市", district: "鳳山區", addr: "高雄市鳳山區五甲二路219號", appleShopLevel: "2.0", hours: "11:00–21:30" },
   // AppleShop White+
   { store: "燦坤 右昌門市", city: "高雄市", district: "楠梓區", addr: "高雄市楠梓區德民路836號", appleShopLevel: "White+", hours: "11:00–21:30" },
+  // 其他
+  { store: "燦坤 內湖店",       city: "台北市", district: "內湖區", addr: "台北市內湖區堤頂大道一段331號",       hours: "11:00–21:30" },
+  { store: "燦坤 公益店",       city: "台中市", district: "南屯區", addr: "台中市南屯區公益路二段125號",         hours: "11:00–21:30" },
+  { store: "燦坤 新莊店",       city: "新北市", district: "新莊區", addr: "新北市新莊區中平路108號",             hours: "11:00–21:30" },
+  { store: "燦坤 基隆旗艦店",   city: "基隆市", district: "中正區", addr: "基隆市中正區義一路18號",              hours: "11:00–21:30" },
+  { store: "燦坤 新文心店",     city: "台中市", district: "北屯區", addr: "台中市北屯區文心路四段671號",         hours: "11:00–21:30" },
+  { store: "燦坤 新豐原旗艦店", city: "台中市", district: "豐原區", addr: "台中市豐原區大社街39號",              hours: "11:00–21:30" },
+  { store: "燦坤 桃園旗艦店",   city: "桃園市", district: "桃園區", addr: "桃園市桃園區中山東路51號",            hours: "11:00–21:30" },
+  { store: "燦坤 光復店",       city: "新竹市", district: "東區",   addr: "新竹市東區光復路二段194巷19號",       hours: "11:00–21:30" },
+  { store: "燦坤 大甲店",       city: "台中市", district: "大甲區", addr: "台中市大甲區民生路13號",              hours: "11:00–21:30" },
+  { store: "燦坤 信義店",       city: "台北市", district: "信義區", addr: "台北市信義區信義路四段375號",         hours: "11:00–21:30" },
+  { store: "燦坤 林口文化店",   city: "新北市", district: "林口區", addr: "新北市林口區文化二路一段269號2樓",    hours: "11:00–21:30" },
+  { store: "燦坤 北投新旗艦店", city: "台北市", district: "北投區", addr: "台北市北投區大業路452巷6號B1",        hours: "11:00–21:30" },
 ];
 
 function renderLocations() {
   const sel = document.getElementById("loc-select");
   const detail = document.getElementById("loc-detail");
+  const countEl = document.getElementById("loc-count");
+  if (countEl) countEl.textContent = `共 ${LOCATIONS.length} 間`;
   // 初始化選單（只執行一次）
   if (sel.options.length <= 1) {
     LOCATIONS.forEach((l, i) => {
