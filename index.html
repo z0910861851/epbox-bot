@@ -600,11 +600,6 @@ body {
     <div class="hero-icon">💬</div>
     <div class="hero-content">
       <div class="hero-title">EPBOX 回收建議</div>
-      <div class="hero-badges">
-        <span class="hero-badge" id="hero-badge-models-2">📱 — 款機型</span>
-        <span class="hero-badge">💡 多場景話術</span>
-        <span class="hero-badge">📋 一鍵複製</span>
-      </div>
     </div>
   </div>
 
@@ -1850,10 +1845,8 @@ function updateHeroBadges() {
   const models = uniqueBaseNames().length;
   const s1 = document.getElementById("hero-badge-stores");
   const m1 = document.getElementById("hero-badge-models");
-  const m2 = document.getElementById("hero-badge-models-2");
   if (s1) s1.textContent = `🏪 共 ${stores} 間門市`;
   if (m1) m1.textContent = `📱 ${models} 款機型`;
-  if (m2) m2.textContent = `📱 ${models} 款機型`;
 }
 
 /* ════════════════════════════════
