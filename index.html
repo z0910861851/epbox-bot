@@ -140,9 +140,24 @@ body {
   left: 50%;
   width: 100vw;
   margin-left: -50vw;
-  margin-top: -16px;
   margin-bottom: 14px;
 }
+/* ── Views bar（對齊 Elay 燦坤週報 tab 上方的總瀏覽數列）── */
+.views-bar {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+  text-align: right;
+  font-size: 11px;
+  color: var(--text-gray);
+  position: relative;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-top: -16px;
+}
+/* Tab 3 的 tab-content 沒有 padding，需要把 margin-top 歸零 */
+#tab-tradein .views-bar { margin-top: 0; }
 .hero-title {
   font-size: 28px;
   font-weight: 700;
@@ -500,6 +515,8 @@ body {
 <!-- ══════════ Tab 1: 各通路回收比較 ══════════ -->
 <div id="tab-compare" class="tab-content active">
 
+  <div class="views-bar">總瀏覽數 <span class="page-views-num">…</span></div>
+
   <!-- Hero Banner -->
   <div class="hero-banner">
     <div class="hero-title">📱 二手機回收價即時比價</div>
@@ -511,10 +528,7 @@ body {
     </div>
   </div>
 
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-    <div class="updated" id="last-updated-1" style="margin:0;">更新時間：載入中…</div>
-    <div id="page-views" style="font-size:11px;color:var(--text-gray);">總瀏覽數 <span class="page-views-num">…</span></div>
-  </div>
+  <div class="updated" id="last-updated-1" style="margin:0 0 8px;">更新時間：載入中…</div>
 
   <div class="info-box">
     <span class="info-icon"><i data-lucide="alert-triangle"></i></span><strong>注意：</strong>以下為各通路機況完美（電池 ≥ 80%、無明顯損傷）之最高參考報價，實際金額依現場評估而定。
@@ -599,14 +613,12 @@ body {
 <!-- ══════════ Tab 5: 話術生成 ══════════ -->
 <div id="tab-analytics" class="tab-content">
 
+  <div class="views-bar">總瀏覽數 <span class="page-views-num">…</span></div>
+
   <!-- Hero Banner -->
   <div class="hero-banner">
     <div class="hero-title">💬 EPBOX 回收建議</div>
     <div class="hero-subtitle">依據顧客舊機用途，產生最適合的回收話術</div>
-  </div>
-
-  <div style="display:flex;justify-content:flex-end;padding:0 16px;">
-    <div style="font-size:11px;color:var(--text-gray);">總瀏覽數 <span class="page-views-num">…</span></div>
   </div>
 
   <!-- 舊機用途 -->
@@ -633,9 +645,7 @@ body {
 
 <!-- ══════════ Tab: 燦坤 Trade-in 週報（iframe 嵌入 Elay 維護的報告） ══════════ -->
 <div id="tab-tradein" class="tab-content" style="padding:0;max-width:none;">
-  <div style="padding:8px 16px;text-align:right;background:#fff;border-bottom:1px solid var(--border);">
-    <span style="font-size:11px;color:var(--text-gray);">總瀏覽數 <span class="page-views-num">…</span></span>
-  </div>
+  <div class="views-bar">總瀏覽數 <span class="page-views-num">…</span></div>
   <iframe
     src="https://elaycool-create.github.io/cankun-tradein-fy26q3/"
     title="燦坤 Trade-in 舊換新分析報告"
