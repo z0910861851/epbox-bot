@@ -26,6 +26,7 @@ body {
   background: var(--bg);
   color: var(--text-dark);
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* ── Header ── */
@@ -127,12 +128,17 @@ body {
 }
 .pill.active { background: var(--apple-blue); color: #fff; border-color: var(--apple-blue); }
 
-/* ── Hero Banner（對齊 Elay 報告 header 樣式）── */
+/* ── Hero Banner（對齊 Elay 報告 header 樣式，全螢幕寬度）── */
 .hero-banner {
   background: linear-gradient(135deg, #1d1d1f 0%, #0071e3 100%);
-  padding: 32px 40px 28px;
-  margin: -16px -16px 14px;
   color: #fff;
+  padding: 32px 40px 28px;
+  position: relative;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-top: -16px;
+  margin-bottom: 14px;
 }
 .hero-title {
   font-size: 28px;
