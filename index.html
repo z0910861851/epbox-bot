@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>EPBOX 自助回收資訊</title>
+<!-- 提前對 Elay 燦坤週報 iframe 來源做 DNS/TLS 握手，加速第一次切換 tab -->
+<link rel="preconnect" href="https://elaycool-create.github.io" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <style>
 :root {
   --ep-green: #00b96b;
@@ -636,7 +639,7 @@ body {
   <iframe
     src="https://elaycool-create.github.io/cankun-tradein-fy26q3/"
     title="燦坤 Trade-in 舊換新分析報告"
-    loading="lazy"
+    loading="eager"
     referrerpolicy="no-referrer-when-downgrade"
     allow="clipboard-write"
     style="width:100%;height:calc(100vh - 125px);border:0;display:block;">
