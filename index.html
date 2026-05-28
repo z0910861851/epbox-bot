@@ -158,6 +158,8 @@ body {
 }
 /* Tab 3 的 tab-content 沒有 padding，需要把 margin-top 歸零 */
 #tab-tradein .views-bar { margin-top: 0; }
+/* Tab 3 iframe：手機上只允許垂直滑動，避免橫向手勢拖移整個頁面 */
+#tab-tradein iframe { touch-action: pan-y; }
 .hero-title {
   font-size: 28px;
   font-weight: 700;
