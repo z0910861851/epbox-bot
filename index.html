@@ -24,6 +24,7 @@
   --gold: #ff9500;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
+html { overflow-x: hidden; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
@@ -158,8 +159,22 @@ body {
 }
 /* Tab 3 的 tab-content 沒有 padding，需要把 margin-top 歸零 */
 #tab-tradein .views-bar { margin-top: 0; }
-/* Tab 3 iframe：手機上只允許垂直滑動，避免橫向手勢拖移整個頁面 */
-#tab-tradein iframe { touch-action: pan-y; }
+/* Tab 3 iframe wrapper：鎖死 iframe 寬度，避免 iOS Safari 把 iframe
+   元素本身撐開到內容寬度，造成外層頁面可橫向拖移 */
+.iframe-wrap {
+  width: 100%;
+  height: calc(100vh - 125px);
+  overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.iframe-wrap iframe {
+  display: block;
+  width: 1px;
+  min-width: 100%;
+  height: 100%;
+  border: 0;
+  touch-action: pan-y;
+}
 .hero-title {
   font-size: 28px;
   font-weight: 700;
@@ -652,14 +667,15 @@ body {
 <!-- ══════════ Tab: 燦坤 Trade-in 週報（iframe 嵌入 Elay 維護的報告） ══════════ -->
 <div id="tab-tradein" class="tab-content" style="padding:0;max-width:none;">
   <div class="views-bar">總瀏覽數 <span class="page-views-num">…</span></div>
-  <iframe
-    src="https://elaycool-create.github.io/cankun-tradein-fy26q3/"
-    title="燦坤 Trade-in 舊換新分析報告"
-    loading="eager"
-    referrerpolicy="no-referrer-when-downgrade"
-    allow="clipboard-write"
-    style="width:100%;height:calc(100vh - 125px);border:0;display:block;">
-  </iframe>
+  <div class="iframe-wrap">
+    <iframe
+      src="https://elaycool-create.github.io/cankun-tradein-fy26q3/"
+      title="燦坤 Trade-in 舊換新分析報告"
+      loading="eager"
+      referrerpolicy="no-referrer-when-downgrade"
+      allow="clipboard-write">
+    </iframe>
+  </div>
 </div>
 
 <script>
