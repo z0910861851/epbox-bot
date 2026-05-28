@@ -24,13 +24,13 @@
   --gold: #ff9500;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { overflow-x: hidden; }
+html { overflow-x: clip; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--text-dark);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ── Header ── */
@@ -159,18 +159,22 @@ body {
 }
 /* Tab 3 的 tab-content 沒有 padding，需要把 margin-top 歸零 */
 #tab-tradein .views-bar { margin-top: 0; }
-/* Tab 3 iframe wrapper：鎖死 iframe 寬度，避免 iOS Safari 把 iframe
-   元素本身撐開到內容寬度，造成外層頁面可橫向拖移 */
+/* Tab 3：整個 tab 區域只允許垂直手勢，避免 iframe 內手勢拖移外層頁 */
+#tab-tradein { touch-action: pan-y; }
+/* Tab 3 iframe wrapper：用 position:relative + overflow:clip 把 iframe
+   絕對定位鎖死在容器內，不論 iOS Safari 怎麼把 iframe 撐開都裁掉 */
 .iframe-wrap {
+  position: relative;
   width: 100%;
   height: calc(100vh - 125px);
-  overflow: hidden;
+  overflow: clip;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 .iframe-wrap iframe {
-  display: block;
-  width: 1px;
-  min-width: 100%;
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
   border: 0;
   touch-action: pan-y;
