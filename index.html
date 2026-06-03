@@ -1041,7 +1041,7 @@ function renderCompare() {
   // EPBOX 合併卡片
   if (epboxPrice) {
     const epDelta = deltaBadge(getPriceDelta(model.name, 'trade in價'));
-    const adjBonus = Math.round(epboxPrice * 0.1);
+    const adjBonus =0;
     const adjTotal = epboxPrice + adjBonus;
     let cardHtml = '<div style="background:linear-gradient(135deg,#ff6b00,#ff9a3c);border-radius:18px;padding:18px 20px;display:flex;align-items:center;gap:16px;margin-bottom:12px;box-shadow:0 6px 20px rgba(255,107,0,0.3);">';
     cardHtml += '<div style="width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + ic(P.bot,'#fff',24) + '</div>';
@@ -1714,7 +1714,7 @@ function generateSalesScript() {
   const basePrice    = Math.round(Number(model.prices['trade in價']) || 0);
   const mult         = COND_MULT[appCondition];
   const adjBase      = Math.round(basePrice * mult);
-  const adjBonus     = Math.round(adjBase * 0.1);
+  const adjBonus     = 0;
   const adjTotal     = adjBase + adjBonus;
 
   const otherPrices  = BD_OTHER_KEYS.map(k => Number(model.prices[k]) || 0).filter(v => v > 0);
