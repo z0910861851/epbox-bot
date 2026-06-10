@@ -51,8 +51,9 @@ body {
 /* ── Tabs ── */
 .tab-nav {
   display: flex;
+  align-items: center;
   background: #fff;
-  border-bottom: none;
+  border-bottom: 1px solid var(--border);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -143,18 +144,15 @@ body {
   margin-bottom: 14px;
 }
 /* ── Views bar（對齊 Elay 燦坤週報 tab 上方的總瀏覽數列）── */
-.views-bar {
-  background: #fff;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  padding: 8px 16px;
-  text-align: right;
+.views-bar-inline {
+  margin-left: auto;
+  padding: 0 16px;
   font-size: 11px;
   color: var(--text-gray);
-  position: sticky;
-  top: 154px;
-  z-index: 98;
-  width: 100%;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 .hero-title {
   font-size: 28px;
@@ -619,10 +617,9 @@ body {
   <button class="tab-btn active" onclick="switchTab('compare', this)"><i data-lucide="bar-chart-2"></i>各通路比較</button>
   <button class="tab-btn" onclick="switchTab('analytics', this)"><i data-lucide="message-circle"></i>回收建議</button>
   <button class="tab-btn" onclick="switchTab('tradein', this)"><i data-lucide="smartphone"></i>燦坤 Trade-in 週報</button>
+  <div class="views-bar-inline">總瀏覽數 <span class="page-views-num">…</span></div>
 </div>
 
-<!-- 總瀏覽數固定列 -->
-<div class="views-bar">總瀏覽數 <span class="page-views-num">…</span></div>
 
 <!-- ══════════ Tab 1: 各通路回收比較 ══════════ -->
 <div id="tab-compare" class="tab-content active">
