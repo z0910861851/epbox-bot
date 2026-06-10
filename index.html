@@ -490,56 +490,62 @@ body {
 .step-icon { width: 44px; height: 44px; background: #e8f7ef; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
 .step-icon svg { width: 22px; height: 22px; stroke: var(--ep-green); stroke-width: 1.8; }
 
-/* ══ 燦坤週報內嵌樣式 ══ */
+/* ══ 燦坤週報內嵌樣式（已隔離） ══ */
 #report-wrap {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang TC', sans-serif;
   font-size: 14px;
   color: #1d1d1f;
 }
-
-:root{--bg:#f5f5f7;--card:#fff;--text:#1d1d1f;--sub:#6e6e73;--accent:#0071e3;--green:#34c759;--orange:#ff9500;--purple:#af52de;--border:#e5e5ea;--teal:#32ade6;--red:#ff3b30}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang TC',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
-.header{background:linear-gradient(135deg,#1d1d1f 0%,#0071e3 100%);color:#fff;padding:32px 40px 28px}
-.header h1{font-size:28px;font-weight:700;letter-spacing:-.5px}
-.header p{color:rgba(255,255,255,.7);margin-top:6px;font-size:14px}
-.header-meta{display:flex;gap:14px;margin-top:16px;flex-wrap:wrap}
-.meta-badge{background:rgba(255,255,255,.15);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500}
-.container{max-width:1500px;margin:0 auto;padding:32px 24px}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+#report-wrap{--bg:#f5f5f7;--card:#fff;--text:#1d1d1f;--sub:#6e6e73;--accent:#0071e3;--green:#34c759;--orange:#ff9500;--purple:#af52de;--border:#e5e5ea;--teal:#32ade6;--red:#ff3b30}
+#report-wrap{box-sizing:border-box;margin:0;padding:0}
+#report-wrap{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang TC',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+#report-wrap .header{background:linear-gradient(135deg,#1d1d1f 0%,#0071e3 100%);color:#fff;padding:32px 40px 28px}
+#report-wrap .header h1{font-size:28px;font-weight:700;letter-spacing:-.5px}
+#report-wrap .header p{color:rgba(255,255,255,.7);margin-top:6px;font-size:14px}
+#report-wrap .header-meta{display:flex;gap:14px;margin-top:16px;flex-wrap:wrap}
+#report-wrap .meta-badge{background:rgba(255,255,255,.15);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500}
+#report-wrap .container{max-width:1500px;margin:0 auto;padding:32px 24px}
+#report-wrap .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 @media(max-width:900px){.two-col{grid-template-columns:1fr}}
-.section-title{font-size:20px;font-weight:700;margin:32px 0 14px;display:flex;align-items:center;gap:8px}
-.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:26px}
-.summary-card{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.06);text-align:center}
-.summary-card .label{color:var(--sub);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.summary-card .value{font-size:30px;font-weight:700;margin:5px 0}
-.summary-card .sub{color:var(--sub);font-size:12px}
-.blue{color:var(--accent)}.green{color:var(--green)}.orange{color:var(--orange)}.purple{color:var(--purple)}.teal{color:var(--teal)}
-.card{background:var(--card);border-radius:16px;padding:22px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:20px}
-.card-title{font-weight:700;font-size:15px;margin-bottom:13px}
-.data-table{width:100%;border-collapse:collapse;font-size:13px}
-.data-table th{background:var(--bg);padding:9px 11px;text-align:left;font-weight:600;font-size:11px;color:var(--sub);border-bottom:1px solid var(--border);white-space:nowrap}
-.data-table td{padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:middle}
-.data-table tr:last-child td{border-bottom:none}
-.data-table tr:hover td{background:rgba(0,113,227,.03)}
-.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
-.kiosk-cell{color:var(--sub)}.plugin-cell{color:var(--purple)}.deal-yes{color:var(--green);font-weight:700}
-.small-text{font-size:12px;color:var(--sub);max-width:190px}.zero-row td{color:#d1d1d6}
-.op-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(50,173,230,.1);color:var(--teal);border-radius:20px;padding:3px 10px;margin:2px 3px 2px 0;font-size:12px;font-weight:500;white-space:nowrap}
-.op-pill .op-cnt{background:var(--teal);color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;font-weight:700}
-.op-cell{max-width:300px;line-height:1.9}
-.op-summary-bar{padding:9px 20px;background:rgba(50,173,230,.04);border-bottom:1px solid var(--border);display:flex;align-items:flex-start;flex-wrap:wrap;gap:4px}
-.op-label{font-size:12px;color:var(--sub);font-weight:600;margin-right:4px;padding-top:4px;white-space:nowrap}
-.store-card{background:var(--card);border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:18px;overflow:hidden}
-.store-header{padding:13px 20px;background:linear-gradient(to right,rgba(0,113,227,.06),transparent);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px}
-.store-title{font-size:15px;font-weight:700}
-.store-kpis{display:flex;flex-wrap:wrap;gap:7px}
-.kpi-chip{border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600}
-.exec-chip{background:rgba(0,113,227,.1);color:var(--accent)}
-.kiosk-chip{background:rgba(110,110,115,.1);color:var(--sub)}
-.plugin-chip{background:rgba(175,82,222,.1);color:var(--purple)}
-.deal-chip{background:rgba(52,199,89,.1);color:var(--green)}
-.rate-chip{background:rgba(255,149,0,.1);color:var(--orange)}
+#report-wrap .section-title{font-size:20px;font-weight:700;margin:32px 0 14px;display:flex;align-items:center;gap:8px}
+#report-wrap .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:26px}
+#report-wrap .summary-card{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.06);text-align:center}
+#report-wrap .summary-card .label{color:var(--sub);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+#report-wrap .summary-card .value{font-size:30px;font-weight:700;margin:5px 0}
+#report-wrap .summary-card .sub{color:var(--sub);font-size:12px}
+#report-wrap .blue{color:var(--accent)}
+#report-wrap .green{color:var(--green)}
+#report-wrap .orange{color:var(--orange)}
+#report-wrap .purple{color:var(--purple)}
+#report-wrap .teal{color:var(--teal)}
+#report-wrap .card{background:var(--card);border-radius:16px;padding:22px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:20px}
+#report-wrap .card-title{font-weight:700;font-size:15px;margin-bottom:13px}
+#report-wrap .data-table{width:100%;border-collapse:collapse;font-size:13px}
+#report-wrap .data-table th{background:var(--bg);padding:9px 11px;text-align:left;font-weight:600;font-size:11px;color:var(--sub);border-bottom:1px solid var(--border);white-space:nowrap}
+#report-wrap .data-table td{padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:middle}
+#report-wrap .data-table tr:last-child td{border-bottom:none}
+#report-wrap .data-table tr:hover td{background:rgba(0,113,227,.03)}
+#report-wrap .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+#report-wrap .kiosk-cell{color:var(--sub)}
+#report-wrap .plugin-cell{color:var(--purple)}
+#report-wrap .deal-yes{color:var(--green);font-weight:700}
+#report-wrap .small-text{font-size:12px;color:var(--sub);max-width:190px}
+#report-wrap .zero-row td{color:#d1d1d6}
+#report-wrap .op-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(50,173,230,.1);color:var(--teal);border-radius:20px;padding:3px 10px;margin:2px 3px 2px 0;font-size:12px;font-weight:500;white-space:nowrap}
+#report-wrap .op-pill .op-cnt{background:var(--teal);color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;font-weight:700}
+#report-wrap .op-cell{max-width:300px;line-height:1.9}
+#report-wrap .op-summary-bar{padding:9px 20px;background:rgba(50,173,230,.04);border-bottom:1px solid var(--border);display:flex;align-items:flex-start;flex-wrap:wrap;gap:4px}
+#report-wrap .op-label{font-size:12px;color:var(--sub);font-weight:600;margin-right:4px;padding-top:4px;white-space:nowrap}
+#report-wrap .store-card{background:var(--card);border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:18px;overflow:hidden}
+#report-wrap .store-header{padding:13px 20px;background:linear-gradient(to right,rgba(0,113,227,.06),transparent);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px}
+#report-wrap .store-title{font-size:15px;font-weight:700}
+#report-wrap .store-kpis{display:flex;flex-wrap:wrap;gap:7px}
+#report-wrap .kpi-chip{border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600}
+#report-wrap .exec-chip{background:rgba(0,113,227,.1);color:var(--accent)}
+#report-wrap .kiosk-chip{background:rgba(110,110,115,.1);color:var(--sub)}
+#report-wrap .plugin-chip{background:rgba(175,82,222,.1);color:var(--purple)}
+#report-wrap .deal-chip{background:rgba(52,199,89,.1);color:var(--green)}
+#report-wrap .rate-chip{background:rgba(255,149,0,.1);color:var(--orange)}
 
 /* ── 銷量輸入列 ── */
 .sales-row{
@@ -548,52 +554,51 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang TC'
   background:linear-gradient(to right,rgba(255,204,0,.08),rgba(255,149,0,.04));
   border-bottom:1px solid var(--border);
 }
-.sales-label{font-size:12px;font-weight:600;color:var(--sub);white-space:nowrap}
-.sales-input{
+#report-wrap .sales-label{font-size:12px;font-weight:600;color:var(--sub);white-space:nowrap}
+#report-wrap .sales-input{
   width:120px;padding:6px 12px;
   border:1.5px solid var(--border);border-radius:20px;
   font-size:13px;font-weight:600;font-family:inherit;
   outline:none;text-align:center;
   transition:border-color .2s,box-shadow .2s;
 }
-.sales-input:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,149,0,.15)}
-.sales-input::placeholder{color:#bbb;font-weight:400}
-.sales-arrow{color:var(--sub);font-size:16px}
-.sales-rate-label{font-size:12px;font-weight:600;color:var(--sub);white-space:nowrap}
-.rate-badge{
+#report-wrap .sales-input:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,149,0,.15)}
+#report-wrap .sales-input::placeholder{color:#bbb;font-weight:400}
+#report-wrap .sales-arrow{color:var(--sub);font-size:16px}
+#report-wrap .sales-rate-label{font-size:12px;font-weight:600;color:var(--sub);white-space:nowrap}
+#report-wrap .rate-badge{
   min-width:64px;text-align:center;
   font-size:16px;font-weight:800;
   padding:4px 14px;border-radius:20px;
   background:#f5f5f7;color:#bbb;
   transition:all .25s;
 }
-.rate-badge.high{background:rgba(52,199,89,.15);color:#25a244}
-.rate-badge.mid{background:rgba(255,149,0,.15);color:#c97200}
-.rate-badge.low{background:rgba(255,59,48,.12);color:#d63030}
+#report-wrap .rate-badge.high{background:rgba(52,199,89,.15);color:#25a244}
+#report-wrap .rate-badge.mid{background:rgba(255,149,0,.15);color:#c97200}
+#report-wrap .rate-badge.low{background:rgba(255,59,48,.12);color:#d63030}
 
 /* ── 回收率排行榜 ── */
 #rate-leaderboard-wrap{transition:opacity .3s}
-.rate-rank-badge{
+#report-wrap .rate-rank-badge{
   display:inline-block;width:26px;height:26px;line-height:26px;
   border-radius:50%;text-align:center;font-size:12px;font-weight:700;
   background:var(--bg);color:var(--sub);
 }
-.rate-rank-badge.r1{background:#FFD700;color:#7a5c00}
-.rate-rank-badge.r2{background:#C0C0C0;color:#555}
-.rate-rank-badge.r3{background:#CD7F32;color:#fff}
-.empty-hint{text-align:center;color:#bbb;padding:24px;font-size:13px}
-
-.filter-bar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-.filter-bar input[type=text]{flex:1;min-width:200px;padding:9px 16px;border:1px solid var(--border);border-radius:24px;font-size:14px;outline:none;font-family:inherit}
-.filter-bar input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,113,227,.15)}
-.legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--sub);margin-bottom:20px}
-.legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px}
-footer{text-align:center;color:var(--sub);font-size:12px;padding:28px}
+#report-wrap .rate-rank-badge.r1{background:#FFD700;color:#7a5c00}
+#report-wrap .rate-rank-badge.r2{background:#C0C0C0;color:#555}
+#report-wrap .rate-rank-badge.r3{background:#CD7F32;color:#fff}
+#report-wrap .empty-hint{text-align:center;color:#bbb;padding:24px;font-size:13px}
+#report-wrap .filter-bar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+#report-wrap .filter-bar input[type=text]{flex:1;min-width:200px;padding:9px 16px;border:1px solid var(--border);border-radius:24px;font-size:14px;outline:none;font-family:inherit}
+#report-wrap .filter-bar input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,113,227,.15)}
+#report-wrap .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--sub);margin-bottom:20px}
+#report-wrap .legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px}
+#report-wrap footer{text-align:center;color:var(--sub);font-size:12px;padding:28px}
 
 /* 回收率色條說明 */
 .rate-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;margin-top:10px}
-.rl-item{display:flex;align-items:center;gap:6px}
-.rl-dot{width:12px;height:12px;border-radius:50%}
+#report-wrap .rl-item{display:flex;align-items:center;gap:6px}
+#report-wrap .rl-dot{width:12px;height:12px;border-radius:50%}
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
