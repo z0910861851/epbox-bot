@@ -33,23 +33,17 @@ body {
 }
 
 /* ── Header ── */
-.header {
-  background: var(--ep-dark);
-  color: #fff;
-  padding: 20px 24px 16px;
-  text-align: center;
+.sticky-top {
   position: sticky;
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 20px rgba(0,0,0,0.3);
 }
-/* 防止週報 CSS 覆蓋主程式 header */
-body > .header {
-  background: var(--ep-dark) !important;
-  padding: 20px 24px 16px !important;
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 100 !important;
+.header {
+  background: var(--ep-dark);
+  color: #fff;
+  padding: 20px 24px 16px;
+  text-align: center;
 }
 .header-logo { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 4px; }
 .logo-box { background: var(--ep-green); color: #fff; font-weight: 900; font-size: 18px; padding: 4px 10px; border-radius: 8px; letter-spacing: 1px; }
@@ -159,10 +153,6 @@ body > .header {
   text-align: right;
   font-size: 11px;
   color: var(--text-gray);
-  position: sticky;
-  top: 154px;
-  z-index: 98;
-  width: 100%;
 }
 .hero-title {
   font-size: 28px;
@@ -610,22 +600,20 @@ footer{text-align:center;color:var(--sub);font-size:12px;padding:28px}
 <body>
 
 <!-- Header -->
-<div class="header">
-  <div class="header-logo">
-    <div class="logo-box">EPBOX</div>
-    <h1>自助回收資訊</h1>
+<div class="sticky-top">
+  <div class="header">
+    <div class="header-logo">
+      <div class="logo-box">EPBOX</div>
+      <h1>自助回收資訊</h1>
+    </div>
   </div>
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('compare', this)"><i data-lucide="bar-chart-2"></i>各通路比較</button>
+    <button class="tab-btn" onclick="switchTab('analytics', this)"><i data-lucide="message-circle"></i>回收建議</button>
+    <button class="tab-btn" onclick="switchTab('tradein', this)"><i data-lucide="smartphone"></i>燦坤 Trade-in 週報</button>
+  </div>
+  <div class="views-bar">總瀏覽數 <span class="page-views-num">…</span></div>
 </div>
-
-<!-- Tabs -->
-<div class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('compare', this)"><i data-lucide="bar-chart-2"></i>各通路比較</button>
-  <button class="tab-btn" onclick="switchTab('analytics', this)"><i data-lucide="message-circle"></i>回收建議</button>
-  <button class="tab-btn" onclick="switchTab('tradein', this)"><i data-lucide="smartphone"></i>燦坤 Trade-in 週報</button>
-</div>
-
-<!-- 總瀏覽數固定列 -->
-<div class="views-bar">總瀏覽數 <span class="page-views-num">…</span></div>
 
 <!-- ══════════ Tab 1: 各通路回收比較 ══════════ -->
 <div id="tab-compare" class="tab-content active">
