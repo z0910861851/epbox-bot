@@ -747,13 +747,13 @@ footer{text-align:center;color:var(--sub);font-size:12px;padding:28px}
 <!-- ══════════ Tab: 燦坤 Trade-in 週報（內嵌） ══════════ -->
 <div id="tab-tradein" class="tab-content" style="padding:0;max-width:none;">
   <div id="report-wrap" style="width:100%;height:calc(100vh - 186px);overflow:hidden;">
-  <iframe
-    src="https://z0910861851.github.io/epbox-bot/weekly-report/report_v3.html"
+  <iframe id="tradein-iframe"
     title="燦坤 Trade-in 舊換新分析報告"
     style="width:100%;height:100%;border:none;"
     loading="eager"
     referrerpolicy="no-referrer-when-downgrade">
   </iframe>
+  <script>document.getElementById('tradein-iframe').src='https://z0910861851.github.io/epbox-bot/weekly-report/report_v3.html?t='+Date.now();</script>
 </div>
 <script src="main.js"></script>
 </body>
