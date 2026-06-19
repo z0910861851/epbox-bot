@@ -73,13 +73,15 @@ let allModels = [];      // [{name, prices:{vendor:price}}]
 let selectedBase = "";
 let selectedStorage = 0;
 let batteryGood = true;
-let appCondition    = 'perfect'; // 'perfect' | 'scratched' | 'damaged'
+let appCondition    = 'perfect'; // 'perfect' | 'scratched' | 'damaged' | 'both'
+let condScratch     = false;
+let condDamage      = false;
 let phoneDestination = 'none';   // 'none' | 'family'
 
-const COND_MULT        = { perfect: 1.0, scratched: 0.9,  damaged: 0.6  }; // EPBOX 倍率
-const VENDOR_COND_MULT = { perfect: 1.0, scratched: 0.75, damaged: 0.35 }; // 外部通路（轉賣商）倍率
-const COND_LABEL = { perfect: '外觀完美', scratched: '有刮痕', damaged: '螢幕損壞' };
-const COND_EMOJI = { perfect: '✨', scratched: '🔸', damaged: '🔴' };
+const COND_MULT        = { perfect: 1.0, scratched: 0.9,  damaged: 0.6,  both: 0.5  }; // EPBOX 倍率
+const VENDOR_COND_MULT = { perfect: 1.0, scratched: 0.75, damaged: 0.35, both: 0.35 }; // 外部通路（轉賣商）倍率
+const COND_LABEL = { perfect: '外觀完美', scratched: '有刮痕', damaged: '螢幕損壞', both: '刮痕+螢幕損壞' };
+const COND_EMOJI = { perfect: '✨', scratched: '🔸', damaged: '🔴', both: '🔸🔴' };
 let lastUpdated = "";
 let lastKnownPrices = {}; // { modelName: price } from Firebase
 
@@ -962,29 +964,46 @@ function batteryReplacementFee(model) {
 /* ════════════════════════════════
    Tab 5: Condition Selector
 ════════════════════════════════ */
-function setCondition(lvl) {
-  appCondition = lvl;
-  document.querySelectorAll('.cond-btn').forEach(btn => {
-    const isActive = btn.dataset.cond === lvl;
-    if (btn.dataset.cond === 'perfect') {
-      btn.style.border      = isActive ? '2px solid var(--ep-green)' : '2px solid var(--border)';
-      btn.style.background  = isActive ? '#edfaf3' : '#fff';
-      btn.style.color       = isActive ? 'var(--ep-green)' : 'var(--text-gray)';
-      btn.style.fontWeight  = isActive ? '700' : '500';
-    } else if (btn.dataset.cond === 'scratched') {
-      btn.style.border      = isActive ? '2px solid var(--gold)' : '2px solid var(--border)';
-      btn.style.background  = isActive ? '#fff8e6' : '#fff';
-      btn.style.color       = isActive ? '#b07000' : 'var(--text-gray)';
-      btn.style.fontWeight  = isActive ? '700' : '500';
-    } else {
-      btn.style.border      = isActive ? '2px solid var(--red)' : '2px solid var(--border)';
-      btn.style.background  = isActive ? '#fff0f0' : '#fff';
-      btn.style.color       = isActive ? 'var(--red)' : 'var(--text-gray)';
-      btn.style.fontWeight  = isActive ? '700' : '500';
-    }
+function syncCondition() {
+  if (condScratch && condDamage) appCondition = 'both';
+  else if (condScratch)          appCondition = 'scratched';
+  else if (condDamage)           appCondition = 'damaged';
+  else                           appCondition = 'perfect';
+}
+
+function resetCondition() {
+  condScratch = false; condDamage = false;
+  syncCondition(); updateCondUI(); renderCompare(); generateSalesScript();
+}
+
+function toggleCondition(type) {
+  if (type === 'scratched') condScratch = !condScratch;
+  if (type === 'damaged')   condDamage  = !condDamage;
+  syncCondition(); updateCondUI(); renderCompare(); generateSalesScript();
+}
+
+function updateCondUI() {
+  const isPerfect = appCondition === 'perfect';
+  const combo     = appCondition === 'both';
+  const btn = document.getElementById('cond-perfect-btn');
+  if (btn) {
+    btn.style.borderColor = isPerfect ? 'var(--apple-blue)' : 'var(--border)';
+    btn.style.background  = isPerfect ? '#e8f1fd' : 'transparent';
+  }
+  const hint = document.getElementById('cond-perfect-hint');
+  if (hint) hint.style.display = isPerfect ? 'block' : 'none';
+
+  [['scratched', condScratch], ['damaged', condDamage]].forEach(([type, checked]) => {
+    const prefix = type === 'scratched' ? 'scratch' : 'damage';
+    const row   = document.getElementById('cond-' + prefix + '-row');
+    const cb    = document.getElementById('cond-' + prefix + '-cb');
+    const badge = document.getElementById('cond-' + prefix + '-badge');
+    if (row)   { row.style.borderColor = checked ? 'var(--apple-blue)' : 'var(--border)'; row.style.background = checked ? '#f5f8ff' : '#fff'; }
+    if (cb)    { cb.style.background = checked ? 'var(--apple-blue)' : ''; cb.style.borderColor = checked ? 'var(--apple-blue)' : '#ccc'; cb.style.color = checked ? '#fff' : ''; cb.textContent = checked ? '✓' : ''; }
+    if (badge) badge.style.display = checked ? 'inline-block' : 'none';
   });
-  renderCompare();
-  generateSalesScript();
+  const alert = document.getElementById('cond-combo-alert');
+  if (alert) alert.style.display = combo ? 'block' : 'none';
 }
 
 function setDestination(dest) {
@@ -1047,9 +1066,13 @@ function generateSalesScript() {
     sections.push({ icon: '👋', label: '開場白', color: '#e8f4ff', border: '#b0d4f0', text:
       `我幫您查了一下，即使外觀有些刮痕，EPBOX 自助回收報價大約還是 NT$${adjTotal.toLocaleString()}（含補貼）。`
     });
-  } else {
+  } else if (appCondition === 'damaged') {
     sections.push({ icon: '👋', label: '開場白', color: '#e8f4ff', border: '#b0d4f0', text:
       `我幫您查了一下，螢幕有損傷的話，EPBOX 自助回收報價大約是 NT$${adjTotal.toLocaleString()}（含補貼）。`
+    });
+  } else {
+    sections.push({ icon: '👋', label: '開場白', color: '#e8f4ff', border: '#b0d4f0', text:
+      `我幫您查了一下，外觀有刮痕加上螢幕損壞，EPBOX 自助回收報價大約是 NT$${adjTotal.toLocaleString()}（含補貼），在這個狀況下算是相當透明的報價。`
     });
   }
 
@@ -1061,6 +1084,10 @@ function generateSalesScript() {
   } else if (appCondition === 'damaged') {
     sections.push({ icon: '💡', label: '螢幕損壞說明', color: '#fff0f0', border: '#f0b0b0', text:
       `其他通路遇到螢幕損壞大多是直接大砍或不收。EPBOX 還是給六成的回收價，加上 10% 補貼，這個條件下算是相當好的選擇了。`
+    });
+  } else if (appCondition === 'both') {
+    sections.push({ icon: '💡', label: '刮痕+螢幕損壞說明', color: '#fff0f0', border: '#f0b0b0', text:
+      `外觀刮痕加螢幕損壞，其他通路通常直接不收或大砍。EPBOX 固定給五折，不講價、不現場殺價，讓顧客知道拿到的已經是這個狀況下最好的選擇。`
     });
   } else if (diff > 0) {
     sections.push({ icon: '💰', label: '價格優勢', color: '#edfaf3', border: '#a8e0c4', text:
