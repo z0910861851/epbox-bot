@@ -655,6 +655,16 @@ async function uploadToFirebase() {
   }
   const msg = errors === 0 ? `✅ 全部 ${done} 筆寫入完成！` : `⚠️ ${done} 筆成功，${errors} 筆失敗`;
   addLog(errors===0?'ok':'err', '\n' + msg);
+
+  if (errors === 0) {
+    try {
+      await db.ref('/tradein_prices/meta/lastUpdated').set(new Date().toISOString());
+      addLog('ok', '✓ 更新時間已同步');
+    } catch(e) {
+      addLog('err', `⚠️ 更新時間寫入失敗：${e.message}`);
+    }
+  }
+
   showBanner(msg, errors===0?'success':'info');
   document.getElementById('reset-btn').style.display = 'flex';
   if (errors === 0) document.getElementById('notify-btn').style.display = 'flex';
