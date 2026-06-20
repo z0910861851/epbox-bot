@@ -88,6 +88,20 @@ let lastKnownPrices = {}; // { modelName: price } from Firebase
 /* ════════════════════════════════
    HELPERS
 ════════════════════════════════ */
+function fmtModel(name) {
+  if (!name) return name;
+  return name
+    .toUpperCase()
+    .replace(/\bIPHONE\b/g, "iPhone")
+    .replace(/\bPRO\b/g, "Pro")
+    .replace(/\bMAX\b/g, "Max")
+    .replace(/\bPLUS\b/g, "Plus")
+    .replace(/\bMINI\b/g, "mini")
+    .replace(/\bSE\b/g, "SE")
+    .replace(/\bXS\b/g, "Xs")
+    .replace(/\bXR\b/g, "Xr")
+    .replace(/\b(\d+E)\b/gi, m => m.toLowerCase());
+}
 function baseName(name) {
   return name.replace(/\s+\d+(GB|TB)/gi, "").trim();
 }
@@ -236,7 +250,7 @@ function initCompare() {
   sel.innerHTML = '<option value="">── 請選擇機型 ──</option>';
   uniqueBaseNames().forEach(b => {
     const o = document.createElement("option");
-    o.value = b; o.textContent = b; sel.appendChild(o);
+    o.value = b; o.textContent = fmtModel(b); sel.appendChild(o);
   });
   // Auto-select first
   if (allModels.length) {
@@ -675,7 +689,7 @@ function initCalc() {
   sel.innerHTML = '<option value="">── 請選擇 ──</option>';
   uniqueBaseNames().forEach(b => {
     const o = document.createElement('option');
-    o.value = b; o.textContent = b; sel.appendChild(o);
+    o.value = b; o.textContent = fmtModel(b); sel.appendChild(o);
   });
 }
 
@@ -728,7 +742,7 @@ function renderCalculator() {
       ${ic(P.phone,'#fff',26)}
     </div>
     <div style="flex:1">
-      <div class="label" style="margin-bottom:2px">${model.name}</div>
+      <div class="label" style="margin-bottom:2px">${fmtModel(model.name)}</div>
       <div class="price">NT$${fmt(tradeIn)}</div>
       <div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:2px;">EPBOX 自助回收參考價 ${epDelta}</div>
     </div>
@@ -832,7 +846,7 @@ function initAlerts() {
   sel.innerHTML = '<option value="">── 選擇機型 ──</option>';
   allModels.forEach(m => {
     const o = document.createElement('option');
-    o.value = m.name; o.textContent = m.name; sel.appendChild(o);
+    o.value = m.name; o.textContent = fmtModel(m.name); sel.appendChild(o);
   });
   renderAlertList();
   updateNotifyTip();
@@ -1042,7 +1056,7 @@ function generateSalesScript() {
     return;
   }
 
-  const modelDisplay = model.name.replace('IPHONE ', 'iPhone ');
+  const modelDisplay = fmtModel(model.name);
   const basePrice    = Math.round(Number(model.prices['trade in價']) || 0);
   const mult         = COND_MULT[appCondition];
   const adjBase      = Math.round(basePrice * mult);
